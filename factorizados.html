@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathQuest - Aventura</title>
+    <title>Matejuegos - Factorizados</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -11,13 +11,16 @@
     <main class="quest-container">
         <section class="game-card">
             <header class="player-header">
-                <h1 class="game-title">⚔️ Factorizados</h1>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <a href="lobby.html" class="back-button" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem;">← Volver</a>
+                    <h1 class="game-title" style="font-size: 1.8rem; margin: 0;">⚔️ Factorizados</h1>
+                    <div style="width: 60px;"></div>
+                </div>
                 <div class="player-info">
                     <span id="player-name" class="player-name">Aventurero</span>
                     <span class="player-level">Nivel <span id="player-level">1</span></span>
                     <span class="player-coins">🪙 <span id="player-coins">0</span></span>
                 </div>
-                <!-- Botones de acciones -->
                 <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
                     <button id="btn-edit-name" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #fbbf24, #b45309);">✏️ Nombre</button>
                     <button id="btn-save" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;">💾 Guardar</button>
@@ -47,6 +50,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="game.js"></script>
+    <script src="factorizados.js"></script>
 </body>
 </html>
