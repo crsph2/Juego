@@ -1,4 +1,7 @@
-// Variables globales del juego
+// ==================== VARIABLES GLOBALES ====================
+// NOTA: 'db' ya está declarada en otro script (firebase-config.js) como const.
+// Por eso NO la declaramos ni reasignamos aquí.
+
 let puntaje = 0;
 let nivel = 1;
 let preguntaActual = {};
@@ -9,23 +12,25 @@ let usuario = null;
 // ==================== FUNCIONES DE GENERACIÓN ====================
 
 function generarPregunta() {
-    const tipo = Math.floor(Math.random() * 4); // 0: dif cuadrados, 1: tcp, 2: trinomio, 3: cubo
+    const tipo = Math.floor(Math.random() * 4);
     let pregunta = "";
     let correcta = "";
 
     switch (tipo) {
-        case 0: // Diferencia de cuadrados
+        case 0: {
             const b = Math.floor(Math.random() * 9) + 2;
-            pregunta = `x² - ${b*b}`;
+            pregunta = `x² - ${b * b}`;
             correcta = `(x-${b})(x+${b})`;
             break;
-        case 1: // Trinomio cuadrado perfecto
+        }
+        case 1: {
             const c = Math.floor(Math.random() * 9) + 2;
             const signo = Math.random() < 0.5 ? '+' : '-';
-            pregunta = `x² ${signo === '+' ? '+' : '-'} ${2*c}x + ${c*c}`;
+            pregunta = `x² ${signo === '+' ? '+' : '-'} ${2 * c}x + ${c * c}`;
             correcta = `(x${signo}${c})²`;
             break;
-        case 2: // Trinomio de la forma x² + bx + c
+        }
+        case 2: {
             const p = Math.floor(Math.random() * 9) + 2;
             const q = Math.floor(Math.random() * 9) + 2;
             const suma = p + q;
@@ -39,17 +44,19 @@ function generarPregunta() {
             const raiz2 = (signoProd === '+' ? q : -q);
             correcta = `(x${raiz1 >= 0 ? '+' : ''}${raiz1})(x${raiz2 >= 0 ? '+' : ''}${raiz2})`;
             break;
-        case 3: // Cubo (suma o diferencia)
+        }
+        case 3: {
             const b5 = Math.floor(Math.random() * 9) + 2;
             const signoCubo = Math.random() < 0.5 ? '+' : '-';
             if (signoCubo === '+') {
-                pregunta = `x³ + ${b5*b5*b5}`;
-                correcta = `(x+${b5})(x²-${b5}x+${b5*b5})`;
+                pregunta = `x³ + ${b5 * b5 * b5}`;
+                correcta = `(x+${b5})(x²-${b5}x+${b5 * b5})`;
             } else {
-                pregunta = `x³ - ${b5*b5*b5}`;
-                correcta = `(x-${b5})(x²+${b5}x+${b5*b5})`;
+                pregunta = `x³ - ${b5 * b5 * b5}`;
+                correcta = `(x-${b5})(x²+${b5}x+${b5 * b5})`;
             }
             break;
+        }
     }
 
     respuestaCorrecta = correcta;
@@ -65,7 +72,7 @@ function generarOpcionesFactorizacion(correcta, tipo) {
     let incorrectas = [];
 
     switch (tipo) {
-        case 0: // Diferencia de cuadrados
+        case 0: {
             const matchDC = correcta.match(/\(x([+-])(\d+)\)\(x([+-])(\d+)\)/);
             if (matchDC) {
                 const b = parseInt(matchDC[2]);
@@ -82,8 +89,8 @@ function generarOpcionesFactorizacion(correcta, tipo) {
                 incorrectas.push(`(x-${otroB})(x+${otroB})`);
             }
             break;
-
-        case 1: // TCP
+        }
+        case 1: {
             const matchTCP = correcta.match(/\(x([+-])(\d+)\)²/);
             if (matchTCP) {
                 const b = parseInt(matchTCP[2]);
@@ -98,8 +105,8 @@ function generarOpcionesFactorizacion(correcta, tipo) {
                 incorrectas.push(`(x${otroSigno}${nuevoB})²`);
             }
             break;
-
-        case 2: // Trinomio
+        }
+        case 2: {
             const matchTri = correcta.match(/\(x([+-])(\d+)\)\(x([+-])(\d+)\)/);
             if (matchTri) {
                 const r1 = parseInt(matchTri[2]);
@@ -121,8 +128,9 @@ function generarOpcionesFactorizacion(correcta, tipo) {
                 incorrectas.push(`(x${ns1}${r1})(x${ns2}${r2})`);
             }
             break;
-
-        case 3: // Cubo - regex corregido (sin espacios)
+        }
+        case 3: {
+            // Regex corregido: sin espacios para que coincida con la cadena generada
             const matchCubo = correcta.match(/\(x([+-])(\d+)\)\(x²([+-])(\d+)x\+(\d+)\)/);
             if (matchCubo) {
                 const b = parseInt(matchCubo[2]);
@@ -135,19 +143,20 @@ function generarOpcionesFactorizacion(correcta, tipo) {
                     nb = Math.floor(Math.random() * 9) + 2;
                 } while (nb === b);
                 const nuevoSignoMedio = signoPrimero === '+' ? '-' : '+';
-                incorrectas.push(`(x${signoPrimero}${nb})(x²${nuevoSignoMedio}${nb}x+${nb*nb})`);
+                incorrectas.push(`(x${signoPrimero}${nb})(x²${nuevoSignoMedio}${nb}x+${nb * nb})`);
 
                 const otroSigno = signoPrimero === '+' ? '-' : '+';
                 const otroMedio = otroSigno === '+' ? '-' : '+';
-                incorrectas.push(`(x${otroSigno}${b})(x²${otroMedio}${b}x+${b*b})`);
+                incorrectas.push(`(x${otroSigno}${b})(x²${otroMedio}${b}x+${b * b})`);
 
                 let nuevaConstante;
                 do {
                     nuevaConstante = Math.floor(Math.random() * 9) + 2;
-                } while (nuevaConstante === constante || nuevaConstante === b*b);
+                } while (nuevaConstante === constante || nuevaConstante === b * b);
                 incorrectas.push(`(x${signoPrimero}${b})(x²${signoMedio}${b}x+${nuevaConstante})`);
             }
             break;
+        }
     }
 
     while (incorrectas.length < 3) {
@@ -216,15 +225,15 @@ function guardarProgreso() {
         nivel: nivel,
         nombre: usuario.displayName || "Anónimo"
     }, { merge: true })
-    .then(() => {
-        console.log("Progreso guardado");
-    })
-    .catch(error => {
-        console.error("Error guardando progreso:", error);
-        const feedbackElement = document.getElementById("feedback");
-        feedbackElement.textContent = "⚠️ Error al guardar progreso. Intenta de nuevo.";
-        feedbackElement.style.color = "orange";
-    });
+        .then(() => {
+            console.log("Progreso guardado");
+        })
+        .catch(error => {
+            console.error("Error guardando progreso:", error);
+            const feedbackElement = document.getElementById("feedback");
+            feedbackElement.textContent = "⚠️ Error al guardar progreso. Intenta de nuevo.";
+            feedbackElement.style.color = "orange";
+        });
 }
 
 // ==================== AUTENTICACIÓN ====================
@@ -263,13 +272,12 @@ function editarNombre() {
     }
 }
 
-// ==================== INICIALIZACIÓN ÚNICA ====================
+// ==================== INICIALIZACIÓN ====================
 
-document.addEventListener("DOMContentLoaded", function() {
-    // Inicializar Firebase
-    db = firebase.firestore();
+document.addEventListener("DOMContentLoaded", function () {
+    // db ya existe globalmente (declarada con const en otro script)
+    // No la declaramos ni reasignamos.
 
-    // Verificar usuario en sesión
     const usuarioJSON = sessionStorage.getItem("usuario");
     if (usuarioJSON) {
         usuario = JSON.parse(usuarioJSON);
@@ -279,7 +287,6 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
     }
 
-    // Cargar progreso desde Firestore
     if (usuario) {
         const userRef = db.collection("usuarios").doc(usuario.uid);
         userRef.get().then(doc => {
@@ -295,10 +302,8 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Generar primera pregunta
     generarPregunta();
 
-    // Asignar event listeners (sin variables globales)
     document.getElementById("cerrarSesion").addEventListener("click", cerrarSesion);
     document.getElementById("editarNombre").addEventListener("click", editarNombre);
 });
