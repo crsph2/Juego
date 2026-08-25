@@ -1,6 +1,4 @@
 // ==================== VARIABLES GLOBALES ====================
-// No usamos ninguna variable 'db' global para evitar conflictos.
-
 let puntaje = 0;
 let nivel = 1;
 let preguntaActual = {};
@@ -129,7 +127,6 @@ function generarOpcionesFactorizacion(correcta, tipo) {
             break;
         }
         case 3: {
-            // Regex corregido: sin espacios
             const matchCubo = correcta.match(/\(x([+-])(\d+)\)\(x²([+-])(\d+)x\+(\d+)\)/);
             if (matchCubo) {
                 const b = parseInt(matchCubo[2]);
@@ -218,8 +215,7 @@ function verificarRespuesta(seleccionada) {
 
 function guardarProgreso() {
     if (!usuario) return;
-    // Usamos firebase.firestore() directamente, sin variable global
-    const db = firebase.firestore(); // Esta es una variable LOCAL, no global
+    const db = firebase.firestore();
     const userRef = db.collection("usuarios").doc(usuario.uid);
     userRef.set({
         puntaje: puntaje,
@@ -257,7 +253,7 @@ function editarNombre() {
         const nombreLimpio = nuevoNombre.trim();
         if (usuario) {
             usuario.updateProfile({ displayName: nombreLimpio }).then(() => {
-                const db = firebase.firestore(); // LOCAL
+                const db = firebase.firestore();
                 const userRef = db.collection("usuarios").doc(usuario.uid);
                 userRef.set({ nombre: nombreLimpio }, { merge: true });
                 document.getElementById("usuarioNombre").textContent = nombreLimpio;
@@ -274,38 +270,52 @@ function editarNombre() {
     }
 }
 
-// ==================== INICIALIZACIÓN ====================
+// ==================== INICIALIZACIÓN CON AUTH DE FIREBASE ====================
 
 document.addEventListener("DOMContentLoaded", function () {
-    // No usamos ninguna variable 'db' global.
+    // Mostrar un mensaje de carga mientras verificamos autenticación
+    const feedback = document.getElementById("feedback");
+    if (feedback) feedback.textContent = "⏳ Verificando sesión...";
 
-    const usuarioJSON = sessionStorage.getItem("usuario");
-    if (usuarioJSON) {
-        usuario = JSON.parse(usuarioJSON);
-        document.getElementById("usuarioNombre").textContent = usuario.displayName || "Anónimo";
-    } else {
-        window.location.href = "index.html";
-        return;
-    }
+    // Escuchar cambios en la autenticación
+    firebase.auth().onAuthStateChanged(function (user) {
+        if (user) {
+            // Usuario autenticado
+            usuario = user;
+            // Guardar en sessionStorage para futuras recargas
+            sessionStorage.setItem("usuario", JSON.stringify(usuario));
 
-    if (usuario) {
-        const db = firebase.firestore(); // LOCAL
-        const userRef = db.collection("usuarios").doc(usuario.uid);
-        userRef.get().then(doc => {
-            if (doc.exists) {
-                const data = doc.data();
-                puntaje = data.puntaje || 0;
-                nivel = data.nivel || 1;
-                document.getElementById("puntaje").textContent = `Puntaje: ${puntaje}`;
-                document.getElementById("nivel").textContent = `Nivel: ${nivel}`;
-            }
-        }).catch(error => {
-            console.error("Error cargando progreso:", error);
-        });
-    }
+            // Actualizar UI
+            document.getElementById("usuarioNombre").textContent = usuario.displayName || "Anónimo";
 
-    generarPregunta();
+            // Cargar progreso desde Firestore
+            const db = firebase.firestore();
+            const userRef = db.collection("usuarios").doc(usuario.uid);
+            userRef.get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    puntaje = data.puntaje || 0;
+                    nivel = data.nivel || 1;
+                    document.getElementById("puntaje").textContent = `Puntaje: ${puntaje}`;
+                    document.getElementById("nivel").textContent = `Nivel: ${nivel}`;
+                }
+                // Iniciar el juego
+                if (feedback) feedback.textContent = "";
+                generarPregunta();
+            }).catch(error => {
+                console.error("Error cargando progreso:", error);
+                if (feedback) feedback.textContent = "⚠️ Error al cargar progreso. Jugando desde cero.";
+                generarPregunta();
+            });
 
-    document.getElementById("cerrarSesion").addEventListener("click", cerrarSesion);
-    document.getElementById("editarNombre").addEventListener("click", editarNombre);
+            // Asignar listeners de botones (solo una vez)
+            document.getElementById("cerrarSesion").addEventListener("click", cerrarSesion);
+            document.getElementById("editarNombre").addEventListener("click", editarNombre);
+
+        } else {
+            // No hay usuario autenticado → redirigir al login
+            sessionStorage.removeItem("usuario");
+            window.location.href = "index.html";
+        }
+    });
 });
