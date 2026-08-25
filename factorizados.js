@@ -63,23 +63,36 @@ function generarPregunta() {
     opcionesActuales = opciones;
     preguntaActual = { pregunta, correcta, opciones };
 
-    console.log("📝 Pregunta generada:", pregunta);
-    console.log("✅ Respuesta correcta:", correcta);
+    console.log("📝 Pregunta:", pregunta);
+    console.log("✅ Correcta:", correcta);
     console.log("🔘 Opciones:", opciones);
 
-    // Actualizar el DOM (con múltiples selectores)
-    actualizarElemento("pregunta", `Factoriza: ${pregunta}`);
-    actualizarElemento("preguntaDisplay", `Factoriza: ${pregunta}`);
-    actualizarElemento("question", `Factoriza: ${pregunta}`);
-    // También buscar cualquier elemento que contenga "CARGANDO PREGUNTA" y reemplazarlo
-    const todosLosElementos = document.querySelectorAll("*");
-    for (let el of todosLosElementos) {
+    // ===== ACTUALIZAR LA PREGUNTA EN EL DOM =====
+    // Buscar cualquier elemento que contenga "CARGANDO PREGUNTA" y reemplazarlo
+    const elementos = document.querySelectorAll("*");
+    let encontrado = false;
+    for (let el of elementos) {
         if (el.textContent && el.textContent.includes("CARGANDO PREGUNTA")) {
             el.textContent = `Factoriza: ${pregunta}`;
+            el.style.fontWeight = "bold";
+            el.style.fontSize = "1.5rem";
+            encontrado = true;
+            console.log("✅ Pregunta actualizada en:", el);
             break;
         }
     }
+    if (!encontrado) {
+        console.warn("⚠️ No se encontró 'CARGANDO PREGUNTA' en el DOM");
+    }
 
+    // También buscar por ID o clase comunes
+    const posiblesContenedores = document.querySelectorAll("#pregunta, .pregunta, [data-role='pregunta'], .question, #question");
+    posiblesContenedores.forEach(el => {
+        el.textContent = `Factoriza: ${pregunta}`;
+        console.log("✅ Pregunta actualizada en:", el);
+    });
+
+    // ===== MOSTRAR OPCIONES =====
     mostrarOpciones(opciones);
 }
 
@@ -191,95 +204,157 @@ function shuffleArray(array) {
     return array;
 }
 
-function actualizarElemento(id, texto) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.textContent = texto;
-        console.log(`✅ Actualizado #${id} con: ${texto}`);
-    } else {
-        // Buscar por clase o cualquier otro selector
-        const alternativos = document.querySelectorAll(`[data-role="${id}"], .${id}, [name="${id}"]`);
-        if (alternativos.length > 0) {
-            alternativos.forEach(e => e.textContent = texto);
-            console.log(`✅ Actualizado ${alternativos.length} elementos con data-role/clase ${id}`);
-        } else {
-            console.warn(`⚠️ No se encontró elemento con id #${id}, clase .${id} o data-role="${id}"`);
+function actualizarTexto(selector, texto) {
+    // Buscar por selector (ID, clase, data-role)
+    let elementos = document.querySelectorAll(selector);
+    if (elementos.length === 0) {
+        // Si no hay, buscar elementos que contengan el texto antiguo
+        const todos = document.querySelectorAll("*");
+        for (let el of todos) {
+            if (el.textContent && el.textContent.includes(selector.replace(/[#.]/g, ""))) {
+                elementos = [el];
+                break;
+            }
         }
     }
+    elementos.forEach(el => {
+        el.textContent = texto;
+    });
+    return elementos.length > 0;
 }
 
 function mostrarOpciones(opciones) {
-    // Buscar contenedor de opciones por varios métodos
-    let contenedor = document.getElementById("opciones");
+    // Buscar contenedor de opciones
+    let contenedor = document.querySelector("#opciones, .opciones, .options, [data-role='opciones'], .opciones-container");
+    
     if (!contenedor) {
-        contenedor = document.querySelector(".opciones-container, [data-role='opciones']");
-    }
-    if (!contenedor) {
-        // Si no existe, crearlo
-        console.warn("⚠️ No se encontró contenedor de opciones. Creando uno nuevo...");
+        // Si no existe, crearlo debajo de la pregunta
+        console.warn("⚠️ No se encontró contenedor de opciones. Creando uno...");
         contenedor = document.createElement("div");
         contenedor.id = "opciones";
         contenedor.style.display = "flex";
         contenedor.style.flexWrap = "wrap";
-        contenedor.style.gap = "10px";
+        contenedor.style.gap = "15px";
         contenedor.style.justifyContent = "center";
-        contenedor.style.marginTop = "20px";
-        // Insertar después del elemento de la pregunta
-        const preguntaEl = document.getElementById("pregunta") || document.querySelector("[data-role='pregunta']") || document.body;
-        preguntaEl.parentNode.insertBefore(contenedor, preguntaEl.nextSibling);
+        contenedor.style.marginTop = "30px";
+        contenedor.style.padding = "20px";
+        
+        // Insertar después del elemento que contiene la pregunta
+        const preguntaElement = document.querySelector("[data-role='pregunta'], #pregunta, .pregunta") || 
+                               document.querySelector("*:contains('Factoriza:')") ||
+                               document.body;
+        if (preguntaElement && preguntaElement.parentNode) {
+            preguntaElement.parentNode.insertBefore(contenedor, preguntaElement.nextSibling);
+        } else {
+            document.body.appendChild(contenedor);
+        }
     }
 
     contenedor.innerHTML = "";
     opciones.forEach(opcion => {
         const btn = document.createElement("button");
         btn.textContent = opcion;
-        btn.style.padding = "10px 20px";
+        btn.style.padding = "12px 25px";
         btn.style.margin = "5px";
         btn.style.fontSize = "1.2rem";
+        btn.style.borderRadius = "8px";
+        btn.style.border = "2px solid #4CAF50";
+        btn.style.backgroundColor = "#f0f0f0";
         btn.style.cursor = "pointer";
+        btn.style.transition = "all 0.3s";
+        btn.onmouseover = () => btn.style.backgroundColor = "#4CAF50";
+        btn.onmouseout = () => btn.style.backgroundColor = "#f0f0f0";
         btn.addEventListener("click", () => verificarRespuesta(opcion));
         contenedor.appendChild(btn);
     });
-    console.log("🔘 Opciones mostradas en el DOM");
+    console.log("🔘 Opciones mostradas");
 }
 
 // ==================== VERIFICACIÓN ====================
 
 function verificarRespuesta(seleccionada) {
     const esCorrecta = (seleccionada === respuestaCorrecta);
-    const feedback = document.getElementById("feedback") || document.querySelector(".feedback") || document.createElement("div");
-    if (!feedback.id) feedback.id = "feedback";
+    const feedback = document.querySelector("#feedback, .feedback, [data-role='feedback']");
+    const feedbackText = feedback || document.createElement("div");
+    if (!feedbackText.id) feedbackText.id = "feedback";
+    if (!feedback) {
+        document.querySelector("#opciones, .opciones, .options")?.after(feedbackText);
+    }
 
     if (esCorrecta) {
         puntaje += 10;
         racha++;
-        feedback.textContent = "✅ ¡Correcto! +10 puntos";
-        feedback.style.color = "green";
+        feedbackText.textContent = "✅ ¡Correcto! +10 puntos";
+        feedbackText.style.color = "green";
         if (puntaje % 50 === 0) {
             nivel++;
-            actualizarElemento("nivel", `Nivel: ${nivel}`);
-            actualizarElemento("nivelActual", `Nivel ${nivel}`);
+            actualizarElementosNivel();
         }
         guardarProgreso();
     } else {
         racha = 0;
-        feedback.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
-        feedback.style.color = "red";
+        feedbackText.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
+        feedbackText.style.color = "red";
     }
 
-    actualizarElemento("puntaje", `Puntaje: ${puntaje}`);
-    actualizarElemento("score", `${puntaje}`);
-    actualizarElemento("racha", `Racha: ${racha}`);
-    actualizarElemento("xp", `${puntaje} / 100 XP`);
+    // Actualizar todos los elementos de puntaje/nivel/racha
+    actualizarElementosUI();
 
     // Deshabilitar botones
-    const botones = document.querySelectorAll("#opciones button, .opciones-container button, [data-role='opciones'] button");
+    const botones = document.querySelectorAll("#opciones button, .opciones button, .options button, [data-role='opciones'] button");
     botones.forEach(btn => btn.disabled = true);
 
     setTimeout(() => {
-        feedback.textContent = "";
+        feedbackText.textContent = "";
         generarPregunta();
     }, 1600);
+}
+
+function actualizarElementosUI() {
+    // Actualizar puntaje en todos los lugares posibles
+    const puntajeSelectores = ["#puntaje", ".puntaje", "[data-role='puntaje']", "#score", ".score", "#xp", ".xp"];
+    puntajeSelectores.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+            if (el.textContent.includes("/100 XP")) {
+                el.textContent = `${puntaje} / 100 XP`;
+            } else {
+                el.textContent = `${puntaje}`;
+            }
+        });
+    });
+    // Buscar elementos que contengan solo números y estén cerca de "Nivel" o "XP"
+    document.querySelectorAll("*").forEach(el => {
+        if (el.textContent && el.textContent.match(/^\d+$/) && el.textContent.length < 5) {
+            const parent = el.parentElement;
+            if (parent && parent.textContent.includes("Nivel")) {
+                el.textContent = nivel;
+            }
+        }
+    });
+
+    // Actualizar nivel
+    const nivelSelectores = ["#nivel", ".nivel", "[data-role='nivel']", "#level", ".level"];
+    nivelSelectores.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+            el.textContent = `Nivel ${nivel}`;
+        });
+    });
+
+    // Actualizar racha
+    const rachaSelectores = ["#racha", ".racha", "[data-role='racha']", "#streak", ".streak"];
+    rachaSelectores.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+            el.textContent = `Racha: ${racha}`;
+        });
+    });
+}
+
+function actualizarElementosNivel() {
+    document.querySelectorAll("*").forEach(el => {
+        if (el.textContent && el.textContent.includes("Nivel")) {
+            el.textContent = `Nivel ${nivel}`;
+        }
+    });
 }
 
 // ==================== GUARDADO EN FIRESTORE ====================
@@ -323,8 +398,12 @@ function guardarNombre() {
                     const db = firebase.firestore();
                     db.collection("usuarios").doc(usuario.uid).set({ nombre: nombreLimpio }, { merge: true });
                 } catch (e) {}
-                actualizarElemento("usuarioNombre", nombreLimpio);
-                actualizarElemento("nombreUsuario", nombreLimpio);
+                // Actualizar todos los elementos que muestren el nombre
+                document.querySelectorAll("*").forEach(el => {
+                    if (el.textContent && el.textContent.includes("Aventurero")) {
+                        el.textContent = nombreLimpio;
+                    }
+                });
                 sessionStorage.setItem("usuario", JSON.stringify(usuario));
                 alert("✅ Nombre actualizado");
             }).catch(error => alert("Error al actualizar nombre"));
@@ -338,11 +417,8 @@ function iniciarJuego() {
     console.log("🎮 Iniciando juego...");
     // Actualizar nombre
     const nombre = usuario.displayName || "Aventurero";
-    actualizarElemento("usuarioNombre", nombre);
-    actualizarElemento("nombreUsuario", nombre);
-    // También buscar cualquier elemento que muestre el nombre
     document.querySelectorAll("*").forEach(el => {
-        if (el.textContent && el.textContent.includes("Aventurero") && el.tagName !== "INPUT") {
+        if (el.textContent && (el.textContent.includes("Aventurero") || el.textContent.includes("Jugador"))) {
             el.textContent = nombre;
         }
     });
@@ -356,12 +432,7 @@ function iniciarJuego() {
                 puntaje = data.puntaje || 0;
                 nivel = data.nivel || 1;
                 racha = data.racha || 0;
-                actualizarElemento("puntaje", `Puntaje: ${puntaje}`);
-                actualizarElemento("score", `${puntaje}`);
-                actualizarElemento("nivel", `Nivel: ${nivel}`);
-                actualizarElemento("nivelActual", `Nivel ${nivel}`);
-                actualizarElemento("racha", `Racha: ${racha}`);
-                actualizarElemento("xp", `${puntaje} / 100 XP`);
+                actualizarElementosUI();
             }
             // Generar primera pregunta
             generarPregunta();
@@ -375,10 +446,12 @@ function iniciarJuego() {
     }
 
     // Botones
-    const salirBtn = document.getElementById("salir") || document.getElementById("cerrarSesion") || document.querySelector("[data-role='salir']");
+    const salirBtn = document.querySelector("#salir, #cerrarSesion, [data-role='salir'], button:contains('SALIR')");
     if (salirBtn) salirBtn.addEventListener("click", cerrarSesion);
-    const guardarBtn = document.getElementById("guardar") || document.getElementById("editarNombre") || document.querySelector("[data-role='guardar']");
+    const guardarBtn = document.querySelector("#guardar, #editarNombre, [data-role='guardar'], button:contains('GUARDAR')");
     if (guardarBtn) guardarBtn.addEventListener("click", guardarNombre);
+    const nombreBtn = document.querySelector("#nombre, #cambiarNombre, [data-role='nombre'], button:contains('NOMBRE')");
+    if (nombreBtn) nombreBtn.addEventListener("click", guardarNombre);
 }
 
 // ==================== CARGA DE LA PÁGINA ====================
@@ -387,7 +460,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("📄 factorizados.html cargado");
 
     // Mostrar mensaje de carga
-    const feedback = document.getElementById("feedback") || document.querySelector(".feedback");
+    const feedback = document.querySelector("#feedback, .feedback, [data-role='feedback']");
     if (feedback) {
         feedback.textContent = "⏳ Verificando sesión...";
         feedback.style.color = "blue";
@@ -416,3 +489,30 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+// Pequeño polyfill para :contains en querySelector (no soportado nativamente)
+(function() {
+    if (!Element.prototype.matches) {
+        Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+    }
+    // Para usar :contains en querySelectorAll, lo simulamos con una función
+    const originalQuerySelectorAll = Document.prototype.querySelectorAll;
+    Document.prototype.querySelectorAll = function(selector) {
+        if (selector.includes(":contains(")) {
+            const parts = selector.split(":");
+            const baseSelector = parts[0];
+            const text = parts[1].match(/contains\(['"](.+)['"]\)/);
+            if (text) {
+                const elements = this.querySelectorAll(baseSelector || "*");
+                const result = [];
+                for (let el of elements) {
+                    if (el.textContent && el.textContent.includes(text[1])) {
+                        result.push(el);
+                    }
+                }
+                return result;
+            }
+        }
+        return originalQuerySelectorAll.call(this, selector);
+    };
+})();
