@@ -1,522 +1,341 @@
-// ---------- Configuración de niveles y regiones ----------
-const XP_POR_NIVEL = 100;
+// Configuración de Firebase (asegúrate de que esté cargada antes)
+let db;
 
-// Regiones según nivel (mínimos actualizados)
-const REGIONES = [
-  { minNivel: 1, nombre: "Aldea del Factor Común" },
-  { minNivel: 2, nombre: "Ciudad del Factor Común" },
-  { minNivel: 5, nombre: "Montaña del Binomio Cuadrado" },
-  { minNivel: 9, nombre: "Cueva de la Factorización Compleja" },
-  { minNivel: 13, nombre: "Ciudadela de los Polinomios" }
-];
+// Variables globales del juego
+let puntaje = 0;
+let nivel = 1;
+let preguntaActual = {};
+let opcionesActuales = [];
+let respuestaCorrecta = "";
+let usuario = null;
 
-// Calcula la región según el nivel
-function regionParaNivel(nivel) {
-  let region = REGIONES[0].nombre;
-  for (const r of REGIONES) {
-    if (nivel >= r.minNivel) region = r.nombre;
-  }
-  return region;
-}
+// Elementos del DOM
+const preguntaElement = document.getElementById("pregunta");
+const opcionesElement = document.getElementById("opciones");
+const puntajeElement = document.getElementById("puntaje");
+const nivelElement = document.getElementById("nivel");
+const feedbackElement = document.getElementById("feedback");
+const cerrarSesionBtn = document.getElementById("cerrarSesion");
+const editarNombreBtn = document.getElementById("editarNombre");
+const usuarioNombreSpan = document.getElementById("usuarioNombre");
 
-// Calcula la dificultad (1 a 5) a partir del nivel
-function obtenerDificultad(nivel) {
-  if (nivel === 1) return 1;           // Dificultad 1: factor común positivo
-  if (nivel >= 2 && nivel <= 4) return 2; // Dificultad 2: factor común con suma/resta
-  if (nivel >= 5 && nivel <= 8) return 3; // Dificultad 3: binomios y trinomios simples
-  if (nivel >= 9 && nivel <= 12) return 4; // Dificultad 4: trinomios con coeficiente >1
-  return 5; // Dificultad 5: diferencia de cubos (nivel 13+)
-}
+// ==================== FUNCIONES DE GENERACIÓN ====================
 
-// ---------- Normalización de factorizaciones ----------
-// Ordena los factores de un producto de binomios para comparar equivalentes
-function normalizarFactorizacion(exp) {
-  exp = exp.replace(/\s/g, ''); // eliminar espacios
+function generarPregunta() {
+    const tipo = Math.floor(Math.random() * 4); // 0: dif cuadrados, 1: tcp, 2: trinomio, 3: cubo
+    let pregunta = "";
+    let correcta = "";
 
-  // Patrón para (ax+b)(cx+d) con a,c opcionales (si no se escribe, es 1)
-  let match = exp.match(/^\(([+-]?\d*)x([+-]\d+)\)\(([+-]?\d*)x([+-]\d+)\)$/);
-  if (match) {
-    let a = match[1] === '' ? 1 : (match[1] === '-' ? -1 : parseInt(match[1]));
-    let b = parseInt(match[2]);
-    let c = match[3] === '' ? 1 : (match[3] === '-' ? -1 : parseInt(match[3]));
-    let d = parseInt(match[4]);
-
-    let factores = [
-      { a, b },
-      { a: c, b: d }
-    ];
-
-    // Ordenar factores: primero por coeficiente de x, luego por término independiente
-    factores.sort((f1, f2) => {
-      if (f1.a !== f2.a) return f1.a - f2.a;
-      return f1.b - f2.b;
-    });
-
-    // Función para formatear un factor (ax+b)
-    function fmt(f) {
-      let parteX = '';
-      if (f.a === 1) parteX = 'x';
-      else if (f.a === -1) parteX = '-x';
-      else parteX = f.a + 'x';
-      let parteConst = '';
-      if (f.b > 0) parteConst = '+' + f.b;
-      else if (f.b < 0) parteConst = f.b.toString();
-      return '(' + parteX + parteConst + ')';
+    switch (tipo) {
+        case 0: // Diferencia de cuadrados
+            const a = Math.floor(Math.random() * 9) + 2;
+            const b = Math.floor(Math.random() * 9) + 2;
+            pregunta = `x² - ${b*b}`;
+            correcta = `(x-${b})(x+${b})`;
+            break;
+        case 1: // Trinomio cuadrado perfecto
+            const c = Math.floor(Math.random() * 9) + 2;
+            const signo = Math.random() < 0.5 ? '+' : '-';
+            pregunta = `x² ${signo === '+' ? '+' : '-'} ${2*c}x + ${c*c}`;
+            correcta = `(x${signo}${c})²`;
+            break;
+        case 2: // Trinomio de la forma x² + bx + c
+            const p = Math.floor(Math.random() * 9) + 2;
+            const q = Math.floor(Math.random() * 9) + 2;
+            const suma = p + q;
+            const producto = p * q;
+            const signoSuma = Math.random() < 0.5 ? '+' : '-';
+            const signoProd = Math.random() < 0.5 ? '+' : '-';
+            let b2 = (signoSuma === '+' ? suma : -suma);
+            let c2 = (signoProd === '+' ? producto : -producto);
+            pregunta = `x² ${b2 >= 0 ? '+' : '-'} ${Math.abs(b2)}x ${c2 >= 0 ? '+' : '-'} ${Math.abs(c2)}`;
+            // Opciones correctas
+            const raiz1 = (signoSuma === '+' ? p : -p);
+            const raiz2 = (signoProd === '+' ? q : -q);
+            correcta = `(x${raiz1 >= 0 ? '+' : ''}${raiz1})(x${raiz2 >= 0 ? '+' : ''}${raiz2})`;
+            break;
+        case 3: // Cubo (suma o diferencia)
+            const b5 = Math.floor(Math.random() * 9) + 2;
+            const signoCubo = Math.random() < 0.5 ? '+' : '-';
+            if (signoCubo === '+') {
+                pregunta = `x³ + ${b5*b5*b5}`;
+                correcta = `(x+${b5})(x²-${b5}x+${b5*b5})`;
+            } else {
+                pregunta = `x³ - ${b5*b5*b5}`;
+                correcta = `(x-${b5})(x²+${b5}x+${b5*b5})`;
+            }
+            break;
     }
 
-    return fmt(factores[0]) + fmt(factores[1]);
-  }
+    respuestaCorrecta = correcta;
+    const opciones = generarOpcionesFactorizacion(correcta, tipo);
+    opcionesActuales = opciones;
+    preguntaActual = { pregunta, correcta, opciones };
 
-  // Para otros casos (factor común, cubos, etc.) no normalizamos
-  return exp;
+    // Mostrar en UI
+    preguntaElement.textContent = `Factoriza: ${pregunta}`;
+    mostrarOpciones(opciones);
 }
 
-// ---------- Generación de preguntas ----------
-function numeroAleatorio(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function generarOpcionesFactorizacion(correcta, tipo) {
+    let opciones = [correcta];
+
+    // Generar 3 opciones incorrectas según el tipo
+    let incorrectas = [];
+
+    switch (tipo) {
+        case 0: // Diferencia de cuadrados
+            // Ej: (x-3)(x+3) -> cambiar b
+            const matchDC = correcta.match(/\(x([+-])(\d+)\)\(x([+-])(\d+)\)/);
+            if (matchDC) {
+                const b = parseInt(matchDC[2]);
+                let nuevoB;
+                do {
+                    nuevoB = Math.floor(Math.random() * 9) + 2;
+                } while (nuevoB === b);
+                incorrectas.push(`(x-${nuevoB})(x+${nuevoB})`);
+                incorrectas.push(`(x+${b})(x-${b})`); // signo cambiado
+                let otroB;
+                do {
+                    otroB = Math.floor(Math.random() * 9) + 2;
+                } while (otroB === b || otroB === nuevoB);
+                incorrectas.push(`(x-${otroB})(x+${otroB})`);
+            }
+            break;
+
+        case 1: // TCP
+            const matchTCP = correcta.match(/\(x([+-])(\d+)\)²/);
+            if (matchTCP) {
+                const b = parseInt(matchTCP[2]);
+                const signo = matchTCP[1];
+                // cambiar b
+                let nuevoB;
+                do {
+                    nuevoB = Math.floor(Math.random() * 9) + 2;
+                } while (nuevoB === b);
+                incorrectas.push(`(x${signo}${nuevoB})²`);
+                // cambiar signo
+                const otroSigno = signo === '+' ? '-' : '+';
+                incorrectas.push(`(x${otroSigno}${b})²`);
+                // cambiar ambos
+                incorrectas.push(`(x${otroSigno}${nuevoB})²`);
+            }
+            break;
+
+        case 2: // Trinomio
+            const matchTri = correcta.match(/\(x([+-])(\d+)\)\(x([+-])(\d+)\)/);
+            if (matchTri) {
+                const r1 = parseInt(matchTri[2]);
+                const r2 = parseInt(matchTri[4]);
+                const s1 = matchTri[1];
+                const s2 = matchTri[3];
+                // cambiar r1
+                let nr1;
+                do {
+                    nr1 = Math.floor(Math.random() * 9) + 2;
+                } while (nr1 === r1);
+                incorrectas.push(`(x${s1}${nr1})(x${s2}${r2})`);
+                // cambiar r2
+                let nr2;
+                do {
+                    nr2 = Math.floor(Math.random() * 9) + 2;
+                } while (nr2 === r2);
+                incorrectas.push(`(x${s1}${r1})(x${s2}${nr2})`);
+                // cambiar ambos signos
+                const ns1 = s1 === '+' ? '-' : '+';
+                const ns2 = s2 === '+' ? '-' : '+';
+                incorrectas.push(`(x${ns1}${r1})(x${ns2}${r2})`);
+            }
+            break;
+
+        case 3: // Cubo
+            // Regex corregido: sin espacios
+            const matchCubo = correcta.match(/\(x([+-])(\d+)\)\(x²([+-])(\d+)x\+(\d+)\)/);
+            if (matchCubo) {
+                const b = parseInt(matchCubo[2]);
+                const signoPrimero = matchCubo[1];  // + o -
+                const signoMedio = matchCubo[3];    // + o -
+                const coef = parseInt(matchCubo[4]); // debería ser b
+                const constante = parseInt(matchCubo[5]); // b²
+
+                // Opción 1: cambiar b (y por tanto constante y coeficiente)
+                let nb;
+                do {
+                    nb = Math.floor(Math.random() * 9) + 2;
+                } while (nb === b);
+                // El signo medio debe ser opuesto al primero (si es suma, medio es -; si es resta, medio es +)
+                const nuevoSignoMedio = signoPrimero === '+' ? '-' : '+';
+                incorrectas.push(`(x${signoPrimero}${nb})(x²${nuevoSignoMedio}${nb}x+${nb*nb})`);
+
+                // Opción 2: cambiar signo primero (y medio)
+                const otroSigno = signoPrimero === '+' ? '-' : '+';
+                const otroMedio = otroSigno === '+' ? '-' : '+';
+                incorrectas.push(`(x${otroSigno}${b})(x²${otroMedio}${b}x+${b*b})`);
+
+                // Opción 3: cambiar constante (b²) sin cambiar b
+                let nuevaConstante;
+                do {
+                    nuevaConstante = Math.floor(Math.random() * 9) + 2;
+                } while (nuevaConstante === constante || nuevaConstante === b*b);
+                incorrectas.push(`(x${signoPrimero}${b})(x²${signoMedio}${b}x+${nuevaConstante})`);
+            }
+            break;
+    }
+
+    // Asegurar que tenemos al menos 3 incorrectas (rellenar con correcta si no)
+    while (incorrectas.length < 3) {
+        incorrectas.push(correcta);
+    }
+
+    // Mezclar correcta + incorrectas y devolver
+    const todas = [correcta, ...incorrectas.slice(0, 3)];
+    return shuffleArray(todas);
 }
 
-// Genera una pregunta según la dificultad (1 a 5)
-function generarPregunta(dificultad) {
-  let enunciado, respuestaCorrecta, opciones = [];
+// ==================== UTILIDADES ====================
 
-  switch(dificultad) {
-    case 1: // Factor común positivo (nivel 1)
-      const a1 = numeroAleatorio(2, 6);
-      const b1 = numeroAleatorio(2, 9);
-      const termino1 = a1 * b1;
-      enunciado = `Factoriza: ${a1}x + ${termino1}`;
-      respuestaCorrecta = `${a1}(x + ${b1})`;
-      opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'facil');
-      break;
-
-    case 2: // Factor común con suma o resta (niveles 2-4)
-      const a2 = numeroAleatorio(2, 6);
-      const b2 = numeroAleatorio(2, 9);
-      const signo = Math.random() < 0.5 ? '+' : '-';
-      const termino2 = signo === '+' ? a2 * b2 : -a2 * b2;
-      const expresion2 = `${a2}x ${signo} ${Math.abs(termino2)}`;
-      const factorizacion2 = `${a2}(x ${signo} ${b2})`;
-      enunciado = `Factoriza: ${expresion2}`;
-      respuestaCorrecta = factorizacion2;
-      opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'facil');
-      break;
-
-    case 3: // 50% diferencia de cuadrados, 50% trinomio simple (niveles 5-8)
-      if (Math.random() < 0.5) {
-        // Diferencia de cuadrados: x² - a² = (x+a)(x-a)
-        const a3 = numeroAleatorio(2, 7);
-        enunciado = `Factoriza: x² - ${a3*a3}`;
-        respuestaCorrecta = `(x + ${a3})(x - ${a3})`;
-        opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'normal');
-      } else {
-        // Trinomio simple: x² + bx + c = (x+m)(x+n)
-        const m = numeroAleatorio(2, 5);
-        const n = numeroAleatorio(2, 5);
-        const b = m + n;
-        const c = m * n;
-        enunciado = `Factoriza: x² + ${b}x + ${c}`;
-        respuestaCorrecta = `(x + ${m})(x + ${n})`;
-        opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'normal');
-      }
-      break;
-
-    case 4: // Trinomio con coeficiente líder > 1 (niveles 9-12)
-      const p = numeroAleatorio(2, 3);
-      const r = numeroAleatorio(2, 3);
-      const q = numeroAleatorio(1, 4);
-      const s = numeroAleatorio(1, 4);
-      const a4 = p * r;
-      const b4 = p * s + q * r;
-      const c4 = q * s;
-      enunciado = `Factoriza: ${a4}x² + ${b4}x + ${c4}`;
-      respuestaCorrecta = `(${p}x + ${q})(${r}x + ${s})`;
-      opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'dificil');
-      break;
-
-    case 5: // Diferencia o suma de cubos (nivel 13+)
-      const tipoCubo = Math.random() < 0.5 ? 'diferencia' : 'suma';
-      const a5 = numeroAleatorio(2, 4);
-      const b5 = numeroAleatorio(2, 4);
-      const bCubo = b5 * b5 * b5;
-      let expresion5, factorizacion5;
-      if (tipoCubo === 'diferencia') {
-        expresion5 = `x³ - ${bCubo}`;
-        factorizacion5 = `(x - ${b5})(x² + ${b5}x + ${b5*b5})`;
-      } else {
-        expresion5 = `x³ + ${bCubo}`;
-        factorizacion5 = `(x + ${b5})(x² - ${b5}x + ${b5*b5})`;
-      }
-      enunciado = `Factoriza: ${expresion5}`;
-      respuestaCorrecta = factorizacion5;
-      opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'cubos');
-      break;
-  }
-
-  // Calcular la versión normalizada de la respuesta correcta
-  const respuestaNormalizada = normalizarFactorizacion(respuestaCorrecta);
-
-  // Mezclar opciones (incluye la correcta)
-  opciones = mezclarArray([respuestaCorrecta, ...opciones]);
-
-  return {
-    enunciado,
-    respuestaCorrecta,          // cadena original (para mostrar)
-    respuestaNormalizada,       // cadena normalizada (para comparar)
-    opciones
-  };
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 }
 
-// Genera opciones incorrectas (errores comunes) para cada tipo
-function generarOpcionesFactorizacion(correcta, cantidad, nivel) {
-  const opciones = new Set();
-  let intentos = 0;
-  while (opciones.size < cantidad && intentos < 100) {
-    intentos++;
-    let candidata = '';
+function mostrarOpciones(opciones) {
+    opcionesElement.innerHTML = "";
+    opciones.forEach(opcion => {
+        const btn = document.createElement("button");
+        btn.textContent = opcion;
+        btn.addEventListener("click", () => verificarRespuesta(opcion));
+        opcionesElement.appendChild(btn);
+    });
+}
 
-    if (nivel === 'facil') {
-      const match = correcta.match(/(\d+)\(x ([+-]) (\d+)\)/);
-      if (match) {
-        const a = parseInt(match[1]);
-        const signo = match[2];
-        const b = parseInt(match[3]);
-        const variantes = [
-          `${a}(x ${signo === '+' ? '-' : '+'} ${b})`,
-          `${a+1}(x ${signo} ${b})`,
-          `${a}(x ${signo} ${b+1})`,
-          `${a}(x ${signo === '+' ? '-' : '+'} ${b+1})`
-        ];
-        candidata = variantes[numeroAleatorio(0, variantes.length-1)];
-      }
-    } else if (nivel === 'normal') {
-      const match = correcta.match(/\(x \+ (\d+)\)\(x - (\d+)\)/);
-      if (match) {
-        const a = parseInt(match[1]);
-        const b = parseInt(match[2]);
-        const variantes = [
-          `(x - ${a})(x + ${b})`,
-          `(x + ${a})(x + ${b})`,
-          `(x - ${a})(x - ${b})`,
-          `(x + ${a+1})(x - ${b})`
-        ];
-        candidata = variantes[numeroAleatorio(0, variantes.length-1)];
-      } else {
-        const match2 = correcta.match(/\(x \+ (\d+)\)\(x \+ (\d+)\)/);
-        if (match2) {
-          const a = parseInt(match2[1]);
-          const b = parseInt(match2[2]);
-          const variantes = [
-            `(x - ${a})(x + ${b})`,
-            `(x + ${a})(x - ${b})`,
-            `(x - ${a})(x - ${b})`,
-            `(x + ${a+1})(x + ${b})`
-          ];
-          candidata = variantes[numeroAleatorio(0, variantes.length-1)];
+// ==================== VERIFICACIÓN ====================
+
+function verificarRespuesta(seleccionada) {
+    const esCorrecta = (seleccionada === respuestaCorrecta);
+    if (esCorrecta) {
+        puntaje += 10;
+        feedbackElement.textContent = "✅ ¡Correcto! +10 puntos";
+        feedbackElement.style.color = "green";
+        // Subir de nivel cada 5 aciertos
+        if (puntaje % 50 === 0) {
+            nivel++;
+            nivelElement.textContent = `Nivel: ${nivel}`;
         }
-      }
-    } else if (nivel === 'dificil') {
-      const match = correcta.match(/\((\d+)x \+ (\d+)\)\((\d+)x \+ (\d+)\)/);
-      if (match) {
-        const p = parseInt(match[1]), q = parseInt(match[2]);
-        const r = parseInt(match[3]), s = parseInt(match[4]);
-        const variantes = [
-          `(${p}x - ${q})(${r}x + ${s})`,
-          `(${p}x + ${q})(${r}x - ${s})`,
-          `(${p}x + ${q+1})(${r}x + ${s})`,
-          `(${p+1}x + ${q})(${r}x + ${s})`
-        ];
-        candidata = variantes[numeroAleatorio(0, variantes.length-1)];
-      }
-    } else if (nivel === 'cubos') {
-      const match = correcta.match(/\(x ([+-]) (\d+)\)\(x² ([+-]) (\d+)x \+ (\d+)\)/);
-      if (match) {
-        const signo1 = match[1];
-        const num1 = parseInt(match[2]);
-        const signo2 = match[3];
-        const num2 = parseInt(match[4]);
-        const num3 = parseInt(match[5]);
-        const variantes = [
-          `(x ${signo1 === '+' ? '-' : '+'} ${num1})(x² ${signo2} ${num2+1}x + ${num3})`,
-          `(x ${signo1} ${num1+1})(x² ${signo2} ${num2}x + ${num3})`,
-          `(x ${signo1 === '+' ? '-' : '+'} ${num1})(x² ${signo2 === '+' ? '-' : '+'} ${num2}x + ${num3})`
-        ];
-        candidata = variantes[numeroAleatorio(0, variantes.length-1)];
-      }
+        // Guardar progreso
+        guardarProgreso();
+    } else {
+        feedbackElement.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
+        feedbackElement.style.color = "red";
     }
-
-    if (candidata && candidata !== correcta) {
-      opciones.add(candidata);
-    }
-  }
-  return Array.from(opciones);
+    puntajeElement.textContent = `Puntaje: ${puntaje}`;
+    // Deshabilitar botones
+    const botones = opcionesElement.querySelectorAll("button");
+    botones.forEach(btn => btn.disabled = true);
+    // Nueva pregunta después de 1.5 segundos
+    setTimeout(() => {
+        feedbackElement.textContent = "";
+        generarPregunta();
+        // Re-habilitar botones (se generan nuevos)
+    }, 1600);
 }
 
-// Mezcla un array (Fisher-Yates)
-function mezclarArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+// ==================== GUARDADO EN FIRESTORE ====================
 
-// ---------- Estado del juego ----------
-let uid = null;
-let jugador = null;
-let preguntaActual = null;
-let racha = 0;
-
-const elNombre = document.getElementById('player-name');
-const elNivel = document.getElementById('player-level');
-const elMonedas = document.getElementById('player-coins');
-const elXpBarra = document.getElementById('xp-bar-fill');
-const elXpTexto = document.getElementById('xp-text');
-const elRegion = document.getElementById('player-region');
-const elPregunta = document.getElementById('pregunta-enunciado');
-const elOpciones = document.getElementById('opciones-container');
-const elFeedback = document.getElementById('feedback-message');
-const elRacha = document.getElementById('racha-actual');
-
-// ---------- Funciones de guardado ----------
-async function guardarProgreso() {
-  if (!jugador || !uid) return;
-  try {
-    await db.collection('usuarios').doc(uid).update({
-      xp: jugador.xp,
-      monedas: jugador.monedas,
-      nivel: jugador.nivel,
-      regionActual: jugador.regionActual,
-      estadisticas: jugador.estadisticas,
-      // No guardamos historial aquí para no sobrescribir (se usa arrayUnion en cada respuesta)
+function guardarProgreso() {
+    if (!usuario) return;
+    const userRef = db.collection("usuarios").doc(usuario.uid);
+    userRef.set({
+        puntaje: puntaje,
+        nivel: nivel,
+        nombre: usuario.displayName || "Anónimo"
+    }, { merge: true })
+    .then(() => {
+        console.log("Progreso guardado");
+    })
+    .catch(error => {
+        console.error("Error guardando progreso:", error);
+        feedbackElement.textContent = "⚠️ Error al guardar progreso. Intenta de nuevo.";
+        feedbackElement.style.color = "orange";
     });
-    console.log('Progreso guardado manualmente');
-    mostrarMensajeGuardado('💾 Progreso guardado');
-  } catch (error) {
-    console.error('Error al guardar manualmente:', error);
-    alert('No se pudo guardar. Revisa tu conexión.');
-  }
 }
 
-// Indicador visual de guardado
-function mostrarMensajeGuardado(texto) {
-  const msg = document.createElement('span');
-  msg.textContent = texto;
-  msg.style.fontSize = '0.8rem';
-  msg.style.color = '#86efac';
-  msg.style.marginLeft = '10px';
-  msg.style.fontWeight = 'bold';
-  elFeedback.appendChild(msg);
-  setTimeout(() => msg.remove(), 2000);
-}
+// ==================== AUTENTICACIÓN ====================
 
-// Guardado automático cada 30 segundos
-setInterval(async () => {
-  if (jugador && uid) {
-    try {
-      await db.collection('usuarios').doc(uid).update({
-        xp: jugador.xp,
-        monedas: jugador.monedas,
-        nivel: jugador.nivel,
-        regionActual: jugador.regionActual,
-        estadisticas: jugador.estadisticas
-      });
-      console.log('Progreso guardado automáticamente');
-    } catch (error) {
-      console.error('Error en guardado automático:', error);
-    }
-  }
-}, 30000); // cada 30 segundos
-
-// ---------- Autenticación y carga de datos ----------
-firebase.auth().onAuthStateChanged(async (user) => {
-  if (!user) {
-    window.location.href = 'index.html';
-    return;
-  }
-  uid = user.uid;
-
-  const snap = await db.collection('usuarios').doc(uid).get();
-  if (!snap.exists) {
-    window.location.href = 'index.html';
-    return;
-  }
-
-  jugador = snap.data();
-  actualizarUI();
-  nuevaPregunta();
-});
-
-function actualizarUI() {
-  elNombre.textContent = jugador.nombre;
-  elNivel.textContent = jugador.nivel;
-  elMonedas.textContent = jugador.monedas;
-  elRegion.textContent = jugador.regionActual;
-
-  const xpEnNivel = jugador.xp % XP_POR_NIVEL;
-  elXpBarra.style.width = `${xpEnNivel}%`;
-  elXpTexto.textContent = `${xpEnNivel} / ${XP_POR_NIVEL} XP`;
-  elRacha.textContent = racha;
-}
-
-function nuevaPregunta() {
-  elFeedback.classList.add('hidden');
-  const dificultad = obtenerDificultad(jugador.nivel);
-  preguntaActual = generarPregunta(dificultad);
-  elPregunta.textContent = preguntaActual.enunciado + ' = ?';
-  elOpciones.innerHTML = '';
-
-  preguntaActual.opciones.forEach((opcion) => {
-    const btn = document.createElement('button');
-    btn.className = 'rpg-button btn-opcion';
-    btn.textContent = opcion;
-    btn.addEventListener('click', () => responder(opcion, btn));
-    elOpciones.appendChild(btn);
-  });
-}
-
-async function responder(opcionElegida, btnElegido) {
-  [...elOpciones.children].forEach(b => b.disabled = true);
-
-  // Normalizar la respuesta del usuario y comparar con la normalizada correcta
-  const esCorrecta = normalizarFactorizacion(opcionElegida) === preguntaActual.respuestaNormalizada;
-
-  let xpGanada = 0;
-  let monedasGanadas = 0;
-
-  if (esCorrecta) {
-    racha++;
-    xpGanada = 10 + Math.min(racha, 5) * 2;
-    monedasGanadas = 5;
-    btnElegido.classList.add('opcion-correcta');
-    elFeedback.textContent = '¡Correcto, héroe! Sigue así.';
-    elFeedback.classList.remove('feedback-error');
-    elFeedback.classList.add('feedback-exito');
-  } else {
-    racha = 0;
-    btnElegido.classList.add('opcion-incorrecta');
-    elFeedback.textContent = `Casi. La respuesta correcta era ${preguntaActual.respuestaCorrecta}.`;
-    elFeedback.classList.remove('feedback-exito');
-    elFeedback.classList.add('feedback-error');
-  }
-  elFeedback.classList.remove('hidden');
-
-  // Actualizar experiencia y nivel
-  const nuevoXp = jugador.xp + xpGanada;
-  const nuevoNivel = Math.floor(nuevoXp / XP_POR_NIVEL) + 1;
-  const subioNivel = nuevoNivel > jugador.nivel;
-
-  jugador.xp = nuevoXp;
-  jugador.monedas += monedasGanadas;
-  jugador.nivel = nuevoNivel;
-  jugador.regionActual = regionParaNivel(nuevoNivel);
-  jugador.estadisticas = jugador.estadisticas || {};
-  jugador.estadisticas.correctas = (jugador.estadisticas.correctas || 0) + (esCorrecta ? 1 : 0);
-  jugador.estadisticas.incorrectas = (jugador.estadisticas.incorrectas || 0) + (esCorrecta ? 0 : 1);
-
-  try {
-    await db.collection('usuarios').doc(uid).update({
-      xp: jugador.xp,
-      monedas: jugador.monedas,
-      nivel: jugador.nivel,
-      regionActual: jugador.regionActual,
-      estadisticas: jugador.estadisticas,
-      historial: firebase.firestore.FieldValue.arrayUnion({
-        pregunta: preguntaActual.enunciado,
-        correcta: esCorrecta,
-        fecha: new Date().toISOString()
-      })
-    });
-    // Mostrar indicador de guardado exitoso
-    mostrarMensajeGuardado('✅ Guardado');
-  } catch (error) {
-    console.error('Error al guardar progreso:', error);
-    // Mostrar mensaje de error en el feedback
-    elFeedback.textContent += ' (Error al guardar)';
-  }
-
-  actualizarUI();
-  if (subioNivel) {
-    elFeedback.textContent += ` ¡Subiste a nivel ${jugador.nivel}!`;
-  }
-
-  setTimeout(nuevaPregunta, 1600);
-}
-
-// ---------- Acciones del jugador ----------
-async function cerrarSesion() {
-    if (confirm("¿Estás seguro de que quieres cerrar sesión? Perderás el progreso no guardado.")) {
-        try {
-            await firebase.auth().signOut();
-            sessionStorage.clear();
-            window.location.href = 'index.html';
-        } catch (error) {
+function cerrarSesion() {
+    if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+        firebase.auth().signOut().then(() => {
+            sessionStorage.removeItem("usuario");
+            window.location.href = "index.html";
+        }).catch(error => {
             console.error("Error al cerrar sesión:", error);
-            alert("Hubo un error al cerrar sesión. Inténtalo de nuevo.");
-        }
-  if (confirm("¿Estás seguro de que quieres cerrar sesión? Perderás el progreso no guardado.")) {
-    try {
-      await firebase.auth().signOut();
-      sessionStorage.clear();
-      window.location.href = 'index.html';
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-      alert("Hubo un error al cerrar sesión. Inténtalo de nuevo.");
-}
-  }
+            alert("Error al cerrar sesión. Intenta de nuevo.");
+        });
+    }
 }
 
-async function editarNombre() {
-    if (!jugador) return;
-    const nuevoNombre = prompt("Introduce tu nuevo nombre de aventurero:", jugador.nombre);
-    if (nuevoNombre && nuevoNombre.trim().length >= 3) {
-        const nombreFinal = nuevoNombre.trim();
-        try {
-            await db.collection('usuarios').doc(uid).update({
-                nombre: nombreFinal
+function editarNombre() {
+    const nuevoNombre = prompt("Ingresa tu nuevo nombre de usuario:", usuario ? usuario.displayName : "");
+    if (nuevoNombre && nuevoNombre.trim() !== "") {
+        const nombreLimpio = nuevoNombre.trim();
+        if (usuario) {
+            usuario.updateProfile({ displayName: nombreLimpio }).then(() => {
+                // Actualizar en Firestore
+                const userRef = db.collection("usuarios").doc(usuario.uid);
+                userRef.set({ nombre: nombreLimpio }, { merge: true });
+                usuarioNombreSpan.textContent = nombreLimpio;
+                sessionStorage.setItem("usuario", JSON.stringify(usuario));
+                feedbackElement.textContent = "✅ Nombre actualizado.";
+                feedbackElement.style.color = "green";
+                setTimeout(() => feedbackElement.textContent = "", 2000);
+            }).catch(error => {
+                console.error("Error al actualizar nombre:", error);
+                alert("Error al actualizar nombre.");
             });
-            jugador.nombre = nombreFinal;
-            elNombre.textContent = nombreFinal;
-            sessionStorage.setItem('mathquest_nombre', nombreFinal);
-            alert("¡Nombre actualizado correctamente!");
-        } catch (error) {
-            console.error("Error al actualizar nombre:", error);
-            alert("No se pudo actualizar el nombre. Revisa tu conexión.");
         }
-    } else if (nuevoNombre !== null) {
-        alert("El nombre debe tener al menos 3 caracteres.");
-  if (!jugador) return;
-  const nuevoNombre = prompt("Introduce tu nuevo nombre de aventurero:", jugador.nombre);
-  if (nuevoNombre && nuevoNombre.trim().length >= 3) {
-    const nombreFinal = nuevoNombre.trim();
-    try {
-      await db.collection('usuarios').doc(uid).update({
-        nombre: nombreFinal
-      });
-      jugador.nombre = nombreFinal;
-      elNombre.textContent = nombreFinal;
-      sessionStorage.setItem('mathquest_nombre', nombreFinal);
-      alert("¡Nombre actualizado correctamente!");
-    } catch (error) {
-      console.error("Error al actualizar nombre:", error);
-      alert("No se pudo actualizar el nombre. Revisa tu conexión.");
-}
-  } else if (nuevoNombre !== null) {
-    alert("El nombre debe tener al menos 3 caracteres.");
-  }
+    }
 }
 
-// Asignar eventos cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    const btnLogout = document.getElementById('btn-logout');
-    const btnEditName = document.getElementById('btn-edit-name');
-    if (btnLogout) btnLogout.addEventListener('click', cerrarSesion);
-    if (btnEditName) btnEditName.addEventListener('click', editarNombre);
-  const btnLogout = document.getElementById('btn-logout');
-  const btnEditName = document.getElementById('btn-edit-name');
-  const btnSave = document.getElementById('btn-save');
-  
-  if (btnLogout) btnLogout.addEventListener('click', cerrarSesion);
-  if (btnEditName) btnEditName.addEventListener('click', editarNombre);
-  if (btnSave) btnSave.addEventListener('click', guardarProgreso);
+// ==================== INICIALIZACIÓN ====================
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Inicializar Firebase (ya debe estar cargado)
+    db = firebase.firestore();
+
+    // Verificar usuario en sesión
+    const usuarioJSON = sessionStorage.getItem("usuario");
+    if (usuarioJSON) {
+        usuario = JSON.parse(usuarioJSON);
+        usuarioNombreSpan.textContent = usuario.displayName || "Anónimo";
+    } else {
+        // Si no hay sesión, redirigir al login
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Cargar progreso desde Firestore
+    if (usuario) {
+        const userRef = db.collection("usuarios").doc(usuario.uid);
+        userRef.get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                puntaje = data.puntaje || 0;
+                nivel = data.nivel || 1;
+                puntajeElement.textContent = `Puntaje: ${puntaje}`;
+                nivelElement.textContent = `Nivel: ${nivel}`;
+            }
+        }).catch(error => {
+            console.error("Error cargando progreso:", error);
+        });
+    }
+
+    // Generar primera pregunta
+    generarPregunta();
+
+    // Event listeners (sin duplicados)
+    document.getElementById("cerrarSesion").addEventListener("click", cerrarSesion);
+    document.getElementById("editarNombre").addEventListener("click", editarNombre);
 });
