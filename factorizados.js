@@ -1,6 +1,5 @@
 // ==================== VARIABLES GLOBALES ====================
-// NOTA: 'db' ya está declarada en otro script (firebase-config.js) como const.
-// Por eso NO la declaramos ni reasignamos aquí.
+// No usamos ninguna variable 'db' global para evitar conflictos.
 
 let puntaje = 0;
 let nivel = 1;
@@ -130,7 +129,7 @@ function generarOpcionesFactorizacion(correcta, tipo) {
             break;
         }
         case 3: {
-            // Regex corregido: sin espacios para que coincida con la cadena generada
+            // Regex corregido: sin espacios
             const matchCubo = correcta.match(/\(x([+-])(\d+)\)\(x²([+-])(\d+)x\+(\d+)\)/);
             if (matchCubo) {
                 const b = parseInt(matchCubo[2]);
@@ -219,6 +218,8 @@ function verificarRespuesta(seleccionada) {
 
 function guardarProgreso() {
     if (!usuario) return;
+    // Usamos firebase.firestore() directamente, sin variable global
+    const db = firebase.firestore(); // Esta es una variable LOCAL, no global
     const userRef = db.collection("usuarios").doc(usuario.uid);
     userRef.set({
         puntaje: puntaje,
@@ -256,6 +257,7 @@ function editarNombre() {
         const nombreLimpio = nuevoNombre.trim();
         if (usuario) {
             usuario.updateProfile({ displayName: nombreLimpio }).then(() => {
+                const db = firebase.firestore(); // LOCAL
                 const userRef = db.collection("usuarios").doc(usuario.uid);
                 userRef.set({ nombre: nombreLimpio }, { merge: true });
                 document.getElementById("usuarioNombre").textContent = nombreLimpio;
@@ -275,8 +277,7 @@ function editarNombre() {
 // ==================== INICIALIZACIÓN ====================
 
 document.addEventListener("DOMContentLoaded", function () {
-    // db ya existe globalmente (declarada con const en otro script)
-    // No la declaramos ni reasignamos.
+    // No usamos ninguna variable 'db' global.
 
     const usuarioJSON = sessionStorage.getItem("usuario");
     if (usuarioJSON) {
@@ -288,6 +289,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (usuario) {
+        const db = firebase.firestore(); // LOCAL
         const userRef = db.collection("usuarios").doc(usuario.uid);
         userRef.get().then(doc => {
             if (doc.exists) {
