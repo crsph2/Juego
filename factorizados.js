@@ -33,26 +33,54 @@ function obtenerDificultad(nivel) {
 function normalizarFactorizacion(exp) {
   exp = exp.replace(/\s/g, ''); // eliminar espacios
 
-  // Patrón para (ax+b)(cx+d) con a,c opcionales (si no se escribe, es 1)
-  let match = exp.match(/^\(([+-]?\d*)x([+-]\d+)\)\(([+-]?\d*)x([+-]\d+)\)$/);
-  if (match) {
-    let a = match[1] === '' ? 1 : (match[1] === '-' ? -1 : parseInt(match[1]));
-    let b = parseInt(match[2]);
-    let c = match[3] === '' ? 1 : (match[3] === '-' ? -1 : parseInt(match[3]));
-    let d = parseInt(match[4]);
+  // --- 1. Factor común: a(bx + c) o a(bx - c) ---
+  let matchComun = exp.match(/^(\d+)\(([+-]?\d*)x([+-]\d+)\)$/);
+  if (matchComun) {
+    let a = parseInt(matchComun[1]);
+    let b = matchComun[2] === '' ? 1 : (matchComun[2] === '-' ? -1 : parseInt(matchComun[2]));
+    let c = parseInt(matchComun[3]);
+    // Nos aseguramos de que el factor común sea positivo para la comparación
+    if (a < 0) {
+      a = -a;
+      b = -b;
+      c = -c;
+    }
+    // Reordenamos los términos dentro del paréntesis para tener 'x' primero
+    let parteX = '';
+    if (b === 1) parteX = 'x';
+    else if (b === -1) parteX = '-x';
+    else parteX = b + 'x';
+    let parteConst = '';
+    if (c > 0) parteConst = '+' + c;
+    else if (c < 0) parteConst = c.toString();
+    return a + '(' + parteX + parteConst + ')';
+  }
 
+  // --- 2. Diferencia de cuadrados: (x+a)(x-a) o (ax+b)(ax-b) ---
+  let matchCuadrados = exp.match(/^\(([+-]?\d*)x([+-]\d+)\)\(([+-]?\d*)x([+-]\d+)\)$/);
+  if (matchCuadrados) {
+    let a1 = matchCuadrados[1] === '' ? 1 : (matchCuadrados[1] === '-' ? -1 : parseInt(matchCuadrados[1]));
+    let b1 = parseInt(matchCuadrados[2]);
+    let a2 = matchCuadrados[3] === '' ? 1 : (matchCuadrados[3] === '-' ? -1 : parseInt(matchCuadrados[3]));
+    let b2 = parseInt(matchCuadrados[4]);
+
+    // Verificar si es diferencia de cuadrados: a1 == a2 y b1 == -b2
+    if (a1 === a2 && b1 === -b2) {
+      let a = a1;
+      let b = Math.abs(b1);
+      // Formato: (x + b)(x - b) o (ax + b)(ax - b)
+      let parteX = (a === 1) ? 'x' : a + 'x';
+      return '(' + parteX + '+' + b + ')(' + parteX + '-' + b + ')';
+    }
+    // Si no es diferencia de cuadrados, ordenamos los binomios normalmente
     let factores = [
-      { a, b },
-      { a: c, b: d }
+      { a: a1, b: b1 },
+      { a: a2, b: b2 }
     ];
-
-    // Ordenar factores: primero por coeficiente de x, luego por término independiente
     factores.sort((f1, f2) => {
       if (f1.a !== f2.a) return f1.a - f2.a;
       return f1.b - f2.b;
     });
-
-    // Función para formatear un factor (ax+b)
     function fmt(f) {
       let parteX = '';
       if (f.a === 1) parteX = 'x';
@@ -63,11 +91,28 @@ function normalizarFactorizacion(exp) {
       else if (f.b < 0) parteConst = f.b.toString();
       return '(' + parteX + parteConst + ')';
     }
-
     return fmt(factores[0]) + fmt(factores[1]);
   }
 
-  // Para otros casos (factor común, cubos, etc.) no normalizamos
+  // --- 3. Suma o Diferencia de Cubos: (x ± a)(x² ∓ ax + a²) ---
+  let matchCubos = exp.match(/^\(x([+-])(\d+)\)\(x²([+-])(\d+)x\+(\d+)\)$/);
+  if (matchCubos) {
+    let signo1 = matchCubos[1];
+    let a = parseInt(matchCubos[2]);
+    let signo2 = matchCubos[3];
+    let b = parseInt(matchCubos[4]);
+    let c = parseInt(matchCubos[5]);
+    // Verificar que sea una suma o diferencia de cubos válida
+    if ((signo1 === '+' && signo2 === '-' && b === a && c === a*a) ||
+        (signo1 === '-' && signo2 === '+' && b === a && c === a*a)) {
+      // Formato canónico: (x + a)(x² - ax + a²) o (x - a)(x² + ax + a²)
+      return '(x' + signo1 + a + ')(x²' + (signo1 === '+' ? '-' : '+') + a + 'x+' + (a*a) + ')';
+    }
+    // Si no coincide, devolvemos la expresión original (no normalizada)
+    return exp;
+  }
+
+  // Para otros casos, devolvemos la expresión tal cual
   return exp;
 }
 
@@ -81,7 +126,7 @@ function generarPregunta(dificultad) {
   let enunciado, respuestaCorrecta, opciones = [];
 
   switch(dificultad) {
-    case 1: // Factor común positivo (nivel 1)
+    case 1: { // Factor común positivo (nivel 1)
       const a1 = numeroAleatorio(2, 6);
       const b1 = numeroAleatorio(2, 9);
       const termino1 = a1 * b1;
@@ -89,8 +134,8 @@ function generarPregunta(dificultad) {
       respuestaCorrecta = `${a1}(x + ${b1})`;
       opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'facil');
       break;
-
-    case 2: // Factor común con suma o resta (niveles 2-4)
+    }
+    case 2: { // Factor común con suma o resta (niveles 2-4)
       const a2 = numeroAleatorio(2, 6);
       const b2 = numeroAleatorio(2, 9);
       const signo = Math.random() < 0.5 ? '+' : '-';
@@ -101,14 +146,14 @@ function generarPregunta(dificultad) {
       respuestaCorrecta = factorizacion2;
       opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'facil');
       break;
-
-    case 3: // 50% diferencia de cuadrados, 50% trinomio simple (niveles 5-8)
+    }
+    case 3: { // 50% diferencia de cuadrados, 50% trinomio simple (niveles 5-8)
       if (Math.random() < 0.5) {
         // Diferencia de cuadrados: x² - a² = (x+a)(x-a)
         const a3 = numeroAleatorio(2, 7);
         enunciado = `Factoriza: x² - ${a3*a3}`;
         respuestaCorrecta = `(x + ${a3})(x - ${a3})`;
-        opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'normal');
+        opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'diferencia_cuadrados');
       } else {
         // Trinomio simple: x² + bx + c = (x+m)(x+n)
         const m = numeroAleatorio(2, 5);
@@ -117,11 +162,11 @@ function generarPregunta(dificultad) {
         const c = m * n;
         enunciado = `Factoriza: x² + ${b}x + ${c}`;
         respuestaCorrecta = `(x + ${m})(x + ${n})`;
-        opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'normal');
+        opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'trinomio_simple');
       }
       break;
-
-    case 4: // Trinomio con coeficiente líder > 1 (niveles 9-12)
+    }
+    case 4: { // Trinomio con coeficiente líder > 1 (niveles 9-12)
       const p = numeroAleatorio(2, 3);
       const r = numeroAleatorio(2, 3);
       const q = numeroAleatorio(1, 4);
@@ -131,10 +176,10 @@ function generarPregunta(dificultad) {
       const c4 = q * s;
       enunciado = `Factoriza: ${a4}x² + ${b4}x + ${c4}`;
       respuestaCorrecta = `(${p}x + ${q})(${r}x + ${s})`;
-      opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'dificil');
+      opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'trinomio_lider');
       break;
-
-    case 5: // Diferencia o suma de cubos (nivel 13+)
+    }
+    case 5: { // Diferencia o suma de cubos (nivel 13+)
       const tipoCubo = Math.random() < 0.5 ? 'diferencia' : 'suma';
       const a5 = numeroAleatorio(2, 4);
       const b5 = numeroAleatorio(2, 4);
@@ -151,6 +196,7 @@ function generarPregunta(dificultad) {
       respuestaCorrecta = factorizacion5;
       opciones = generarOpcionesFactorizacion(respuestaCorrecta, 3, 'cubos');
       break;
+    }
   }
 
   // Calcular la versión normalizada de la respuesta correcta
@@ -182,40 +228,40 @@ function generarOpcionesFactorizacion(correcta, cantidad, nivel) {
         const signo = match[2];
         const b = parseInt(match[3]);
         const variantes = [
-          `${a}(x ${signo === '+' ? '-' : '+'} ${b})`,
-          `${a+1}(x ${signo} ${b})`,
-          `${a}(x ${signo} ${b+1})`,
-          `${a}(x ${signo === '+' ? '-' : '+'} ${b+1})`
+          `${a}(x ${signo === '+' ? '-' : '+'} ${b})`, // Signo incorrecto
+          `${a+1}(x ${signo} ${b})`,                   // Coeficiente incorrecto
+          `${a}(x ${signo} ${b+1})`,                   // Constante incorrecta
+          `${a}(x ${signo === '+' ? '-' : '+'} ${b+1})` // Ambos errores
         ];
         candidata = variantes[numeroAleatorio(0, variantes.length-1)];
       }
-    } else if (nivel === 'normal') {
+    } else if (nivel === 'diferencia_cuadrados') {
       const match = correcta.match(/\(x \+ (\d+)\)\(x - (\d+)\)/);
       if (match) {
         const a = parseInt(match[1]);
         const b = parseInt(match[2]);
         const variantes = [
-          `(x - ${a})(x + ${b})`,
-          `(x + ${a})(x + ${b})`,
-          `(x - ${a})(x - ${b})`,
-          `(x + ${a+1})(x - ${b})`
+          `(x - ${a})(x + ${b})`,     // Signos intercambiados
+          `(x + ${a})(x + ${b})`,     // Ambos positivos
+          `(x - ${a})(x - ${b})`,     // Ambos negativos
+          `(x + ${a+1})(x - ${b})`    // Coeficiente alterado
         ];
         candidata = variantes[numeroAleatorio(0, variantes.length-1)];
-      } else {
-        const match2 = correcta.match(/\(x \+ (\d+)\)\(x \+ (\d+)\)/);
-        if (match2) {
-          const a = parseInt(match2[1]);
-          const b = parseInt(match2[2]);
-          const variantes = [
-            `(x - ${a})(x + ${b})`,
-            `(x + ${a})(x - ${b})`,
-            `(x - ${a})(x - ${b})`,
-            `(x + ${a+1})(x + ${b})`
-          ];
-          candidata = variantes[numeroAleatorio(0, variantes.length-1)];
-        }
       }
-    } else if (nivel === 'dificil') {
+    } else if (nivel === 'trinomio_simple') {
+      const match = correcta.match(/\(x \+ (\d+)\)\(x \+ (\d+)\)/);
+      if (match) {
+        const a = parseInt(match[1]);
+        const b = parseInt(match[2]);
+        const variantes = [
+          `(x - ${a})(x + ${b})`,
+          `(x + ${a})(x - ${b})`,
+          `(x - ${a})(x - ${b})`,
+          `(x + ${a+1})(x + ${b})`
+        ];
+        candidata = variantes[numeroAleatorio(0, variantes.length-1)];
+      }
+    } else if (nivel === 'trinomio_lider') {
       const match = correcta.match(/\((\d+)x \+ (\d+)\)\((\d+)x \+ (\d+)\)/);
       if (match) {
         const p = parseInt(match[1]), q = parseInt(match[2]);
@@ -286,32 +332,55 @@ firebase.auth().onAuthStateChanged(async (user) => {
   }
   uid = user.uid;
 
-  const snap = await db.collection('usuarios').doc(uid).get();
-  if (!snap.exists) {
-    window.location.href = 'index.html';
-    return;
+  try {
+    const snap = await db.collection('usuarios').doc(uid).get();
+    if (!snap.exists) {
+      // Si no existe el documento, redirigir al inicio
+      window.location.href = 'index.html';
+      return;
+    }
+    jugador = snap.data();
+    // Asegurar que el nombre del jugador esté disponible
+    if (!jugador.nombre) {
+      jugador.nombre = "Aventurero";
+    }
+    actualizarUI();
+    nuevaPregunta();
+  } catch (error) {
+    console.error("Error al cargar datos del jugador:", error);
+    // Mostrar un mensaje de error o redirigir
+    elNombre.textContent = "Error al cargar";
   }
-
-  jugador = snap.data();
-  actualizarUI();
-  nuevaPregunta();
 });
 
 function actualizarUI() {
-  elNombre.textContent = jugador.nombre;
-  elNivel.textContent = jugador.nivel;
-  elMonedas.textContent = jugador.monedas;
-  elRegion.textContent = jugador.regionActual;
+  if (jugador) {
+    elNombre.textContent = jugador.nombre || "Aventurero";
+    elNivel.textContent = jugador.nivel || 1;
+    elMonedas.textContent = jugador.monedas || 0;
+    elRegion.textContent = jugador.regionActual || "Aldea del Factor Común";
 
-  const xpEnNivel = jugador.xp % XP_POR_NIVEL;
-  elXpBarra.style.width = `${xpEnNivel}%`;
-  elXpTexto.textContent = `${xpEnNivel} / ${XP_POR_NIVEL} XP`;
+    const xpEnNivel = (jugador.xp || 0) % XP_POR_NIVEL;
+    elXpBarra.style.width = `${xpEnNivel}%`;
+    elXpTexto.textContent = `${xpEnNivel} / ${XP_POR_NIVEL} XP`;
+  }
+  // Actualizar la racha siempre
   elRacha.textContent = racha;
+  // Cambiar color de la racha según su valor
+  if (racha >= 5) {
+    elRacha.style.color = '#ffd700'; // Dorado
+  } else if (racha >= 3) {
+    elRacha.style.color = '#4CAF50'; // Verde
+  } else {
+    elRacha.style.color = '#ffffff'; // Blanco
+  }
 }
 
 function nuevaPregunta() {
   elFeedback.classList.add('hidden');
-  const dificultad = obtenerDificultad(jugador.nivel);
+  // Asegurar que el nivel del jugador sea válido
+  const nivelActual = jugador ? jugador.nivel : 1;
+  const dificultad = obtenerDificultad(nivelActual);
   preguntaActual = generarPregunta(dificultad);
   elPregunta.textContent = preguntaActual.enunciado + ' = ?';
   elOpciones.innerHTML = '';
@@ -326,6 +395,7 @@ function nuevaPregunta() {
 }
 
 async function responder(opcionElegida, btnElegido) {
+  // Deshabilitar todos los botones para evitar múltiples respuestas
   [...elOpciones.children].forEach(b => b.disabled = true);
 
   // Normalizar la respuesta del usuario y comparar con la normalizada correcta
@@ -336,8 +406,10 @@ async function responder(opcionElegida, btnElegido) {
 
   if (esCorrecta) {
     racha++;
-    xpGanada = 10 + Math.min(racha, 5) * 2;
-    monedasGanadas = 5;
+    // Bonus por racha: hasta 5 de bonus adicional
+    const bonusRacha = Math.min(racha, 5) * 2;
+    xpGanada = 10 + bonusRacha;
+    monedasGanadas = 5 + Math.floor(racha / 3); // Monedas extra por racha
     btnElegido.classList.add('opcion-correcta');
     elFeedback.textContent = '¡Correcto, héroe! Sigue así.';
     elFeedback.classList.remove('feedback-error');
@@ -352,12 +424,12 @@ async function responder(opcionElegida, btnElegido) {
   elFeedback.classList.remove('hidden');
 
   // Actualizar experiencia y nivel
-  const nuevoXp = jugador.xp + xpGanada;
+  const nuevoXp = (jugador.xp || 0) + xpGanada;
   const nuevoNivel = Math.floor(nuevoXp / XP_POR_NIVEL) + 1;
-  const subioNivel = nuevoNivel > jugador.nivel;
+  const subioNivel = nuevoNivel > (jugador.nivel || 1);
 
   jugador.xp = nuevoXp;
-  jugador.monedas += monedasGanadas;
+  jugador.monedas = (jugador.monedas || 0) + monedasGanadas;
   jugador.nivel = nuevoNivel;
   jugador.regionActual = regionParaNivel(nuevoNivel);
   jugador.estadisticas = jugador.estadisticas || {};
@@ -379,12 +451,16 @@ async function responder(opcionElegida, btnElegido) {
     });
   } catch (error) {
     console.error('Error al guardar progreso:', error);
+    // Opcional: Mostrar un mensaje de error al usuario
+    elFeedback.textContent += ' (Error al guardar el progreso)';
   }
 
   actualizarUI();
   if (subioNivel) {
     elFeedback.textContent += ` ¡Subiste a nivel ${jugador.nivel}!`;
+    // Opcional: Efecto visual o sonido por subir de nivel
   }
 
+  // Esperar un momento y cargar la siguiente pregunta
   setTimeout(nuevaPregunta, 1600);
 }
