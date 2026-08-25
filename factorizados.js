@@ -1,6 +1,3 @@
-// Configuración de Firebase (asegúrate de que esté cargada antes)
-let db;
-
 // Variables globales del juego
 let puntaje = 0;
 let nivel = 1;
