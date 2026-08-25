@@ -16,15 +16,12 @@ function hideError() {
     errorDiv.classList.add('hidden');
 }
 
-// ---- Funciones de autenticación ----
-
-// Crear cuenta nueva
+// ---- Registro ----
 async function registrarUsuario(email, password, nickname) {
     try {
         const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const uid = cred.user.uid;
 
-        // Guardar en Firestore con los datos iniciales
         await db.collection("usuarios").doc(uid).set({
             nombre: nickname,
             fechaCreacion: new Date(),
@@ -54,16 +51,14 @@ async function registrarUsuario(email, password, nickname) {
     }
 }
 
-// Iniciar sesión
+// ---- Inicio de sesión ----
 async function iniciarSesion(email, password) {
     try {
         const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
         const uid = cred.user.uid;
 
-        // Obtener datos del jugador
         const snap = await db.collection('usuarios').doc(uid).get();
         if (!snap.exists) {
-            // Caso raro: usuario autenticado pero sin documento (¿no debería pasar)
             showError('No se encontraron datos de este jugador. Contacta al soporte.');
             return;
         }
@@ -71,7 +66,6 @@ async function iniciarSesion(email, password) {
         const jugador = snap.data();
         const nickname = jugador.nombre;
 
-        // Preguntar si quiere continuar o reiniciar
         const continuar = confirm(
             `¡Bienvenido de vuelta, ${nickname}!\n` +
             `¿Quieres continuar tu partida desde donde la dejaste?\n` +
@@ -81,12 +75,11 @@ async function iniciarSesion(email, password) {
         );
 
         if (continuar) {
-            // No hacemos cambios, solo guardamos en sessionStorage y redirigimos
             sessionStorage.setItem('mathquest_uid', uid);
             sessionStorage.setItem('mathquest_nombre', nickname);
             window.location.href = 'juego.html';
         } else {
-            // Reiniciar: resetear todos los campos menos el nombre
+            // Reiniciar progreso
             await db.collection('usuarios').doc(uid).update({
                 xp: 0,
                 monedas: 0,
@@ -97,7 +90,7 @@ async function iniciarSesion(email, password) {
                 estadisticas: {},
                 progresoRegiones: {},
                 dificultadActual: "facil",
-                fechaCreacion: new Date() // opcional, actualizar fecha
+                fechaCreacion: new Date()
             });
 
             sessionStorage.setItem('mathquest_uid', uid);
@@ -119,14 +112,12 @@ async function iniciarSesion(email, password) {
 }
 
 // ---- Event listeners ----
-
 btnRegister.addEventListener('click', () => {
     hideError();
     const email = emailInput.value.trim();
     const password = passwordInput.value;
     const nickname = nicknameInput.value.trim();
 
-    // Validaciones
     if (!email || !password || !nickname) {
         showError('Completa todos los campos: email, contraseña y nombre de aventurero.');
         return;
@@ -156,9 +147,7 @@ btnLogin.addEventListener('click', () => {
     iniciarSesion(email, password);
 });
 
-// También se puede enviar con Enter en el formulario
 form.addEventListener('submit', (e) => {
-    e.preventDefault(); // Evitamos el envío tradicional
-    // Por defecto, si se presiona Enter, asumimos que quiere iniciar sesión
+    e.preventDefault();
     btnLogin.click();
 });
