@@ -66,12 +66,12 @@ function generarPregunta() {
     console.log("📝 Pregunta:", pregunta);
     console.log("✅ Correcta:", correcta);
 
-    // Actualizar el DOM de forma segura
-    const preguntaEl = document.getElementById("pregunta");
+    // ===== CORRECCIÓN: usar el id correcto para el enunciado =====
+    const preguntaEl = document.getElementById("pregunta-enunciado");
     if (preguntaEl) {
         preguntaEl.textContent = `Factoriza: ${pregunta}`;
     } else {
-        // Buscar cualquier elemento que contenga "CARGANDO PREGUNTA"
+        // Fallback: buscar cualquier elemento que contenga "CARGANDO PREGUNTA"
         const elementos = document.querySelectorAll("*");
         for (let el of elementos) {
             if (el.textContent && el.textContent.includes("CARGANDO PREGUNTA")) {
@@ -190,71 +190,103 @@ function shuffleArray(array) {
     return array;
 }
 
-// ==================== MOSTRAR OPCIONES (corregido) ====================
+// ==================== MOSTRAR OPCIONES (CORREGIDO) ====================
 
 function mostrarOpciones(opciones) {
-    let contenedor = document.getElementById("opciones");
+    // Buscar el contenedor por su id correcto
+    let contenedor = document.getElementById("opciones-container");
+    
+    // Si no existe, buscar por clase o data-role
     if (!contenedor) {
-        contenedor = document.querySelector(".opciones-container, [data-role='opciones']");
+        contenedor = document.querySelector(".options-container, [data-role='opciones']");
     }
+    
+    // Si aún no existe, crearlo
     if (!contenedor) {
-        // Crear contenedor si no existe
         console.warn("⚠️ No se encontró contenedor de opciones. Creando uno...");
         contenedor = document.createElement("div");
-        contenedor.id = "opciones";
-        contenedor.style.display = "flex";
-        contenedor.style.flexWrap = "wrap";
-        contenedor.style.gap = "10px";
-        contenedor.style.justifyContent = "center";
-        contenedor.style.marginTop = "20px";
+        contenedor.id = "opciones-container";
+        contenedor.className = "options-container";
+        contenedor.style.display = "grid";
+        contenedor.style.gridTemplateColumns = "1fr 1fr";
+        contenedor.style.gap = "0.75rem";
+        contenedor.style.marginBottom = "1.5rem";
 
-        // Insertar después del elemento de pregunta (si existe)
-        const preguntaEl = document.getElementById("pregunta") || document.querySelector("[data-role='pregunta']");
+        // Insertar después del elemento de pregunta
+        const preguntaEl = document.getElementById("pregunta-enunciado") || document.querySelector("[data-role='pregunta']");
         if (preguntaEl && preguntaEl.parentNode) {
             preguntaEl.parentNode.insertBefore(contenedor, preguntaEl.nextSibling);
         } else {
-            // Si no hay pregunta, añadir al body
             document.body.appendChild(contenedor);
         }
     }
 
+    // Limpiar y agregar botones
     contenedor.innerHTML = "";
     opciones.forEach(opcion => {
         const btn = document.createElement("button");
         btn.textContent = opcion;
-        btn.style.padding = "10px 20px";
-        btn.style.margin = "5px";
-        btn.style.fontSize = "1.2rem";
+        btn.className = "rpg-button btn-opcion";
+        btn.style.width = "auto";
+        btn.style.padding = "0.75rem";
+        btn.style.fontSize = "1.1rem";
+        btn.style.background = "#1e293b";
+        btn.style.border = "2px solid #334155";
+        btn.style.borderRadius = "8px";
+        btn.style.color = "#e2e8f0";
         btn.style.cursor = "pointer";
+        btn.style.transition = "all 0.2s";
         btn.addEventListener("click", () => verificarRespuesta(opcion));
         contenedor.appendChild(btn);
     });
     console.log("🔘 Opciones mostradas");
 }
 
-// ==================== VERIFICACIÓN ====================
+// ==================== VERIFICACIÓN (CORREGIDO) ====================
 
 function verificarRespuesta(seleccionada) {
     const esCorrecta = (seleccionada === respuestaCorrecta);
-    const feedback = document.getElementById("feedback") || document.querySelector(".feedback");
+    const feedback = document.getElementById("feedback-message") || document.querySelector(".feedback");
+    
+    // Si no hay feedback, crearlo
+    let fb;
     if (!feedback) {
-        // Si no hay feedback, crearlo
-        const newFeedback = document.createElement("div");
-        newFeedback.id = "feedback";
-        newFeedback.style.marginTop = "10px";
-        newFeedback.style.fontWeight = "bold";
-        document.body.appendChild(newFeedback);
-        // Reasignar para usarlo
-        var fb = newFeedback;
+        fb = document.createElement("div");
+        fb.id = "feedback-message";
+        fb.className = "feedback";
+        fb.style.padding = "0.75rem";
+        fb.style.borderRadius = "8px";
+        fb.style.margin = "0.75rem 0";
+        fb.style.fontWeight = "500";
+        // Insertar después del contenedor de opciones
+        const opcionesContainer = document.getElementById("opciones-container");
+        if (opcionesContainer && opcionesContainer.parentNode) {
+            opcionesContainer.parentNode.insertBefore(fb, opcionesContainer.nextSibling);
+        } else {
+            document.body.appendChild(fb);
+        }
     } else {
-        var fb = feedback;
+        fb = feedback;
     }
+
+    // Deshabilitar botones y aplicar clases de estilo
+    const botones = document.querySelectorAll("#opciones-container button, .options-container button, [data-role='opciones'] button");
+    botones.forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === seleccionada) {
+            if (esCorrecta) {
+                btn.classList.add("opcion-correcta");
+            } else {
+                btn.classList.add("opcion-incorrecta");
+            }
+        }
+    });
 
     if (esCorrecta) {
         puntaje += 10;
         racha++;
         fb.textContent = "✅ ¡Correcto! +10 puntos";
-        fb.style.color = "green";
+        fb.className = "feedback feedback-exito";
         if (puntaje % 50 === 0) {
             nivel++;
             actualizarElemento("nivel", `Nivel: ${nivel}`);
@@ -264,7 +296,7 @@ function verificarRespuesta(seleccionada) {
     } else {
         racha = 0;
         fb.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
-        fb.style.color = "red";
+        fb.className = "feedback feedback-error";
     }
 
     actualizarElemento("puntaje", `Puntaje: ${puntaje}`);
@@ -272,12 +304,9 @@ function verificarRespuesta(seleccionada) {
     actualizarElemento("racha", `Racha: ${racha}`);
     actualizarElemento("xp", `${puntaje} / 100 XP`);
 
-    // Deshabilitar botones
-    const botones = document.querySelectorAll("#opciones button, .opciones-container button, [data-role='opciones'] button");
-    botones.forEach(btn => btn.disabled = true);
-
     setTimeout(() => {
         fb.textContent = "";
+        fb.className = "feedback hidden";
         generarPregunta();
     }, 1600);
 }
@@ -297,13 +326,12 @@ function actualizarElemento(id, texto) {
     }
 }
 
-// ==================== GUARDAR PROGRESO (CORREGIDO) ====================
+// ==================== GUARDAR PROGRESO ====================
 
 function guardarProgreso() {
     if (!usuario) return;
     try {
         const db = firebase.firestore();
-        // CORRECCIÓN: usar documento específico del usuario
         const userRef = db.collection("usuarios").doc(usuario.uid);
         userRef.set({
             puntaje: puntaje,
@@ -408,10 +436,10 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("📄 factorizados.html cargado");
 
     // Mostrar mensaje de carga
-    const feedback = document.getElementById("feedback") || document.querySelector(".feedback");
+    const feedback = document.getElementById("feedback-message") || document.querySelector(".feedback");
     if (feedback) {
         feedback.textContent = "⏳ Verificando sesión...";
-        feedback.style.color = "blue";
+        feedback.className = "feedback";
     }
 
     const user = firebase.auth().currentUser;
