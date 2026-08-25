@@ -1,129 +1,118 @@
-// app.js - Sin campo de nickname, siempre "Trotamundos"
+const form = document.getElementById('auth-form');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const nicknameInput = document.getElementById('nickname');
+const errorDiv = document.getElementById('error-message');
 
-// Configuración de Firebase (ya deberías tenerla en firebase-config.js)
-// Asumimos que firebase y db ya están inicializados
+const btnRegister = document.getElementById('btn-register');
+const btnLogin = document.getElementById('btn-login');
 
-const loginForm = document.getElementById('login-form');
-const registerForm = document.getElementById('register-form');
-const showRegisterLink = document.getElementById('show-register');
-const showLoginLink = document.getElementById('show-login');
-
-// Elementos del login
-const loginEmail = document.getElementById('login-email');
-const loginPassword = document.getElementById('login-password');
-const loginBtn = document.getElementById('login-btn');
-
-// Elementos del registro (sin nickname)
-const registerEmail = document.getElementById('register-email');
-const registerPassword = document.getElementById('register-password');
-const registerBtn = document.getElementById('register-btn');
-
-// Mensajes de error
-const errorMsg = document.getElementById('error-message');
-
-function showError(msg) {
-  errorMsg.textContent = msg;
-  errorMsg.style.display = 'block';
+function showError(message) {
+    errorDiv.textContent = message;
+    errorDiv.classList.remove('hidden');
 }
 
 function hideError() {
-  errorMsg.style.display = 'none';
+    errorDiv.classList.add('hidden');
 }
 
-// --- Mostrar formularios ---
-showRegisterLink.addEventListener('click', (e) => {
-  e.preventDefault();
-  loginForm.style.display = 'none';
-  registerForm.style.display = 'block';
-  hideError();
-});
+// ---- Registro ----
+async function registrarUsuario(email, password, nickname) {
+    try {
+        const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const uid = cred.user.uid;
 
-showLoginLink.addEventListener('click', (e) => {
-  e.preventDefault();
-  registerForm.style.display = 'none';
-  loginForm.style.display = 'block';
-  hideError();
-});
+        await db.collection("usuarios").doc(uid).set({
+            nombre: nickname,
+            fechaCreacion: new Date(),
+            // Datos generales de la plataforma
+            xpTotal: 0,
+            juegosCompletados: [],
+            // Datos específicos de cada juego se guardarán en subcolecciones o con prefijos
+        });
 
-// --- Registro (sin nickname) ---
-async function registrarUsuario(email, password) {
-  try {
-    const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
-    const uid = cred.user.uid;
-
-    // Guardar en Firestore con nombre por defecto "Trotamundos"
-    await db.collection("usuarios").doc(uid).set({
-      nombre: "Trotamundos",
-      nivel: 1,
-      xp: 0,
-      monedas: 0,
-      regionActual: "Aldea del Factor Común",
-      estadisticas: { correctas: 0, incorrectas: 0 },
-      historial: [],
-      fechaCreacion: new Date()
-    });
-
-    // Guardar en sessionStorage para uso en otras páginas
-    sessionStorage.setItem('mathquest_uid', uid);
-    sessionStorage.setItem('mathquest_nombre', "Trotamundos");
-
-    window.location.href = 'lobby.html';
-  } catch (error) {
-    showError(error.message);
-  }
+        sessionStorage.setItem('mathquest_uid', uid);
+        sessionStorage.setItem('mathquest_nombre', nickname);
+        window.location.href = 'lobby.html';
+    } catch (error) {
+        console.error("Error en registro:", error);
+        let msg = error.message;
+        if (error.code === 'auth/email-already-in-use') {
+            msg = 'Este correo ya está registrado. Por favor, inicia sesión.';
+        } else if (error.code === 'auth/weak-password') {
+            msg = 'La contraseña debe tener al menos 6 caracteres.';
+        }
+        showError(msg);
+    }
 }
 
-registerBtn.addEventListener('click', () => {
-  hideError();
-  const email = registerEmail.value.trim();
-  const password = registerPassword.value;
+// ---- Inicio de sesión ----
+async function iniciarSesion(email, password) {
+    try {
+        const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+        const uid = cred.user.uid;
 
-  if (!email || !password) {
-    showError('Completa todos los campos.');
-    return;
-  }
-  if (password.length < 6) {
-    showError('La contraseña debe tener al menos 6 caracteres.');
-    return;
-  }
-  registrarUsuario(email, password);
+        const snap = await db.collection('usuarios').doc(uid).get();
+        if (!snap.exists) {
+            showError('No se encontraron datos de este jugador.');
+            return;
+        }
+
+        const jugador = snap.data();
+        sessionStorage.setItem('mathquest_uid', uid);
+        sessionStorage.setItem('mathquest_nombre', jugador.nombre);
+        window.location.href = 'lobby.html';
+    } catch (error) {
+        console.error("Error en inicio de sesión:", error);
+        let msg = error.message;
+        if (error.code === 'auth/user-not-found') {
+            msg = 'No existe una cuenta con ese correo. Regístrate primero.';
+        } else if (error.code === 'auth/wrong-password') {
+            msg = 'Contraseña incorrecta. Inténtalo de nuevo.';
+        } else if (error.code === 'auth/invalid-email') {
+            msg = 'El formato del correo no es válido.';
+        }
+        showError(msg);
+    }
+}
+
+// ---- Event listeners ----
+btnRegister.addEventListener('click', () => {
+    hideError();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const nickname = nicknameInput.value.trim();
+
+    if (!email || !password || !nickname) {
+        showError('Completa todos los campos.');
+        return;
+    }
+    if (nickname.length < 3) {
+        showError('El nombre debe tener al menos 3 caracteres.');
+        return;
+    }
+    if (password.length < 6) {
+        showError('La contraseña debe tener al menos 6 caracteres.');
+        return;
+    }
+
+    registrarUsuario(email, password, nickname);
 });
 
-// --- Login ---
-loginBtn.addEventListener('click', async () => {
-  hideError();
-  const email = loginEmail.value.trim();
-  const password = loginPassword.value;
+btnLogin.addEventListener('click', () => {
+    hideError();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
 
-  if (!email || !password) {
-    showError('Completa todos los campos.');
-    return;
-  }
-
-  try {
-    const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
-    const uid = cred.user.uid;
-    const snap = await db.collection('usuarios').doc(uid).get();
-    if (!snap.exists) {
-      showError('Usuario no encontrado en la base de datos.');
-      return;
+    if (!email || !password) {
+        showError('Ingresa tu correo y contraseña.');
+        return;
     }
-    const data = snap.data();
-    sessionStorage.setItem('mathquest_uid', uid);
-    sessionStorage.setItem('mathquest_nombre', data.nombre || "Trotamundos");
-    window.location.href = 'lobby.html';
-  } catch (error) {
-    showError(error.message);
-  }
+
+    iniciarSesion(email, password);
 });
 
-// --- También permitir login con Enter ---
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    if (loginForm.style.display !== 'none') {
-      loginBtn.click();
-    } else if (registerForm.style.display !== 'none') {
-      registerBtn.click();
-    }
-  }
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    btnLogin.click();
 });

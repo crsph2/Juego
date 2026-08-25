@@ -1,52 +1,55 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MathQuest - Factorización</title>
-  <!-- Estilos globales -->
-  <link rel="stylesheet" href="styles.css">
-  <!-- Firebase y Firestore -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-  <script src="firebase-config.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matejuegos - Factorizados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="game-container">
-    <!-- Encabezado del jugador (igual que en lobby) -->
-    <header class="player-header">
-      <div class="player-info">
-        <span id="player-name">Cargando...</span>
-        <button id="edit-name-btn" class="edit-btn" title="Editar nombre">✏️</button>
-      </div>
-      <div class="player-stats">
-        <span>Nivel: <span id="player-level">1</span></span>
-        <span>Monedas: <span id="player-coins">0</span></span>
-        <span>Región: <span id="player-region">Aldea del Factor Común</span></span>
-      </div>
-      <div class="xp-bar-container">
-        <div id="xp-bar-fill" style="width:0%"></div>
-        <span id="xp-text">0 / 100 XP</span>
-      </div>
-      <div class="streak-container">
-        <span>🔥 Racha: <span id="racha-actual">0</span></span>
-      </div>
-    </header>
+    <main class="quest-container">
+        <section class="game-card">
+            <header class="player-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <a href="lobby.html" class="back-button" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem;">← Volver</a>
+                    <h1 class="game-title" style="font-size: 1.8rem; margin: 0;">⚔️ Factorizados</h1>
+                    <div style="width: 60px;"></div>
+                </div>
+                <div class="player-info">
+                    <span id="player-name" class="player-name">Aventurero</span>
+                    <span class="player-level">Nivel <span id="player-level">1</span></span>
+                    <span class="player-coins">🪙 <span id="player-coins">0</span></span>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
+                    <button id="btn-edit-name" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #fbbf24, #b45309);">✏️ Nombre</button>
+                    <button id="btn-save" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;">💾 Guardar</button>
+                    <button id="btn-logout" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;">🚪 Salir</button>
+                </div>
+                <div class="xp-bar">
+                    <div id="xp-bar-fill" class="xp-bar-fill" style="width:0%"></div>
+                    <span id="xp-text" class="xp-text">0 / 100 XP</span>
+                </div>
+                <div class="region-info">
+                    <span id="player-region">Bosque de la Suma</span>
+                </div>
+            </header>
 
-    <!-- Contenido del juego -->
-    <main class="game-content">
-      <h2 id="pregunta-enunciado">Factoriza: ...</h2>
-      <div id="opciones-container" class="opciones-grid">
-        <!-- Los botones de opciones se generan dinámicamente -->
-      </div>
-      <div id="feedback-message" class="hidden"></div>
-      <button id="volver-lobby" class="rpg-button secundario">Volver al Lobby</button>
+            <div class="question-area">
+                <p id="pregunta-enunciado" class="question-text">Cargando pregunta...</p>
+                <div id="opciones-container" class="options-container"></div>
+                <div id="feedback-message" class="feedback hidden"></div>
+                <div class="streak">
+                    Racha: <span id="racha-actual">0</span>
+                </div>
+            </div>
+        </section>
     </main>
-  </div>
 
-  <!-- Scripts -->
-  <script src="common.js"></script>
-  <script src="factorizados.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="factorizados.js"></script>
 </body>
 </html>
