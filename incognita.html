@@ -6,158 +6,6 @@
     <title>Matejuegos - ¿Dónde está la incógnita?</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* Estilos específicos para el modo arrastrar */
-        .drag-workspace {
-            background: #0f172a;
-            border: 2px solid #334155;
-            border-radius: 12px;
-            padding: 20px;
-            min-height: 200px;
-            margin: 15px 0;
-            position: relative;
-        }
-        .equation-display {
-            font-size: 2rem;
-            font-family: 'Cinzel', serif;
-            color: #f8fafc;
-            text-align: center;
-            padding: 20px;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .equation-display .slot {
-            display: inline-block;
-            min-width: 50px;
-            min-height: 50px;
-            border: 2px dashed #64748b;
-            border-radius: 8px;
-            padding: 5px 10px;
-            background: #1e293b;
-            color: #fbbf24;
-            font-weight: bold;
-            font-size: 1.5rem;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        .equation-display .slot.filled {
-            border-color: #22c55e;
-            background: #1a3a2a;
-        }
-        .equation-display .slot.drag-over {
-            border-color: #fbbf24;
-            background: #2a2a3a;
-            transform: scale(1.05);
-        }
-        .number-pool {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-            padding: 15px;
-            background: #1e293b;
-            border-radius: 10px;
-            margin: 10px 0;
-        }
-        .number-tile {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #fbbf24, #b45309);
-            color: #0f172a;
-            border-radius: 10px;
-            cursor: grab;
-            user-select: none;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .number-tile:hover {
-            transform: scale(1.05);
-        }
-        .number-tile:active {
-            cursor: grabbing;
-        }
-        .number-tile.placed {
-            opacity: 0.4;
-            pointer-events: none;
-        }
-        .mode-selector {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 15px;
-        }
-        .mode-selector button {
-            padding: 8px 20px;
-            border: 2px solid #334155;
-            border-radius: 8px;
-            background: transparent;
-            color: #94a3b8;
-            cursor: pointer;
-            font-family: 'Cinzel', serif;
-            transition: all 0.3s;
-        }
-        .mode-selector button.active {
-            border-color: #fbbf24;
-            color: #fbbf24;
-            background: rgba(251, 191, 36, 0.1);
-        }
-        .mode-selector button:hover {
-            border-color: #fbbf24;
-            color: #f8fafc;
-        }
-        .check-btn {
-            margin-top: 15px;
-            padding: 12px 30px;
-            font-size: 1.1rem;
-        }
-        .feedback-drag {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 500;
-        }
-        .feedback-drag.success {
-            background: rgba(34, 197, 94, 0.2);
-            color: #86efac;
-        }
-        .feedback-drag.error {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-        }
-        .hint-text {
-            color: #94a3b8;
-            font-size: 0.85rem;
-            text-align: center;
-            margin: 10px 0;
-        }
-        @media (max-width: 480px) {
-            .equation-display {
-                font-size: 1.3rem;
-                padding: 10px;
-            }
-            .equation-display .slot {
-                min-width: 35px;
-                min-height: 35px;
-                font-size: 1rem;
-                padding: 3px 6px;
-            }
-            .number-tile {
-                width: 45px;
-                height: 45px;
-                font-size: 1.1rem;
-            }
-        }
-    </style>
 </head>
 <body>
     <main class="quest-container" style="max-width: 500px;">
@@ -180,10 +28,10 @@
             <!-- Selector de modo -->
             <div class="mode-selector">
                 <button id="mode-alternativas" class="active">📝 Alternativas</button>
-                <button id="mode-arrastrar">✋ Arrastrar</button>
+                <button id="mode-practica">✋ Práctica paso a paso</button>
             </div>
 
-            <!-- Modo Alternativas -->
+            <!-- Modo Alternativas (sin cambios) -->
             <div id="modo-alternativas" class="question-area">
                 <p id="pregunta-enunciado-alt" class="question-text">Cargando pregunta...</p>
                 <div id="opciones-container-alt" class="options-container"></div>
@@ -193,23 +41,33 @@
                 </div>
             </div>
 
-            <!-- Modo Arrastrar -->
-            <div id="modo-arrastrar" style="display: none;">
-                <p class="hint-text">Arrastra los números a los espacios vacíos para resolver la ecuación</p>
-                
-                <div class="drag-workspace">
-                    <div id="equation-display" class="equation-display">
+            <!-- Modo Práctica paso a paso -->
+            <div id="modo-practica" style="display: none;">
+                <div class="practica-container">
+                    <!-- Ecuación actual -->
+                    <div id="ecuacion-actual" class="ecuacion-display">
                         <!-- Se genera dinámicamente -->
                     </div>
-                </div>
 
-                <div id="number-pool" class="number-pool">
-                    <!-- Se genera dinámicamente -->
-                </div>
+                    <!-- Pasos realizados -->
+                    <div id="pasos-realizados" class="pasos-container">
+                        <!-- Aquí se irán añadiendo los pasos -->
+                    </div>
 
-                <button id="check-drag-btn" class="rpg-button check-btn" style="width: auto; padding: 10px 30px; margin: 0 auto; display: block;">✓ Verificar</button>
-                <div id="feedback-drag" class="feedback-drag"></div>
-                <button id="next-drag-btn" class="rpg-button" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;">Siguiente pregunta →</button>
+                    <!-- Zona de arrastre: números disponibles -->
+                    <div class="drag-zone">
+                        <p class="hint-text">Arrastra el número correcto al espacio vacío para resolver</p>
+                        <div id="number-pool-practica" class="number-pool">
+                            <!-- Se genera dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Mensaje de feedback -->
+                    <div id="feedback-practica" class="feedback hidden"></div>
+
+                    <!-- Botón para siguiente pregunta (se muestra al final) -->
+                    <button id="next-practica-btn" class="rpg-button" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;">Siguiente ecuación →</button>
+                </div>
             </div>
         </section>
     </main>
