@@ -25,20 +25,15 @@ async function registrarUsuario(email, password, nickname) {
         await db.collection("usuarios").doc(uid).set({
             nombre: nickname,
             fechaCreacion: new Date(),
-            xp: 0,
-            monedas: 0,
-            nivel: 1,
-            regionActual: "Bosque de la Suma",
-            logros: [],
-            historial: [],
-            estadisticas: {},
-            progresoRegiones: {},
-            dificultadActual: "facil"
+            // Datos generales de la plataforma
+            xpTotal: 0,
+            juegosCompletados: [],
+            // Datos específicos de cada juego se guardarán en subcolecciones o con prefijos
         });
 
         sessionStorage.setItem('mathquest_uid', uid);
         sessionStorage.setItem('mathquest_nombre', nickname);
-        window.location.href = 'juego.html';
+        window.location.href = 'lobby.html';
     } catch (error) {
         console.error("Error en registro:", error);
         let msg = error.message;
@@ -59,44 +54,14 @@ async function iniciarSesion(email, password) {
 
         const snap = await db.collection('usuarios').doc(uid).get();
         if (!snap.exists) {
-            showError('No se encontraron datos de este jugador. Contacta al soporte.');
+            showError('No se encontraron datos de este jugador.');
             return;
         }
 
         const jugador = snap.data();
-        const nickname = jugador.nombre;
-
-        const continuar = confirm(
-            `¡Bienvenido de vuelta, ${nickname}!\n` +
-            `¿Quieres continuar tu partida desde donde la dejaste?\n` +
-            `(Nivel ${jugador.nivel} - ${jugador.xp} XP)\n\n` +
-            `- Aceptar: seguir jugando\n` +
-            `- Cancelar: empezar de nuevo (se perderá todo el progreso)`
-        );
-
-        if (continuar) {
-            sessionStorage.setItem('mathquest_uid', uid);
-            sessionStorage.setItem('mathquest_nombre', nickname);
-            window.location.href = 'juego.html';
-        } else {
-            // Reiniciar progreso
-            await db.collection('usuarios').doc(uid).update({
-                xp: 0,
-                monedas: 0,
-                nivel: 1,
-                regionActual: "Bosque de la Suma",
-                logros: [],
-                historial: [],
-                estadisticas: {},
-                progresoRegiones: {},
-                dificultadActual: "facil",
-                fechaCreacion: new Date()
-            });
-
-            sessionStorage.setItem('mathquest_uid', uid);
-            sessionStorage.setItem('mathquest_nombre', nickname);
-            window.location.href = 'juego.html';
-        }
+        sessionStorage.setItem('mathquest_uid', uid);
+        sessionStorage.setItem('mathquest_nombre', jugador.nombre);
+        window.location.href = 'lobby.html';
     } catch (error) {
         console.error("Error en inicio de sesión:", error);
         let msg = error.message;
@@ -119,7 +84,7 @@ btnRegister.addEventListener('click', () => {
     const nickname = nicknameInput.value.trim();
 
     if (!email || !password || !nickname) {
-        showError('Completa todos los campos: email, contraseña y nombre de aventurero.');
+        showError('Completa todos los campos.');
         return;
     }
     if (nickname.length < 3) {
