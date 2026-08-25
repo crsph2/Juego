@@ -65,34 +65,22 @@ function generarPregunta() {
 
     console.log("📝 Pregunta:", pregunta);
     console.log("✅ Correcta:", correcta);
-    console.log("🔘 Opciones:", opciones);
 
-    // ===== ACTUALIZAR LA PREGUNTA EN EL DOM =====
-    // Buscar cualquier elemento que contenga "CARGANDO PREGUNTA" y reemplazarlo
-    const elementos = document.querySelectorAll("*");
-    let encontrado = false;
-    for (let el of elementos) {
-        if (el.textContent && el.textContent.includes("CARGANDO PREGUNTA")) {
-            el.textContent = `Factoriza: ${pregunta}`;
-            el.style.fontWeight = "bold";
-            el.style.fontSize = "1.5rem";
-            encontrado = true;
-            console.log("✅ Pregunta actualizada en:", el);
-            break;
+    // Actualizar el DOM de forma segura
+    const preguntaEl = document.getElementById("pregunta");
+    if (preguntaEl) {
+        preguntaEl.textContent = `Factoriza: ${pregunta}`;
+    } else {
+        // Buscar cualquier elemento que contenga "CARGANDO PREGUNTA"
+        const elementos = document.querySelectorAll("*");
+        for (let el of elementos) {
+            if (el.textContent && el.textContent.includes("CARGANDO PREGUNTA")) {
+                el.textContent = `Factoriza: ${pregunta}`;
+                break;
+            }
         }
     }
-    if (!encontrado) {
-        console.warn("⚠️ No se encontró 'CARGANDO PREGUNTA' en el DOM");
-    }
 
-    // También buscar por ID o clase comunes
-    const posiblesContenedores = document.querySelectorAll("#pregunta, .pregunta, [data-role='pregunta'], .question, #question");
-    posiblesContenedores.forEach(el => {
-        el.textContent = `Factoriza: ${pregunta}`;
-        console.log("✅ Pregunta actualizada en:", el);
-    });
-
-    // ===== MOSTRAR OPCIONES =====
     mostrarOpciones(opciones);
 }
 
@@ -194,8 +182,6 @@ function generarOpcionesFactorizacion(correcta, tipo) {
     return shuffleArray(todas);
 }
 
-// ==================== UTILIDADES ====================
-
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -204,48 +190,30 @@ function shuffleArray(array) {
     return array;
 }
 
-function actualizarTexto(selector, texto) {
-    // Buscar por selector (ID, clase, data-role)
-    let elementos = document.querySelectorAll(selector);
-    if (elementos.length === 0) {
-        // Si no hay, buscar elementos que contengan el texto antiguo
-        const todos = document.querySelectorAll("*");
-        for (let el of todos) {
-            if (el.textContent && el.textContent.includes(selector.replace(/[#.]/g, ""))) {
-                elementos = [el];
-                break;
-            }
-        }
-    }
-    elementos.forEach(el => {
-        el.textContent = texto;
-    });
-    return elementos.length > 0;
-}
+// ==================== MOSTRAR OPCIONES (corregido) ====================
 
 function mostrarOpciones(opciones) {
-    // Buscar contenedor de opciones
-    let contenedor = document.querySelector("#opciones, .opciones, .options, [data-role='opciones'], .opciones-container");
-    
+    let contenedor = document.getElementById("opciones");
     if (!contenedor) {
-        // Si no existe, crearlo debajo de la pregunta
+        contenedor = document.querySelector(".opciones-container, [data-role='opciones']");
+    }
+    if (!contenedor) {
+        // Crear contenedor si no existe
         console.warn("⚠️ No se encontró contenedor de opciones. Creando uno...");
         contenedor = document.createElement("div");
         contenedor.id = "opciones";
         contenedor.style.display = "flex";
         contenedor.style.flexWrap = "wrap";
-        contenedor.style.gap = "15px";
+        contenedor.style.gap = "10px";
         contenedor.style.justifyContent = "center";
-        contenedor.style.marginTop = "30px";
-        contenedor.style.padding = "20px";
-        
-        // Insertar después del elemento que contiene la pregunta
-        const preguntaElement = document.querySelector("[data-role='pregunta'], #pregunta, .pregunta") || 
-                               document.querySelector("*:contains('Factoriza:')") ||
-                               document.body;
-        if (preguntaElement && preguntaElement.parentNode) {
-            preguntaElement.parentNode.insertBefore(contenedor, preguntaElement.nextSibling);
+        contenedor.style.marginTop = "20px";
+
+        // Insertar después del elemento de pregunta (si existe)
+        const preguntaEl = document.getElementById("pregunta") || document.querySelector("[data-role='pregunta']");
+        if (preguntaEl && preguntaEl.parentNode) {
+            preguntaEl.parentNode.insertBefore(contenedor, preguntaEl.nextSibling);
         } else {
+            // Si no hay pregunta, añadir al body
             document.body.appendChild(contenedor);
         }
     }
@@ -254,16 +222,10 @@ function mostrarOpciones(opciones) {
     opciones.forEach(opcion => {
         const btn = document.createElement("button");
         btn.textContent = opcion;
-        btn.style.padding = "12px 25px";
+        btn.style.padding = "10px 20px";
         btn.style.margin = "5px";
         btn.style.fontSize = "1.2rem";
-        btn.style.borderRadius = "8px";
-        btn.style.border = "2px solid #4CAF50";
-        btn.style.backgroundColor = "#f0f0f0";
         btn.style.cursor = "pointer";
-        btn.style.transition = "all 0.3s";
-        btn.onmouseover = () => btn.style.backgroundColor = "#4CAF50";
-        btn.onmouseout = () => btn.style.backgroundColor = "#f0f0f0";
         btn.addEventListener("click", () => verificarRespuesta(opcion));
         contenedor.appendChild(btn);
     });
@@ -274,95 +236,74 @@ function mostrarOpciones(opciones) {
 
 function verificarRespuesta(seleccionada) {
     const esCorrecta = (seleccionada === respuestaCorrecta);
-    const feedback = document.querySelector("#feedback, .feedback, [data-role='feedback']");
-    const feedbackText = feedback || document.createElement("div");
-    if (!feedbackText.id) feedbackText.id = "feedback";
+    const feedback = document.getElementById("feedback") || document.querySelector(".feedback");
     if (!feedback) {
-        document.querySelector("#opciones, .opciones, .options")?.after(feedbackText);
+        // Si no hay feedback, crearlo
+        const newFeedback = document.createElement("div");
+        newFeedback.id = "feedback";
+        newFeedback.style.marginTop = "10px";
+        newFeedback.style.fontWeight = "bold";
+        document.body.appendChild(newFeedback);
+        // Reasignar para usarlo
+        var fb = newFeedback;
+    } else {
+        var fb = feedback;
     }
 
     if (esCorrecta) {
         puntaje += 10;
         racha++;
-        feedbackText.textContent = "✅ ¡Correcto! +10 puntos";
-        feedbackText.style.color = "green";
+        fb.textContent = "✅ ¡Correcto! +10 puntos";
+        fb.style.color = "green";
         if (puntaje % 50 === 0) {
             nivel++;
-            actualizarElementosNivel();
+            actualizarElemento("nivel", `Nivel: ${nivel}`);
+            actualizarElemento("nivelActual", `Nivel ${nivel}`);
         }
         guardarProgreso();
     } else {
         racha = 0;
-        feedbackText.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
-        feedbackText.style.color = "red";
+        fb.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
+        fb.style.color = "red";
     }
 
-    // Actualizar todos los elementos de puntaje/nivel/racha
-    actualizarElementosUI();
+    actualizarElemento("puntaje", `Puntaje: ${puntaje}`);
+    actualizarElemento("score", `${puntaje}`);
+    actualizarElemento("racha", `Racha: ${racha}`);
+    actualizarElemento("xp", `${puntaje} / 100 XP`);
 
     // Deshabilitar botones
-    const botones = document.querySelectorAll("#opciones button, .opciones button, .options button, [data-role='opciones'] button");
+    const botones = document.querySelectorAll("#opciones button, .opciones-container button, [data-role='opciones'] button");
     botones.forEach(btn => btn.disabled = true);
 
     setTimeout(() => {
-        feedbackText.textContent = "";
+        fb.textContent = "";
         generarPregunta();
     }, 1600);
 }
 
-function actualizarElementosUI() {
-    // Actualizar puntaje en todos los lugares posibles
-    const puntajeSelectores = ["#puntaje", ".puntaje", "[data-role='puntaje']", "#score", ".score", "#xp", ".xp"];
-    puntajeSelectores.forEach(sel => {
-        document.querySelectorAll(sel).forEach(el => {
-            if (el.textContent.includes("/100 XP")) {
-                el.textContent = `${puntaje} / 100 XP`;
-            } else {
-                el.textContent = `${puntaje}`;
-            }
-        });
-    });
-    // Buscar elementos que contengan solo números y estén cerca de "Nivel" o "XP"
-    document.querySelectorAll("*").forEach(el => {
-        if (el.textContent && el.textContent.match(/^\d+$/) && el.textContent.length < 5) {
-            const parent = el.parentElement;
-            if (parent && parent.textContent.includes("Nivel")) {
-                el.textContent = nivel;
-            }
-        }
-    });
+// ==================== ACTUALIZAR ELEMENTOS ====================
 
-    // Actualizar nivel
-    const nivelSelectores = ["#nivel", ".nivel", "[data-role='nivel']", "#level", ".level"];
-    nivelSelectores.forEach(sel => {
-        document.querySelectorAll(sel).forEach(el => {
-            el.textContent = `Nivel ${nivel}`;
-        });
-    });
-
-    // Actualizar racha
-    const rachaSelectores = ["#racha", ".racha", "[data-role='racha']", "#streak", ".streak"];
-    rachaSelectores.forEach(sel => {
-        document.querySelectorAll(sel).forEach(el => {
-            el.textContent = `Racha: ${racha}`;
-        });
-    });
+function actualizarElemento(id, texto) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = texto;
+        return;
+    }
+    // Buscar por clase o data-role
+    const alternativos = document.querySelectorAll(`[data-role="${id}"], .${id}`);
+    if (alternativos.length > 0) {
+        alternativos.forEach(e => e.textContent = texto);
+    }
 }
 
-function actualizarElementosNivel() {
-    document.querySelectorAll("*").forEach(el => {
-        if (el.textContent && el.textContent.includes("Nivel")) {
-            el.textContent = `Nivel ${nivel}`;
-        }
-    });
-}
-
-// ==================== GUARDADO EN FIRESTORE ====================
+// ==================== GUARDAR PROGRESO (CORREGIDO) ====================
 
 function guardarProgreso() {
     if (!usuario) return;
     try {
         const db = firebase.firestore();
+        // CORRECCIÓN: usar documento específico del usuario
         const userRef = db.collection("usuarios").doc(usuario.uid);
         userRef.set({
             puntaje: puntaje,
@@ -370,10 +311,14 @@ function guardarProgreso() {
             racha: racha,
             nombre: usuario.displayName || "Anónimo"
         }, { merge: true })
-        .then(() => console.log("💾 Progreso guardado"))
-        .catch(error => console.error("Error guardando:", error));
+        .then(() => {
+            console.log("💾 Progreso guardado correctamente");
+        })
+        .catch((error) => {
+            console.error("❌ Error al guardar:", error);
+        });
     } catch (e) {
-        console.error("Error al acceder a Firestore:", e);
+        console.error("❌ Error al acceder a Firestore:", e);
     }
 }
 
@@ -384,6 +329,9 @@ function cerrarSesion() {
         firebase.auth().signOut().then(() => {
             sessionStorage.removeItem("usuario");
             window.location.href = "index.html";
+        }).catch(error => {
+            console.error("Error al cerrar sesión:", error);
+            alert("Error al cerrar sesión");
         });
     }
 }
@@ -397,16 +345,17 @@ function guardarNombre() {
                 try {
                     const db = firebase.firestore();
                     db.collection("usuarios").doc(usuario.uid).set({ nombre: nombreLimpio }, { merge: true });
-                } catch (e) {}
-                // Actualizar todos los elementos que muestren el nombre
-                document.querySelectorAll("*").forEach(el => {
-                    if (el.textContent && el.textContent.includes("Aventurero")) {
-                        el.textContent = nombreLimpio;
-                    }
-                });
+                } catch (e) {
+                    console.error("Error al actualizar en Firestore:", e);
+                }
+                actualizarElemento("usuarioNombre", nombreLimpio);
+                actualizarElemento("nombreUsuario", nombreLimpio);
                 sessionStorage.setItem("usuario", JSON.stringify(usuario));
                 alert("✅ Nombre actualizado");
-            }).catch(error => alert("Error al actualizar nombre"));
+            }).catch(error => {
+                alert("Error al actualizar nombre");
+                console.error(error);
+            });
         }
     }
 }
@@ -415,13 +364,10 @@ function guardarNombre() {
 
 function iniciarJuego() {
     console.log("🎮 Iniciando juego...");
-    // Actualizar nombre
+    // Mostrar nombre
     const nombre = usuario.displayName || "Aventurero";
-    document.querySelectorAll("*").forEach(el => {
-        if (el.textContent && (el.textContent.includes("Aventurero") || el.textContent.includes("Jugador"))) {
-            el.textContent = nombre;
-        }
-    });
+    actualizarElemento("usuarioNombre", nombre);
+    actualizarElemento("nombreUsuario", nombre);
 
     // Cargar progreso
     try {
@@ -432,9 +378,13 @@ function iniciarJuego() {
                 puntaje = data.puntaje || 0;
                 nivel = data.nivel || 1;
                 racha = data.racha || 0;
-                actualizarElementosUI();
+                actualizarElemento("puntaje", `Puntaje: ${puntaje}`);
+                actualizarElemento("score", `${puntaje}`);
+                actualizarElemento("nivel", `Nivel: ${nivel}`);
+                actualizarElemento("nivelActual", `Nivel ${nivel}`);
+                actualizarElemento("racha", `Racha: ${racha}`);
+                actualizarElemento("xp", `${puntaje} / 100 XP`);
             }
-            // Generar primera pregunta
             generarPregunta();
         }).catch(error => {
             console.error("Error cargando progreso:", error);
@@ -446,12 +396,10 @@ function iniciarJuego() {
     }
 
     // Botones
-    const salirBtn = document.querySelector("#salir, #cerrarSesion, [data-role='salir'], button:contains('SALIR')");
+    const salirBtn = document.getElementById("salir") || document.getElementById("cerrarSesion") || document.querySelector("[data-role='salir']");
     if (salirBtn) salirBtn.addEventListener("click", cerrarSesion);
-    const guardarBtn = document.querySelector("#guardar, #editarNombre, [data-role='guardar'], button:contains('GUARDAR')");
+    const guardarBtn = document.getElementById("guardar") || document.getElementById("editarNombre") || document.querySelector("[data-role='guardar']");
     if (guardarBtn) guardarBtn.addEventListener("click", guardarNombre);
-    const nombreBtn = document.querySelector("#nombre, #cambiarNombre, [data-role='nombre'], button:contains('NOMBRE')");
-    if (nombreBtn) nombreBtn.addEventListener("click", guardarNombre);
 }
 
 // ==================== CARGA DE LA PÁGINA ====================
@@ -460,7 +408,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("📄 factorizados.html cargado");
 
     // Mostrar mensaje de carga
-    const feedback = document.querySelector("#feedback, .feedback, [data-role='feedback']");
+    const feedback = document.getElementById("feedback") || document.querySelector(".feedback");
     if (feedback) {
         feedback.textContent = "⏳ Verificando sesión...";
         feedback.style.color = "blue";
@@ -489,30 +437,3 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
-
-// Pequeño polyfill para :contains en querySelector (no soportado nativamente)
-(function() {
-    if (!Element.prototype.matches) {
-        Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
-    }
-    // Para usar :contains en querySelectorAll, lo simulamos con una función
-    const originalQuerySelectorAll = Document.prototype.querySelectorAll;
-    Document.prototype.querySelectorAll = function(selector) {
-        if (selector.includes(":contains(")) {
-            const parts = selector.split(":");
-            const baseSelector = parts[0];
-            const text = parts[1].match(/contains\(['"](.+)['"]\)/);
-            if (text) {
-                const elements = this.querySelectorAll(baseSelector || "*");
-                const result = [];
-                for (let el of elements) {
-                    if (el.textContent && el.textContent.includes(text[1])) {
-                        result.push(el);
-                    }
-                }
-                return result;
-            }
-        }
-        return originalQuerySelectorAll.call(this, selector);
-    };
-})();
