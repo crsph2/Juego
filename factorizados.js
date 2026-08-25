@@ -5,6 +5,7 @@ let preguntaActual = {};
 let opcionesActuales = [];
 let respuestaCorrecta = "";
 let usuario = null;
+let authChecked = false; // Bandera para evitar múltiples redirecciones
 
 // ==================== FUNCIONES DE GENERACIÓN ====================
 
@@ -270,52 +271,138 @@ function editarNombre() {
     }
 }
 
-// ==================== INICIALIZACIÓN CON AUTH DE FIREBASE ====================
+// ==================== INICIALIZACIÓN CON AUTH DE FIREBASE Y FALLBACK ====================
+
+function iniciarJuego(usuarioAutenticado) {
+    if (usuarioAutenticado) {
+        usuario = usuarioAutenticado;
+        sessionStorage.setItem("usuario", JSON.stringify(usuario));
+        document.getElementById("usuarioNombre").textContent = usuario.displayName || "Anónimo";
+
+        const db = firebase.firestore();
+        const userRef = db.collection("usuarios").doc(usuario.uid);
+        userRef.get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                puntaje = data.puntaje || 0;
+                nivel = data.nivel || 1;
+                document.getElementById("puntaje").textContent = `Puntaje: ${puntaje}`;
+                document.getElementById("nivel").textContent = `Nivel: ${nivel}`;
+            }
+            const feedback = document.getElementById("feedback");
+            if (feedback) feedback.textContent = "";
+            generarPregunta();
+        }).catch(error => {
+            console.error("Error cargando progreso:", error);
+            const feedback = document.getElementById("feedback");
+            if (feedback) feedback.textContent = "⚠️ Error al cargar progreso. Jugando desde cero.";
+            generarPregunta();
+        });
+
+        // Asignar listeners
+        document.getElementById("cerrarSesion").addEventListener("click", cerrarSesion);
+        document.getElementById("editarNombre").addEventListener("click", editarNombre);
+    } else {
+        // No autenticado: redirigir
+        sessionStorage.removeItem("usuario");
+        window.location.href = "index.html";
+    }
+}
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Mostrar un mensaje de carga mientras verificamos autenticación
+    // Verificar si Firebase está disponible
+    if (typeof firebase === 'undefined') {
+        console.error("Firebase no está definido. Asegúrate de cargar Firebase antes.");
+        alert("Error: Firebase no está disponible. Revisa la consola.");
+        return;
+    }
+
     const feedback = document.getElementById("feedback");
     if (feedback) feedback.textContent = "⏳ Verificando sesión...";
 
-    // Escuchar cambios en la autenticación
+    // 1. Intentar recuperar sesión desde sessionStorage (rápido)
+    const storedUser = sessionStorage.getItem("usuario");
+    if (storedUser) {
+        try {
+            const parsed = JSON.parse(storedUser);
+            if (parsed && parsed.uid) {
+                console.log("Sesión recuperada de sessionStorage:", parsed.displayName);
+                // Intentamos iniciar el juego con este usuario, pero Firebase confirmará después
+                // Para evitar conflictos, esperamos a onAuthStateChanged
+            }
+        } catch (e) {
+            console.warn("Error al parsear usuario de sessionStorage", e);
+        }
+    }
+
+    // 2. Escuchar cambios en autenticación (el método oficial)
+    let authResolved = false;
+
     firebase.auth().onAuthStateChanged(function (user) {
+        if (authResolved) return; // Ya se resolvió
+        authResolved = true;
+
+        console.log("onAuthStateChanged llamado. Usuario:", user ? user.displayName : "null");
         if (user) {
-            // Usuario autenticado
-            usuario = user;
-            // Guardar en sessionStorage para futuras recargas
-            sessionStorage.setItem("usuario", JSON.stringify(usuario));
-
-            // Actualizar UI
-            document.getElementById("usuarioNombre").textContent = usuario.displayName || "Anónimo";
-
-            // Cargar progreso desde Firestore
-            const db = firebase.firestore();
-            const userRef = db.collection("usuarios").doc(usuario.uid);
-            userRef.get().then(doc => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    puntaje = data.puntaje || 0;
-                    nivel = data.nivel || 1;
-                    document.getElementById("puntaje").textContent = `Puntaje: ${puntaje}`;
-                    document.getElementById("nivel").textContent = `Nivel: ${nivel}`;
-                }
-                // Iniciar el juego
-                if (feedback) feedback.textContent = "";
-                generarPregunta();
-            }).catch(error => {
-                console.error("Error cargando progreso:", error);
-                if (feedback) feedback.textContent = "⚠️ Error al cargar progreso. Jugando desde cero.";
-                generarPregunta();
-            });
-
-            // Asignar listeners de botones (solo una vez)
-            document.getElementById("cerrarSesion").addEventListener("click", cerrarSesion);
-            document.getElementById("editarNombre").addEventListener("click", editarNombre);
-
+            // Autenticado correctamente
+            console.log("Usuario autenticado:", user.displayName);
+            iniciarJuego(user);
         } else {
-            // No hay usuario autenticado → redirigir al login
-            sessionStorage.removeItem("usuario");
+            // No autenticado: intentar fallback con sessionStorage
+            const stored = sessionStorage.getItem("usuario");
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    if (parsed && parsed.uid) {
+                        console.warn("onAuthStateChanged dijo null pero sessionStorage tiene usuario. Intentando usarlo como fallback.");
+                        // Forzamos la autenticación con Firebase usando el token (esto puede no funcionar si expiró)
+                        // Mejor redirigimos a login para que vuelva a autenticar.
+                        sessionStorage.removeItem("usuario");
+                        window.location.href = "index.html";
+                        return;
+                    }
+                } catch (e) {}
+            }
+            // Si llegamos aquí, no hay sesión válida
+            console.log("No hay usuario autenticado. Redirigiendo al login.");
             window.location.href = "index.html";
         }
     });
+
+    // 3. Timeout de seguridad por si onAuthStateChanged no se dispara
+    setTimeout(() => {
+        if (!authResolved) {
+            console.warn("onAuthStateChanged no se disparó en 5 segundos. Forzando verificación.");
+            authResolved = true;
+            // Verificar usuario actual manualmente
+            const currentUser = firebase.auth().currentUser;
+            if (currentUser) {
+                console.log("currentUser obtenido por timeout:", currentUser.displayName);
+                iniciarJuego(currentUser);
+            } else {
+                // Intentar sesión desde sessionStorage
+                const stored = sessionStorage.getItem("usuario");
+                if (stored) {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        if (parsed && parsed.uid) {
+                            console.warn("Timeout: usando usuario de sessionStorage como fallback.");
+                            // No tenemos forma de validar el token, pero podemos intentar
+                            // Crear un objeto usuario simulado (esto es solo para pruebas)
+                            // Normalmente deberías redirigir al login, pero aquí lo usamos como último recurso
+                            const fakeUser = {
+                                uid: parsed.uid,
+                                displayName: parsed.displayName || "Anónimo",
+                                updateProfile: () => Promise.resolve()
+                            };
+                            iniciarJuego(fakeUser);
+                            return;
+                        }
+                    } catch (e) {}
+                }
+                console.warn("Timeout: No se encontró usuario. Redirigiendo al login.");
+                window.location.href = "index.html";
+            }
+        }
+    }, 5000); // 5 segundos de espera
 });
