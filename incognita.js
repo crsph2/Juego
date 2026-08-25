@@ -1,12 +1,11 @@
 // ---------- Configuración ----------
 let uid = null;
 let jugador = null;
-let modoActual = 'alternativas'; // 'alternativas' o 'arrastrar'
+let modoActual = 'alternativas';
 let racha = 0;
-let preguntaActual = null;
 let puntuacion = 0;
 
-// Elementos del DOM
+// ---------- Elementos del DOM ----------
 const elNombre = document.getElementById('player-name');
 const elPuntuacion = document.getElementById('player-score');
 
@@ -16,43 +15,301 @@ const elOpcionesAlt = document.getElementById('opciones-container-alt');
 const elFeedbackAlt = document.getElementById('feedback-message-alt');
 const elRachaAlt = document.getElementById('racha-actual-alt');
 
-// Modo Arrastrar
-const elEquationDisplay = document.getElementById('equation-display');
-const elNumberPool = document.getElementById('number-pool');
-const elFeedbackDrag = document.getElementById('feedback-drag');
-const elCheckDragBtn = document.getElementById('check-drag-btn');
-const elNextDragBtn = document.getElementById('next-drag-btn');
+// Modo Práctica paso a paso
+const elEcuacionActual = document.getElementById('ecuacion-actual');
+const elPasosRealizados = document.getElementById('pasos-realizados');
+const elNumberPoolPractica = document.getElementById('number-pool-practica');
+const elFeedbackPractica = document.getElementById('feedback-practica');
+const elNextPracticaBtn = document.getElementById('next-practica-btn');
 
-// ---------- Generación de preguntas (ecuaciones lineales) ----------
+// ---------- Generación de ecuaciones lineales ----------
 function generarEcuacionLineal() {
-    // Genera una ecuación de la forma ax + b = c
+    // Genera una ecuación de la forma ax + b = c, con solución entera
     const a = Math.floor(Math.random() * 4) + 1; // 1-4
     const b = Math.floor(Math.random() * 10) - 5; // -5 a 4
     const x = Math.floor(Math.random() * 10) - 5; // -5 a 4
     const c = a * x + b;
-    
-    // Asegurar que la solución sea entera
     return { a, b, c, x };
 }
 
+function formatearEcuacion(a, b, c) {
+    let left = '';
+    if (a === 1) left = 'x';
+    else if (a === -1) left = '-x';
+    else left = a + 'x';
+    if (b > 0) left += ' + ' + b;
+    else if (b < 0) left += ' - ' + Math.abs(b);
+    return left + ' = ' + c;
+}
+
+// ---------- Generación de pasos para la práctica ----------
+function generarPasos(a, b, c, x) {
+    const pasos = [];
+    // Paso 0: ecuación original
+    pasos.push({
+        tipo: 'original',
+        texto: formatearEcuacion(a, b, c)
+    });
+
+    // Paso 1: mover constante (restar o sumar b)
+    if (b !== 0) {
+        const op = b > 0 ? 'restar' : 'sumar';
+        const valor = Math.abs(b);
+        const nuevoB = 0;
+        const nuevoC = c - b;
+        pasos.push({
+            tipo: 'mover_constante',
+            operacion: op,
+            valor: valor,
+            a: a,
+            b: nuevoB,
+            c: nuevoC,
+            texto: formatearEcuacion(a, nuevoB, nuevoC)
+        });
+        // Actualizar para el siguiente paso
+        b = nuevoB;
+        c = nuevoC;
+    }
+
+    // Paso 2: dividir por a (si a !== 1)
+    if (a !== 1) {
+        const valor = a;
+        const nuevoA = 1;
+        const nuevoC = c / a;
+        pasos.push({
+            tipo: 'dividir',
+            valor: valor,
+            a: nuevoA,
+            b: b,
+            c: nuevoC,
+            texto: formatearEcuacion(nuevoA, b, nuevoC)
+        });
+        a = nuevoA;
+        c = nuevoC;
+    }
+
+    // Paso 3: solución final
+    pasos.push({
+        tipo: 'solucion',
+        x: x,
+        texto: 'x = ' + x
+    });
+
+    return pasos;
+}
+
+// ---------- Estado de la práctica ----------
+let practicaState = {
+    pasos: [],
+    pasoActual: 0,        // índice del paso en el que estamos
+    ecuacionOriginal: '', 
+    numerosUsados: [],
+    intentos: 0
+};
+
+function iniciarPractica() {
+    const eq = generarEcuacionLineal();
+    const { a, b, c, x } = eq;
+    practicaState.pasos = generarPasos(a, b, c, x);
+    practicaState.pasoActual = 0;
+    practicaState.numerosUsados = [];
+    practicaState.intentos = 0;
+    practicaState.eq = eq;
+
+    elFeedbackPractica.className = 'feedback hidden';
+    elFeedbackPractica.textContent = '';
+    elNextPracticaBtn.style.display = 'none';
+
+    // Mostrar el primer paso (la ecuación original)
+    mostrarPasoActual();
+    generarPoolNumeros();
+}
+
+function mostrarPasoActual() {
+    const paso = practicaState.pasos[practicaState.pasoActual];
+    if (!paso) return;
+
+    // Limpiar
+    elEcuacionActual.innerHTML = '';
+    elPasosRealizados.innerHTML = '';
+
+    // Mostrar la ecuación actual con un slot si se necesita arrastrar
+    if (paso.tipo === 'original') {
+        // Mostrar ecuación original sin slots
+        elEcuacionActual.innerHTML = `<div class="ecuacion-linea">${paso.texto}</div>`;
+        // Mostrar mensaje de instrucción
+        const hint = document.createElement('div');
+        hint.className = 'hint-text';
+        hint.textContent = 'Resuelve la ecuación paso a paso. Arrastra el número correcto.';
+        elEcuacionActual.appendChild(hint);
+        // Si no hay siguiente paso? (no debería)
+    } else if (paso.tipo === 'mover_constante' || paso.tipo === 'dividir') {
+        // Mostrar la ecuación con un slot para el número a arrastrar
+        const linea = document.createElement('div');
+        linea.className = 'ecuacion-linea';
+        
+        // Construir la ecuación con un slot
+        let html = '';
+        const { a, b, c, operacion, valor } = paso;
+        // Mostrar la ecuación actual antes de aplicar la operación
+        // Obtener la ecuación del paso anterior
+        const pasoAnterior = practicaState.pasos[practicaState.pasoActual - 1];
+        html += `<span>${pasoAnterior.texto}</span>`;
+        // Flecha y operación
+        let opTexto = '';
+        if (paso.tipo === 'mover_constante') {
+            opTexto = (operacion === 'restar') ? ` - ${valor}` : ` + ${valor}`;
+        } else if (paso.tipo === 'dividir') {
+            opTexto = ` ÷ ${valor}`;
+        }
+        html += `<span style="color: #fbbf24; margin: 0 10px;">→</span>`;
+        // Slot para arrastrar el número (se llenará con drag and drop)
+        html += `<span class="slot-practica" id="slot-practica" data-paso="${practicaState.pasoActual}">?</span>`;
+        html += `<span style="color: #94a3b8; font-size: 0.8rem; margin-left: 5px;">(${opTexto})</span>`;
+        
+        linea.innerHTML = html;
+        elEcuacionActual.appendChild(linea);
+
+        // Configurar el slot para drag and drop
+        const slot = document.getElementById('slot-practica');
+        slot.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            slot.classList.add('drag-over');
+        });
+        slot.addEventListener('dragleave', () => {
+            slot.classList.remove('drag-over');
+        });
+        slot.addEventListener('drop', (e) => {
+            e.preventDefault();
+            slot.classList.remove('drag-over');
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const numeroArrastrado = data.valor;
+            // Verificar si es el número correcto
+            verificarNumeroArrastrado(numeroArrastrado, paso);
+        });
+    } else if (paso.tipo === 'solucion') {
+        // Mostrar solución final
+        elEcuacionActual.innerHTML = `<div class="ecuacion-linea" style="color: #22c55e;">${paso.texto}</div>`;
+        elFeedbackPractica.textContent = '🎉 ¡Has resuelto la ecuación!';
+        elFeedbackPractica.className = 'feedback feedback-exito';
+        elFeedbackPractica.classList.remove('hidden');
+        elNextPracticaBtn.style.display = 'block';
+    }
+
+    // Mostrar los pasos ya realizados (historial)
+    for (let i = 0; i < practicaState.pasoActual; i++) {
+        const p = practicaState.pasos[i];
+        if (p.tipo === 'original') continue;
+        const div = document.createElement('div');
+        div.className = 'paso-realizado';
+        div.textContent = p.texto;
+        elPasosRealizados.appendChild(div);
+    }
+}
+
+function generarPoolNumeros() {
+    const paso = practicaState.pasos[practicaState.pasoActual];
+    if (!paso || paso.tipo === 'original' || paso.tipo === 'solucion') {
+        elNumberPoolPractica.innerHTML = '';
+        return;
+    }
+
+    // Determinar el número correcto a arrastrar
+    let correcto;
+    if (paso.tipo === 'mover_constante') {
+        correcto = paso.valor;
+    } else if (paso.tipo === 'dividir') {
+        correcto = paso.valor;
+    }
+
+    // Generar distractores (números que no son el correcto)
+    const distractores = new Set();
+    const eq = practicaState.eq;
+    const posibles = [eq.a, eq.b, eq.c, eq.x, Math.abs(eq.a), Math.abs(eq.b), Math.abs(eq.c), Math.abs(eq.x)];
+    // Añadir algunos números aleatorios
+    for (let i = 0; i < 4; i++) {
+        let num = Math.floor(Math.random() * 8) + 1;
+        if (num !== correcto && !distractores.has(num) && !posibles.includes(num)) {
+            distractores.add(num);
+        }
+    }
+    // Si no hay suficientes distractores, añadir algunos fijos
+    while (distractores.size < 3) {
+        let num = Math.floor(Math.random() * 8) + 1;
+        if (num !== correcto && !distractores.has(num)) {
+            distractores.add(num);
+        }
+    }
+
+    const pool = mezclarArray([correcto, ...Array.from(distractores)]);
+    elNumberPoolPractica.innerHTML = '';
+    pool.forEach((num) => {
+        const tile = document.createElement('div');
+        tile.className = 'number-tile';
+        tile.textContent = num;
+        tile.draggable = true;
+        tile.dataset.value = num;
+        tile.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', JSON.stringify({ valor: num }));
+        });
+        elNumberPoolPractica.appendChild(tile);
+    });
+}
+
+function verificarNumeroArrastrado(numero, paso) {
+    // Verificar si es el número correcto
+    let correcto;
+    if (paso.tipo === 'mover_constante') {
+        correcto = paso.valor;
+    } else if (paso.tipo === 'dividir') {
+        correcto = paso.valor;
+    }
+
+    if (numero === correcto) {
+        // Correcto: avanzar al siguiente paso
+        practicaState.pasoActual++;
+        // Marcar el número como usado (opcional)
+        const slot = document.getElementById('slot-practica');
+        if (slot) {
+            slot.textContent = numero;
+            slot.classList.add('filled');
+        }
+        // Mostrar feedback positivo
+        elFeedbackPractica.textContent = '✅ ¡Correcto!';
+        elFeedbackPractica.className = 'feedback feedback-exito';
+        elFeedbackPractica.classList.remove('hidden');
+        // Después de un breve delay, mostrar el siguiente paso
+        setTimeout(() => {
+            mostrarPasoActual();
+            generarPoolNumeros();
+            elFeedbackPractica.classList.add('hidden');
+        }, 800);
+    } else {
+        // Incorrecto
+        elFeedbackPractica.textContent = '❌ Número incorrecto. Intenta de nuevo.';
+        elFeedbackPractica.className = 'feedback feedback-error';
+        elFeedbackPractica.classList.remove('hidden');
+        // Limpiar el slot
+        const slot = document.getElementById('slot-practica');
+        if (slot) {
+            slot.textContent = '?';
+            slot.classList.remove('filled');
+        }
+        // Después de 1.5 segundos, ocultar el error y permitir reintentar
+        setTimeout(() => {
+            elFeedbackPractica.classList.add('hidden');
+        }, 1500);
+    }
+}
+
+// ---------- Modo Alternativas (sin cambios) ----------
 function generarPreguntaAlternativas() {
     const eq = generarEcuacionLineal();
     const { a, b, c, x } = eq;
-    
-    let enunciado;
-    if (b === 0) {
-        enunciado = `${a}x = ${c}`;
-    } else if (b > 0) {
-        enunciado = `${a}x + ${b} = ${c}`;
-    } else {
-        enunciado = `${a}x - ${Math.abs(b)} = ${c}`;
-    }
-    
-    // Generar opciones (1 correcta, 3 incorrectas)
+    let enunciado = formatearEcuacion(a, b, c);
     const correcta = x;
     const opciones = new Set();
     opciones.add(correcta);
-    
     let intentos = 0;
     while (opciones.size < 4 && intentos < 100) {
         intentos++;
@@ -61,7 +318,6 @@ function generarPreguntaAlternativas() {
             opciones.add(distractora);
         }
     }
-    
     return {
         enunciado: `Resuelve: ${enunciado}`,
         respuestaCorrecta: correcta,
@@ -69,67 +325,12 @@ function generarPreguntaAlternativas() {
     };
 }
 
-function generarPreguntaArrastrar() {
-    const eq = generarEcuacionLineal();
-    const { a, b, c, x } = eq;
-    
-    // Crear la ecuación con espacios para arrastrar
-    // Formato: [a]x + [b] = [c], donde el usuario debe arrastrar a, b, c o x
-    // Vamos a pedir que arrastren el valor de x
-    
-    let enunciado;
-    if (b === 0) {
-        enunciado = `${a}x = ${c}`;
-    } else if (b > 0) {
-        enunciado = `${a}x + ${b} = ${c}`;
-    } else {
-        enunciado = `${a}x - ${Math.abs(b)} = ${c}`;
-    }
-    
-    // Los números que el usuario puede arrastrar: a, b, c, y algunos distractores
-    const numerosBase = [a, b, c];
-    const distractores = [];
-    for (let i = 0; i < 3; i++) {
-        let d;
-        do {
-            d = Math.floor(Math.random() * 12) - 5;
-        } while (numerosBase.includes(d) || distractores.includes(d));
-        distractores.push(d);
-    }
-    const pool = mezclarArray([...numerosBase, ...distractores]);
-    
-    // Determinar qué número falta (el que debe ir en el slot)
-    // En este caso, pedimos que arrastren el valor de x
-    const slots = [
-        { id: 'x', label: 'x = ?', correcto: x }
-    ];
-    
-    return {
-        enunciado,
-        slots,
-        pool,
-        respuestaCorrecta: x,
-        x: x
-    };
-}
-
-// ---------- Utilidades ----------
-function mezclarArray(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-}
-
-// ---------- Modo Alternativas ----------
 function nuevaPreguntaAlternativas() {
     preguntaActual = generarPreguntaAlternativas();
     elPreguntaAlt.textContent = preguntaActual.enunciado + ' → x = ?';
     elOpcionesAlt.innerHTML = '';
     elFeedbackAlt.classList.add('hidden');
     elFeedbackAlt.classList.remove('feedback-exito', 'feedback-error');
-    
     preguntaActual.opciones.forEach((opcion) => {
         const btn = document.createElement('button');
         btn.className = 'rpg-button btn-opcion';
@@ -141,9 +342,7 @@ function nuevaPreguntaAlternativas() {
 
 function responderAlternativa(opcionElegida, btnElegido) {
     [...elOpcionesAlt.children].forEach(b => b.disabled = true);
-    
     const esCorrecta = opcionElegida === preguntaActual.respuestaCorrecta;
-    
     if (esCorrecta) {
         racha++;
         puntuacion += 10 + Math.min(racha, 5) * 2;
@@ -161,146 +360,29 @@ function responderAlternativa(opcionElegida, btnElegido) {
     elFeedbackAlt.classList.remove('hidden');
     elRachaAlt.textContent = racha;
     elPuntuacion.textContent = puntuacion;
-    
-    // Guardar progreso
     guardarProgreso(esCorrecta);
-    
     setTimeout(nuevaPreguntaAlternativas, 1600);
 }
 
-// ---------- Modo Arrastrar ----------
-let dragState = {
-    slots: [],
-    pool: [],
-    colocados: {}
-};
-
-function nuevaPreguntaArrastrar() {
-    const pregunta = generarPreguntaArrastrar();
-    preguntaActual = pregunta;
-    dragState.slots = pregunta.slots;
-    dragState.pool = pregunta.pool;
-    dragState.colocados = {};
-    
-    elFeedbackDrag.textContent = '';
-    elFeedbackDrag.className = 'feedback-drag';
-    elNextDragBtn.style.display = 'none';
-    elCheckDragBtn.style.display = 'block';
-    
-    // Renderizar ecuación con slots
-    let html = '';
-    // Mostrar la ecuación con un slot para x
-    const partes = pregunta.enunciado.split('=');
-    html += `<span>${partes[0]} = </span>`;
-    html += `<span class="slot" id="slot-x" data-slot="x">?</span>`;
-    elEquationDisplay.innerHTML = html;
-    
-    // Renderizar pool de números
-    elNumberPool.innerHTML = '';
-    dragState.pool.forEach((num, index) => {
-        const tile = document.createElement('div');
-        tile.className = 'number-tile';
-        tile.textContent = num;
-        tile.draggable = true;
-        tile.dataset.value = num;
-        tile.dataset.index = index;
-        
-        tile.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', JSON.stringify({
-                value: num,
-                index: index
-            }));
-            tile.classList.add('dragging');
-        });
-        tile.addEventListener('dragend', () => {
-            tile.classList.remove('dragging');
-        });
-        
-        elNumberPool.appendChild(tile);
-    });
-    
-    // Configurar slot para drop
-    const slot = document.getElementById('slot-x');
-    slot.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        slot.classList.add('drag-over');
-    });
-    slot.addEventListener('dragleave', () => {
-        slot.classList.remove('drag-over');
-    });
-    slot.addEventListener('drop', (e) => {
-        e.preventDefault();
-        slot.classList.remove('drag-over');
-        
-        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-        const valor = data.value;
-        const index = data.index;
-        
-        // Verificar si ya hay un número en el slot
-        if (dragState.colocados['x']) {
-            // Devolver el número anterior al pool
-            const anterior = dragState.colocados['x'];
-            const tileAnterior = elNumberPool.querySelector(`[data-value="${anterior}"]`);
-            if (tileAnterior) {
-                tileAnterior.classList.remove('placed');
-                tileAnterior.style.display = '';
-            }
-        }
-        
-        // Colocar el nuevo número
-        const tile = elNumberPool.querySelector(`[data-value="${valor}"]`);
-        if (tile) {
-            tile.classList.add('placed');
-            tile.style.display = 'none';
-        }
-        
-        dragState.colocados['x'] = valor;
-        slot.textContent = valor;
-        slot.classList.add('filled');
-    });
-}
-
-function verificarArrastrar() {
-    const valorColocado = dragState.colocados['x'];
-    if (valorColocado === undefined) {
-        elFeedbackDrag.textContent = '⚠️ Arrastra un número al espacio vacío primero.';
-        elFeedbackDrag.className = 'feedback-drag error';
-        return;
+// ---------- Utilidades ----------
+function mezclarArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    
-    const esCorrecta = valorColocado === preguntaActual.respuestaCorrecta;
-    
-    if (esCorrecta) {
-        racha++;
-        puntuacion += 10 + Math.min(racha, 5) * 2;
-        elFeedbackDrag.textContent = `✅ ¡Correcto! x = ${preguntaActual.respuestaCorrecta}`;
-        elFeedbackDrag.className = 'feedback-drag success';
-        elCheckDragBtn.style.display = 'none';
-        elNextDragBtn.style.display = 'block';
-    } else {
-        racha = 0;
-        elFeedbackDrag.textContent = `❌ Casi. La respuesta correcta era x = ${preguntaActual.respuestaCorrecta}`;
-        elFeedbackDrag.className = 'feedback-drag error';
-        // Permitir reintentar
-    }
-    
-    elRachaAlt.textContent = racha;
-    elPuntuacion.textContent = puntuacion;
-    guardarProgreso(esCorrecta);
+    return arr;
 }
 
 // ---------- Guardar progreso ----------
 async function guardarProgreso(acerto) {
     if (!uid) return;
     try {
-        // Guardar en una subcolección o en el documento principal
         const ref = db.collection('usuarios').doc(uid);
         await ref.update({
             [`juegos.incognita.puntuacion`]: puntuacion,
             [`juegos.incognita.racha`]: racha,
             [`juegos.incognita.ultimaJugada`]: new Date().toISOString()
         });
-        // También actualizar XP total
         await ref.update({
             xpTotal: firebase.firestore.FieldValue.increment(acerto ? 5 : 0)
         });
@@ -313,29 +395,23 @@ async function guardarProgreso(acerto) {
 function cambiarModo(modo) {
     modoActual = modo;
     document.getElementById('modo-alternativas').style.display = modo === 'alternativas' ? 'block' : 'none';
-    document.getElementById('modo-arrastrar').style.display = modo === 'arrastrar' ? 'block' : 'none';
-    
+    document.getElementById('modo-practica').style.display = modo === 'practica' ? 'block' : 'none';
     document.getElementById('mode-alternativas').classList.toggle('active', modo === 'alternativas');
-    document.getElementById('mode-arrastrar').classList.toggle('active', modo === 'arrastrar');
-    
+    document.getElementById('mode-practica').classList.toggle('active', modo === 'practica');
     if (modo === 'alternativas') {
         nuevaPreguntaAlternativas();
     } else {
-        nuevaPreguntaArrastrar();
+        iniciarPractica();
     }
 }
 
 // ---------- Event listeners ----------
 document.getElementById('mode-alternativas').addEventListener('click', () => cambiarModo('alternativas'));
-document.getElementById('mode-arrastrar').addEventListener('click', () => cambiarModo('arrastrar'));
-elCheckDragBtn.addEventListener('click', verificarArrastrar);
-elNextDragBtn.addEventListener('click', () => {
-    nuevaPreguntaArrastrar();
-    elNextDragBtn.style.display = 'none';
-    elCheckDragBtn.style.display = 'block';
+document.getElementById('mode-practica').addEventListener('click', () => cambiarModo('practica'));
+elNextPracticaBtn.addEventListener('click', () => {
+    iniciarPractica();
 });
 
-// Cerrar sesión
 document.getElementById('btn-logout').addEventListener('click', async () => {
     if (confirm('¿Seguro que quieres cerrar sesión?')) {
         await firebase.auth().signOut();
@@ -351,20 +427,16 @@ firebase.auth().onAuthStateChanged(async (user) => {
         return;
     }
     uid = user.uid;
-    
     const snap = await db.collection('usuarios').doc(uid).get();
     if (!snap.exists) {
         window.location.href = 'index.html';
         return;
     }
-    
     jugador = snap.data();
     elNombre.textContent = jugador.nombre;
     puntuacion = jugador.juegos?.incognita?.puntuacion || 0;
     racha = jugador.juegos?.incognita?.racha || 0;
     elPuntuacion.textContent = puntuacion;
     elRachaAlt.textContent = racha;
-    
-    // Iniciar con el modo alternativas
     cambiarModo('alternativas');
 });
