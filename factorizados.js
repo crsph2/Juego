@@ -5,7 +5,6 @@ let preguntaActual = {};
 let opcionesActuales = [];
 let respuestaCorrecta = "";
 let usuario = null;
-let authChecked = false; // Bandera para evitar múltiples redirecciones
 
 // ==================== FUNCIONES DE GENERACIÓN ====================
 
@@ -62,7 +61,8 @@ function generarPregunta() {
     opcionesActuales = opciones;
     preguntaActual = { pregunta, correcta, opciones };
 
-    document.getElementById("pregunta").textContent = `Factoriza: ${pregunta}`;
+    const preguntaElement = document.getElementById("pregunta");
+    if (preguntaElement) preguntaElement.textContent = `Factoriza: ${pregunta}`;
     mostrarOpciones(opciones);
 }
 
@@ -176,6 +176,7 @@ function shuffleArray(array) {
 
 function mostrarOpciones(opciones) {
     const opcionesElement = document.getElementById("opciones");
+    if (!opcionesElement) return;
     opcionesElement.innerHTML = "";
     opciones.forEach(opcion => {
         const btn = document.createElement("button");
@@ -192,22 +193,28 @@ function verificarRespuesta(seleccionada) {
     const feedbackElement = document.getElementById("feedback");
     if (esCorrecta) {
         puntaje += 10;
-        feedbackElement.textContent = "✅ ¡Correcto! +10 puntos";
-        feedbackElement.style.color = "green";
+        if (feedbackElement) {
+            feedbackElement.textContent = "✅ ¡Correcto! +10 puntos";
+            feedbackElement.style.color = "green";
+        }
         if (puntaje % 50 === 0) {
             nivel++;
-            document.getElementById("nivel").textContent = `Nivel: ${nivel}`;
+            const nivelElement = document.getElementById("nivel");
+            if (nivelElement) nivelElement.textContent = `Nivel: ${nivel}`;
         }
         guardarProgreso();
     } else {
-        feedbackElement.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
-        feedbackElement.style.color = "red";
+        if (feedbackElement) {
+            feedbackElement.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
+            feedbackElement.style.color = "red";
+        }
     }
-    document.getElementById("puntaje").textContent = `Puntaje: ${puntaje}`;
+    const puntajeElement = document.getElementById("puntaje");
+    if (puntajeElement) puntajeElement.textContent = `Puntaje: ${puntaje}`;
     const botones = document.querySelectorAll("#opciones button");
     botones.forEach(btn => btn.disabled = true);
     setTimeout(() => {
-        feedbackElement.textContent = "";
+        if (feedbackElement) feedbackElement.textContent = "";
         generarPregunta();
     }, 1600);
 }
@@ -229,8 +236,10 @@ function guardarProgreso() {
         .catch(error => {
             console.error("Error guardando progreso:", error);
             const feedbackElement = document.getElementById("feedback");
-            feedbackElement.textContent = "⚠️ Error al guardar progreso. Intenta de nuevo.";
-            feedbackElement.style.color = "orange";
+            if (feedbackElement) {
+                feedbackElement.textContent = "⚠️ Error al guardar progreso. Intenta de nuevo.";
+                feedbackElement.style.color = "orange";
+            }
         });
 }
 
@@ -257,12 +266,15 @@ function editarNombre() {
                 const db = firebase.firestore();
                 const userRef = db.collection("usuarios").doc(usuario.uid);
                 userRef.set({ nombre: nombreLimpio }, { merge: true });
-                document.getElementById("usuarioNombre").textContent = nombreLimpio;
+                const usuarioNombreElement = document.getElementById("usuarioNombre");
+                if (usuarioNombreElement) usuarioNombreElement.textContent = nombreLimpio;
                 sessionStorage.setItem("usuario", JSON.stringify(usuario));
                 const feedbackElement = document.getElementById("feedback");
-                feedbackElement.textContent = "✅ Nombre actualizado.";
-                feedbackElement.style.color = "green";
-                setTimeout(() => feedbackElement.textContent = "", 2000);
+                if (feedbackElement) {
+                    feedbackElement.textContent = "✅ Nombre actualizado.";
+                    feedbackElement.style.color = "green";
+                    setTimeout(() => feedbackElement.textContent = "", 2000);
+                }
             }).catch(error => {
                 console.error("Error al actualizar nombre:", error);
                 alert("Error al actualizar nombre.");
@@ -271,138 +283,69 @@ function editarNombre() {
     }
 }
 
-// ==================== INICIALIZACIÓN CON AUTH DE FIREBASE Y FALLBACK ====================
-
-function iniciarJuego(usuarioAutenticado) {
-    if (usuarioAutenticado) {
-        usuario = usuarioAutenticado;
-        sessionStorage.setItem("usuario", JSON.stringify(usuario));
-        document.getElementById("usuarioNombre").textContent = usuario.displayName || "Anónimo";
-
-        const db = firebase.firestore();
-        const userRef = db.collection("usuarios").doc(usuario.uid);
-        userRef.get().then(doc => {
-            if (doc.exists) {
-                const data = doc.data();
-                puntaje = data.puntaje || 0;
-                nivel = data.nivel || 1;
-                document.getElementById("puntaje").textContent = `Puntaje: ${puntaje}`;
-                document.getElementById("nivel").textContent = `Nivel: ${nivel}`;
-            }
-            const feedback = document.getElementById("feedback");
-            if (feedback) feedback.textContent = "";
-            generarPregunta();
-        }).catch(error => {
-            console.error("Error cargando progreso:", error);
-            const feedback = document.getElementById("feedback");
-            if (feedback) feedback.textContent = "⚠️ Error al cargar progreso. Jugando desde cero.";
-            generarPregunta();
-        });
-
-        // Asignar listeners
-        document.getElementById("cerrarSesion").addEventListener("click", cerrarSesion);
-        document.getElementById("editarNombre").addEventListener("click", editarNombre);
-    } else {
-        // No autenticado: redirigir
-        sessionStorage.removeItem("usuario");
-        window.location.href = "index.html";
-    }
-}
+// ==================== INICIALIZACIÓN CON AUTH DE FIREBASE ====================
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Verificar si Firebase está disponible
-    if (typeof firebase === 'undefined') {
-        console.error("Firebase no está definido. Asegúrate de cargar Firebase antes.");
-        alert("Error: Firebase no está disponible. Revisa la consola.");
-        return;
-    }
-
+    // Verificar que los elementos existan antes de usarlos
     const feedback = document.getElementById("feedback");
     if (feedback) feedback.textContent = "⏳ Verificando sesión...";
 
-    // 1. Intentar recuperar sesión desde sessionStorage (rápido)
-    const storedUser = sessionStorage.getItem("usuario");
-    if (storedUser) {
-        try {
-            const parsed = JSON.parse(storedUser);
-            if (parsed && parsed.uid) {
-                console.log("Sesión recuperada de sessionStorage:", parsed.displayName);
-                // Intentamos iniciar el juego con este usuario, pero Firebase confirmará después
-                // Para evitar conflictos, esperamos a onAuthStateChanged
-            }
-        } catch (e) {
-            console.warn("Error al parsear usuario de sessionStorage", e);
-        }
+    // Verificar que Firebase esté cargado
+    if (typeof firebase === 'undefined') {
+        console.error("Firebase no está cargado. Revisa tus scripts.");
+        if (feedback) feedback.textContent = "❌ Error: Firebase no cargado.";
+        return;
     }
 
-    // 2. Escuchar cambios en autenticación (el método oficial)
-    let authResolved = false;
+    if (typeof firebase.auth === 'undefined') {
+        console.error("Firebase Auth no está cargado.");
+        if (feedback) feedback.textContent = "❌ Error: Firebase Auth no cargado.";
+        return;
+    }
 
+    // Escuchar cambios en la autenticación
     firebase.auth().onAuthStateChanged(function (user) {
-        if (authResolved) return; // Ya se resolvió
-        authResolved = true;
-
-        console.log("onAuthStateChanged llamado. Usuario:", user ? user.displayName : "null");
+        console.log("onAuthStateChanged llamado. User:", user);
         if (user) {
-            // Autenticado correctamente
-            console.log("Usuario autenticado:", user.displayName);
-            iniciarJuego(user);
+            // Usuario autenticado
+            usuario = user;
+            sessionStorage.setItem("usuario", JSON.stringify(usuario));
+
+            const nombreElement = document.getElementById("usuarioNombre");
+            if (nombreElement) nombreElement.textContent = usuario.displayName || "Anónimo";
+
+            // Cargar progreso
+            const db = firebase.firestore();
+            const userRef = db.collection("usuarios").doc(usuario.uid);
+            userRef.get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    puntaje = data.puntaje || 0;
+                    nivel = data.nivel || 1;
+                    const puntajeElement = document.getElementById("puntaje");
+                    const nivelElement = document.getElementById("nivel");
+                    if (puntajeElement) puntajeElement.textContent = `Puntaje: ${puntaje}`;
+                    if (nivelElement) nivelElement.textContent = `Nivel: ${nivel}`;
+                }
+                if (feedback) feedback.textContent = "";
+                generarPregunta();
+            }).catch(error => {
+                console.error("Error cargando progreso:", error);
+                if (feedback) feedback.textContent = "⚠️ Error al cargar progreso. Jugando desde cero.";
+                generarPregunta();
+            });
+
+            // Listeners de botones
+            const cerrarBtn = document.getElementById("cerrarSesion");
+            const editarBtn = document.getElementById("editarNombre");
+            if (cerrarBtn) cerrarBtn.addEventListener("click", cerrarSesion);
+            if (editarBtn) editarBtn.addEventListener("click", editarNombre);
+
         } else {
-            // No autenticado: intentar fallback con sessionStorage
-            const stored = sessionStorage.getItem("usuario");
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    if (parsed && parsed.uid) {
-                        console.warn("onAuthStateChanged dijo null pero sessionStorage tiene usuario. Intentando usarlo como fallback.");
-                        // Forzamos la autenticación con Firebase usando el token (esto puede no funcionar si expiró)
-                        // Mejor redirigimos a login para que vuelva a autenticar.
-                        sessionStorage.removeItem("usuario");
-                        window.location.href = "index.html";
-                        return;
-                    }
-                } catch (e) {}
-            }
-            // Si llegamos aquí, no hay sesión válida
-            console.log("No hay usuario autenticado. Redirigiendo al login.");
+            // No autenticado
+            console.warn("Usuario no autenticado. Redirigiendo a index.html");
+            sessionStorage.removeItem("usuario");
             window.location.href = "index.html";
         }
     });
-
-    // 3. Timeout de seguridad por si onAuthStateChanged no se dispara
-    setTimeout(() => {
-        if (!authResolved) {
-            console.warn("onAuthStateChanged no se disparó en 5 segundos. Forzando verificación.");
-            authResolved = true;
-            // Verificar usuario actual manualmente
-            const currentUser = firebase.auth().currentUser;
-            if (currentUser) {
-                console.log("currentUser obtenido por timeout:", currentUser.displayName);
-                iniciarJuego(currentUser);
-            } else {
-                // Intentar sesión desde sessionStorage
-                const stored = sessionStorage.getItem("usuario");
-                if (stored) {
-                    try {
-                        const parsed = JSON.parse(stored);
-                        if (parsed && parsed.uid) {
-                            console.warn("Timeout: usando usuario de sessionStorage como fallback.");
-                            // No tenemos forma de validar el token, pero podemos intentar
-                            // Crear un objeto usuario simulado (esto es solo para pruebas)
-                            // Normalmente deberías redirigir al login, pero aquí lo usamos como último recurso
-                            const fakeUser = {
-                                uid: parsed.uid,
-                                displayName: parsed.displayName || "Anónimo",
-                                updateProfile: () => Promise.resolve()
-                            };
-                            iniciarJuego(fakeUser);
-                            return;
-                        }
-                    } catch (e) {}
-                }
-                console.warn("Timeout: No se encontró usuario. Redirigiendo al login.");
-                window.location.href = "index.html";
-            }
-        }
-    }, 5000); // 5 segundos de espera
 });
