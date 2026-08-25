@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathQuest - Inicio</title>
+    <!-- Fuente estilo RPG -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<main class="quest-container">
+  <section class="login-card">
+    <header>
+      <h1 class="game-title">⚔️ Factorizados</h1>
+      <p class="game-subtitle">Elige tu nombre para comenzar la misión</p>
+    </header>
+
+    <form id="player-form" class="player-form">
+      <label for="adventurer-name" class="sr-only">Nombre de aventurero</label>
+      
+      <input 
+        type="text" 
+        id="adventurer-name" 
+        name="adventurer-name" 
+        class="rpg-input"
+        placeholder="Ej. Genia del álgebra" 
+        required 
+        minlength="3" 
+        maxlength="15" 
+        autocomplete="off"
+        autofocus
+      />
+      
+      <button type="submit" class="rpg-button btn-primary">
+        ¡Iniciar Aventura!
+      </button>
+    </form>
+    
+    <div id="error-message" class="error-feedback hidden" aria-live="polite"></div>
+  </section>
+</main>
+
+<!-- Cargamos los SDKs de Firebase (Compat para que funcione fácil) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<!-- Tu configuración personalizada de Firebase -->
+<script src="firebase-config.js"></script>
+
+<!-- Tu lógica del juego -->
+<script src="app.js"></script>
+
+</body>
+</html>

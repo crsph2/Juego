@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathQuest - Aventura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="quest-container">
+        <section class="game-card">
+            <!-- Encabezado del jugador -->
+            <header class="player-header">
+                <h1 class="game-title">⚔️ Factorizados</h1>
+                <div class="player-info">
+                    <span id="player-name" class="player-name">Aventurero</span>
+                    <span class="player-level">Nivel <span id="player-level">1</span></span>
+                    <span class="player-coins">🪙 <span id="player-coins">0</span></span>
+                </div>
+                <div class="xp-bar">
+                    <div id="xp-bar-fill" class="xp-bar-fill" style="width:0%"></div>
+                    <span id="xp-text" class="xp-text">0 / 100 XP</span>
+                </div>
+                <div class="region-info">
+                    <span id="player-region">Bosque de la Suma</span>
+                </div>
+            </header>
+
+            <!-- Pregunta -->
+            <div class="question-area">
+                <p id="pregunta-enunciado" class="question-text">Cargando pregunta...</p>
+                <div id="opciones-container" class="options-container">
+                    <!-- Los botones se generan dinámicamente -->
+                </div>
+                <div id="feedback-message" class="feedback hidden"></div>
+                <div class="streak">
+                    Racha: <span id="racha-actual">0</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
