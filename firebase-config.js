@@ -1,6 +1,5 @@
 // Copia y pega aquí TU configuración de Firebase
 const firebaseConfig = {
-const firebaseConfig = {
   apiKey: "AIzaSyCrZVGH2lU_AzUTNAldgx92jRU0goeeKE0",
   authDomain: "mate2-67072.firebaseapp.com",
   projectId: "mate2-67072",
