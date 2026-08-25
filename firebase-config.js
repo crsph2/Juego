@@ -1,12 +1,13 @@
 // Copia y pega aquí TU configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDWiRZWAU9sJMat1XsYznKqC4JxIXimL4c",
-  authDomain: "jmate-54676.firebaseapp.com",
-  projectId: "jmate-54676",
-  storageBucket: "jmate-54676.firebasestorage.app",
-  messagingSenderId: "23842288171",
-  appId: "1:23842288171:web:ff9175535ecccdd791706e",
-  measurementId: "G-1Z33844ZT8"
+const firebaseConfig = {
+  apiKey: "AIzaSyCrZVGH2lU_AzUTNAldgx92jRU0goeeKE0",
+  authDomain: "mate2-67072.firebaseapp.com",
+  projectId: "mate2-67072",
+  storageBucket: "mate2-67072.firebasestorage.app",
+  messagingSenderId: "563223996556",
+  appId: "1:563223996556:web:f4a982536abbdbe196f3a9",
+  measurementId: "G-QYYCEV58RN"
 };
 
 // Inicializamos Firebase
