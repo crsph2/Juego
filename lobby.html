@@ -1,52 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matejuegos - Lobby</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MathQuest - Lobby</title>
+  <!-- Estilos globales -->
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase y Firestore -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
 </head>
 <body>
-    <main class="quest-container">
-        <section class="game-card lobby-card">
-            <header class="lobby-header">
-                <h1 class="game-title">🎮 Matejuegos</h1>
-                <div class="player-info">
-                    <span id="player-name" class="player-name">Jugador</span>
-                    <span class="player-coins">⭐ <span id="player-xp">0</span> XP</span>
-                </div>
-                <button id="btn-logout" class="rpg-button" style="padding: 8px 20px; font-size: 0.8rem; width: auto; background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; margin-top: 10px;">🚪 Cerrar sesión</button>
-            </header>
+  <div class="game-container">
+    <!-- Encabezado del jugador -->
+    <header class="player-header">
+      <div class="player-info">
+        <span id="player-name">Cargando...</span>
+        <button id="edit-name-btn" class="edit-btn" title="Editar nombre">✏️</button>
+      </div>
+      <div class="player-stats">
+        <span>Nivel: <span id="player-level">1</span></span>
+        <span>Monedas: <span id="player-coins">0</span></span>
+        <span>Región: <span id="player-region">Aldea del Factor Común</span></span>
+      </div>
+      <div class="xp-bar-container">
+        <div id="xp-bar-fill" style="width:0%"></div>
+        <span id="xp-text">0 / 100 XP</span>
+      </div>
+    </header>
 
-            <div class="lobby-games">
-                <h2 class="lobby-subtitle">Elige tu aventura</h2>
-                
-                <div class="game-card-item" onclick="location.href='factorizados.html'">
-                    <div class="game-icon">⚔️</div>
-                    <div class="game-info">
-                        <h3>Factorizados</h3>
-                        <p>Factoriza expresiones algebraicas y sube de nivel</p>
-                        <span class="game-tag">Álgebra</span>
-                    </div>
-                </div>
+    <!-- Contenido del lobby -->
+    <main class="lobby-content">
+      <h1>🏰 Vestíbulo del Aventurero</h1>
+      <p>Elige un desafío para continuar tu viaje</p>
 
-                <div class="game-card-item" onclick="location.href='incognita.html'">
-                    <div class="game-icon">🔍</div>
-                    <div class="game-info">
-                        <h3>¿Dónde está la incógnita?</h3>
-                        <p>Resuelve ecuaciones lineales de dos formas diferentes</p>
-                        <span class="game-tag">Ecuaciones</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+      <div class="game-cards">
+        <div class="game-card" id="btn-factorizacion">
+          <h2>🔢 Factorización</h2>
+          <p>Domina el arte de descomponer polinomios</p>
+          <button class="rpg-button">Jugar</button>
+        </div>
+        <div class="game-card" id="btn-incognita">
+          <h2>❓ La Incógnita</h2>
+          <p>Resuelve ecuaciones y encuentra el valor de x</p>
+          <button class="rpg-button">Jugar</button>
+        </div>
+        <!-- Agrega más juegos aquí -->
+      </div>
     </main>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="lobby.js"></script>
+    <!-- Mensaje de feedback (para el botón de editar nombre) -->
+    <div id="feedback-message" class="hidden"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="common.js"></script>
+  <script src="lobby.js"></script>
 </body>
 </html>
