@@ -4,55 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MathQuest - Inicio</title>
-    <!-- Fuente estilo RPG -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <!-- Estilos -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
 <main class="quest-container">
   <section class="login-card">
     <header>
       <h1 class="game-title">⚔️ Factorizados</h1>
-      <p class="game-subtitle">Elige tu nombre para comenzar la misión</p>
+      <p class="game-subtitle">Inicia sesión o regístrate para continuar tu aventura</p>
     </header>
 
-    <form id="player-form" class="player-form">
-      <label for="adventurer-name" class="sr-only">Nombre de aventurero</label>
-      
+    <form id="auth-form" class="player-form">
+      <!-- Email -->
+      <input 
+        type="email" 
+        id="email" 
+        class="rpg-input" 
+        placeholder="Correo electrónico" 
+        required 
+        autocomplete="email"
+      />
+      <!-- Contraseña -->
+      <input 
+        type="password" 
+        id="password" 
+        class="rpg-input" 
+        placeholder="Contraseña (mínimo 6 caracteres)" 
+        required 
+        autocomplete="current-password"
+        minlength="6"
+      />
+      <!-- Nickname (solo para registro) -->
       <input 
         type="text" 
-        id="adventurer-name" 
-        name="adventurer-name" 
-        class="rpg-input"
-        placeholder="Ej. Genia del álgebra" 
-        required 
-        minlength="3" 
-        maxlength="15" 
+        id="nickname" 
+        class="rpg-input" 
+        placeholder="Nombre de aventurero (solo para registrarse)" 
         autocomplete="off"
-        autofocus
       />
-      
-      <button type="submit" class="rpg-button btn-primary">
-        ¡Iniciar Aventura!
-      </button>
+
+      <div class="button-group">
+        <button type="button" id="btn-register" class="rpg-button btn-primary">
+          Registrarse
+        </button>
+        <button type="button" id="btn-login" class="rpg-button btn-secondary">
+          Iniciar sesión
+        </button>
+      </div>
     </form>
-    
+
     <div id="error-message" class="error-feedback hidden" aria-live="polite"></div>
   </section>
 </main>
 
-<!-- Cargamos los SDKs de Firebase (Compat para que funcione fácil) -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-<!-- Tu configuración personalizada de Firebase -->
+<!-- Tu configuración -->
 <script src="firebase-config.js"></script>
-
-<!-- Tu lógica del juego -->
+<!-- Nueva lógica -->
 <script src="app.js"></script>
-
 </body>
 </html>
