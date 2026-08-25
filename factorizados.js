@@ -1,6 +1,7 @@
 // ==================== VARIABLES GLOBALES ====================
 let puntaje = 0;
 let nivel = 1;
+let racha = 0;
 let preguntaActual = {};
 let opcionesActuales = [];
 let respuestaCorrecta = "";
@@ -9,6 +10,7 @@ let usuario = null;
 // ==================== FUNCIONES DE GENERACIÓN ====================
 
 function generarPregunta() {
+    console.log("🔄 Generando nueva pregunta...");
     const tipo = Math.floor(Math.random() * 4);
     let pregunta = "";
     let correcta = "";
@@ -61,8 +63,23 @@ function generarPregunta() {
     opcionesActuales = opciones;
     preguntaActual = { pregunta, correcta, opciones };
 
-    const preguntaEl = document.getElementById("pregunta");
-    if (preguntaEl) preguntaEl.textContent = `Factoriza: ${pregunta}`;
+    console.log("📝 Pregunta generada:", pregunta);
+    console.log("✅ Respuesta correcta:", correcta);
+    console.log("🔘 Opciones:", opciones);
+
+    // Actualizar el DOM (con múltiples selectores)
+    actualizarElemento("pregunta", `Factoriza: ${pregunta}`);
+    actualizarElemento("preguntaDisplay", `Factoriza: ${pregunta}`);
+    actualizarElemento("question", `Factoriza: ${pregunta}`);
+    // También buscar cualquier elemento que contenga "CARGANDO PREGUNTA" y reemplazarlo
+    const todosLosElementos = document.querySelectorAll("*");
+    for (let el of todosLosElementos) {
+        if (el.textContent && el.textContent.includes("CARGANDO PREGUNTA")) {
+            el.textContent = `Factoriza: ${pregunta}`;
+            break;
+        }
+    }
+
     mostrarOpciones(opciones);
 }
 
@@ -174,47 +191,93 @@ function shuffleArray(array) {
     return array;
 }
 
+function actualizarElemento(id, texto) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = texto;
+        console.log(`✅ Actualizado #${id} con: ${texto}`);
+    } else {
+        // Buscar por clase o cualquier otro selector
+        const alternativos = document.querySelectorAll(`[data-role="${id}"], .${id}, [name="${id}"]`);
+        if (alternativos.length > 0) {
+            alternativos.forEach(e => e.textContent = texto);
+            console.log(`✅ Actualizado ${alternativos.length} elementos con data-role/clase ${id}`);
+        } else {
+            console.warn(`⚠️ No se encontró elemento con id #${id}, clase .${id} o data-role="${id}"`);
+        }
+    }
+}
+
 function mostrarOpciones(opciones) {
-    const opcionesElement = document.getElementById("opciones");
-    if (!opcionesElement) return;
-    opcionesElement.innerHTML = "";
+    // Buscar contenedor de opciones por varios métodos
+    let contenedor = document.getElementById("opciones");
+    if (!contenedor) {
+        contenedor = document.querySelector(".opciones-container, [data-role='opciones']");
+    }
+    if (!contenedor) {
+        // Si no existe, crearlo
+        console.warn("⚠️ No se encontró contenedor de opciones. Creando uno nuevo...");
+        contenedor = document.createElement("div");
+        contenedor.id = "opciones";
+        contenedor.style.display = "flex";
+        contenedor.style.flexWrap = "wrap";
+        contenedor.style.gap = "10px";
+        contenedor.style.justifyContent = "center";
+        contenedor.style.marginTop = "20px";
+        // Insertar después del elemento de la pregunta
+        const preguntaEl = document.getElementById("pregunta") || document.querySelector("[data-role='pregunta']") || document.body;
+        preguntaEl.parentNode.insertBefore(contenedor, preguntaEl.nextSibling);
+    }
+
+    contenedor.innerHTML = "";
     opciones.forEach(opcion => {
         const btn = document.createElement("button");
         btn.textContent = opcion;
+        btn.style.padding = "10px 20px";
+        btn.style.margin = "5px";
+        btn.style.fontSize = "1.2rem";
+        btn.style.cursor = "pointer";
         btn.addEventListener("click", () => verificarRespuesta(opcion));
-        opcionesElement.appendChild(btn);
+        contenedor.appendChild(btn);
     });
+    console.log("🔘 Opciones mostradas en el DOM");
 }
 
 // ==================== VERIFICACIÓN ====================
 
 function verificarRespuesta(seleccionada) {
     const esCorrecta = (seleccionada === respuestaCorrecta);
-    const feedbackElement = document.getElementById("feedback");
+    const feedback = document.getElementById("feedback") || document.querySelector(".feedback") || document.createElement("div");
+    if (!feedback.id) feedback.id = "feedback";
+
     if (esCorrecta) {
         puntaje += 10;
-        if (feedbackElement) {
-            feedbackElement.textContent = "✅ ¡Correcto! +10 puntos";
-            feedbackElement.style.color = "green";
-        }
+        racha++;
+        feedback.textContent = "✅ ¡Correcto! +10 puntos";
+        feedback.style.color = "green";
         if (puntaje % 50 === 0) {
             nivel++;
-            const nivelEl = document.getElementById("nivel");
-            if (nivelEl) nivelEl.textContent = `Nivel: ${nivel}`;
+            actualizarElemento("nivel", `Nivel: ${nivel}`);
+            actualizarElemento("nivelActual", `Nivel ${nivel}`);
         }
         guardarProgreso();
     } else {
-        if (feedbackElement) {
-            feedbackElement.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
-            feedbackElement.style.color = "red";
-        }
+        racha = 0;
+        feedback.textContent = "❌ Incorrecto. La respuesta era: " + respuestaCorrecta;
+        feedback.style.color = "red";
     }
-    const puntajeEl = document.getElementById("puntaje");
-    if (puntajeEl) puntajeEl.textContent = `Puntaje: ${puntaje}`;
-    const botones = document.querySelectorAll("#opciones button");
+
+    actualizarElemento("puntaje", `Puntaje: ${puntaje}`);
+    actualizarElemento("score", `${puntaje}`);
+    actualizarElemento("racha", `Racha: ${racha}`);
+    actualizarElemento("xp", `${puntaje} / 100 XP`);
+
+    // Deshabilitar botones
+    const botones = document.querySelectorAll("#opciones button, .opciones-container button, [data-role='opciones'] button");
     botones.forEach(btn => btn.disabled = true);
+
     setTimeout(() => {
-        if (feedbackElement) feedbackElement.textContent = "";
+        feedback.textContent = "";
         generarPregunta();
     }, 1600);
 }
@@ -229,17 +292,11 @@ function guardarProgreso() {
         userRef.set({
             puntaje: puntaje,
             nivel: nivel,
+            racha: racha,
             nombre: usuario.displayName || "Anónimo"
         }, { merge: true })
-        .then(() => console.log("Progreso guardado"))
-        .catch(error => {
-            console.error("Error guardando progreso:", error);
-            const feedbackElement = document.getElementById("feedback");
-            if (feedbackElement) {
-                feedbackElement.textContent = "⚠️ Error al guardar progreso. Intenta de nuevo.";
-                feedbackElement.style.color = "orange";
-            }
-        });
+        .then(() => console.log("💾 Progreso guardado"))
+        .catch(error => console.error("Error guardando:", error));
     } catch (e) {
         console.error("Error al acceder a Firestore:", e);
     }
@@ -248,123 +305,111 @@ function guardarProgreso() {
 // ==================== AUTENTICACIÓN ====================
 
 function cerrarSesion() {
-    if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+    if (confirm("¿Seguro que quieres salir?")) {
         firebase.auth().signOut().then(() => {
             sessionStorage.removeItem("usuario");
             window.location.href = "index.html";
-        }).catch(error => {
-            console.error("Error al cerrar sesión:", error);
-            alert("Error al cerrar sesión. Intenta de nuevo.");
         });
     }
 }
 
-function editarNombre() {
-    const nuevoNombre = prompt("Ingresa tu nuevo nombre de usuario:", usuario ? usuario.displayName : "");
+function guardarNombre() {
+    const nuevoNombre = prompt("Nuevo nombre de usuario:", usuario ? usuario.displayName : "");
     if (nuevoNombre && nuevoNombre.trim() !== "") {
         const nombreLimpio = nuevoNombre.trim();
         if (usuario) {
             usuario.updateProfile({ displayName: nombreLimpio }).then(() => {
                 try {
                     const db = firebase.firestore();
-                    const userRef = db.collection("usuarios").doc(usuario.uid);
-                    userRef.set({ nombre: nombreLimpio }, { merge: true });
-                } catch (e) {
-                    console.error("Error al actualizar en Firestore:", e);
-                }
-                const nombreEl = document.getElementById("usuarioNombre");
-                if (nombreEl) nombreEl.textContent = nombreLimpio;
+                    db.collection("usuarios").doc(usuario.uid).set({ nombre: nombreLimpio }, { merge: true });
+                } catch (e) {}
+                actualizarElemento("usuarioNombre", nombreLimpio);
+                actualizarElemento("nombreUsuario", nombreLimpio);
                 sessionStorage.setItem("usuario", JSON.stringify(usuario));
-                const feedbackElement = document.getElementById("feedback");
-                if (feedbackElement) {
-                    feedbackElement.textContent = "✅ Nombre actualizado.";
-                    feedbackElement.style.color = "green";
-                    setTimeout(() => feedbackElement.textContent = "", 2000);
-                }
-            }).catch(error => {
-                console.error("Error al actualizar nombre:", error);
-                alert("Error al actualizar nombre.");
-            });
+                alert("✅ Nombre actualizado");
+            }).catch(error => alert("Error al actualizar nombre"));
         }
     }
 }
 
-// ==================== INICIALIZACIÓN PRINCIPAL ====================
+// ==================== INICIALIZACIÓN ====================
 
 function iniciarJuego() {
-    // Verificar que los elementos necesarios existan
-    if (!document.getElementById("pregunta") || !document.getElementById("opciones")) {
-        console.error("Faltan elementos del DOM en factorizados.html");
-        return;
-    }
+    console.log("🎮 Iniciando juego...");
+    // Actualizar nombre
+    const nombre = usuario.displayName || "Aventurero";
+    actualizarElemento("usuarioNombre", nombre);
+    actualizarElemento("nombreUsuario", nombre);
+    // También buscar cualquier elemento que muestre el nombre
+    document.querySelectorAll("*").forEach(el => {
+        if (el.textContent && el.textContent.includes("Aventurero") && el.tagName !== "INPUT") {
+            el.textContent = nombre;
+        }
+    });
 
-    // Mostrar nombre del usuario
-    const nombreEl = document.getElementById("usuarioNombre");
-    if (nombreEl) nombreEl.textContent = usuario.displayName || "Anónimo";
-
-    // Cargar progreso desde Firestore
+    // Cargar progreso
     try {
         const db = firebase.firestore();
-        const userRef = db.collection("usuarios").doc(usuario.uid);
-        userRef.get().then(doc => {
+        db.collection("usuarios").doc(usuario.uid).get().then(doc => {
             if (doc.exists) {
                 const data = doc.data();
                 puntaje = data.puntaje || 0;
                 nivel = data.nivel || 1;
-                const puntajeEl = document.getElementById("puntaje");
-                const nivelEl = document.getElementById("nivel");
-                if (puntajeEl) puntajeEl.textContent = `Puntaje: ${puntaje}`;
-                if (nivelEl) nivelEl.textContent = `Nivel: ${nivel}`;
+                racha = data.racha || 0;
+                actualizarElemento("puntaje", `Puntaje: ${puntaje}`);
+                actualizarElemento("score", `${puntaje}`);
+                actualizarElemento("nivel", `Nivel: ${nivel}`);
+                actualizarElemento("nivelActual", `Nivel ${nivel}`);
+                actualizarElemento("racha", `Racha: ${racha}`);
+                actualizarElemento("xp", `${puntaje} / 100 XP`);
             }
-            // Iniciar el juego
+            // Generar primera pregunta
             generarPregunta();
         }).catch(error => {
             console.error("Error cargando progreso:", error);
-            generarPregunta(); // Jugar sin progreso
+            generarPregunta();
         });
     } catch (e) {
         console.error("Error al acceder a Firestore:", e);
         generarPregunta();
     }
 
-    // Asignar event listeners
-    const cerrarBtn = document.getElementById("cerrarSesion");
-    const editarBtn = document.getElementById("editarNombre");
-    if (cerrarBtn) cerrarBtn.addEventListener("click", cerrarSesion);
-    if (editarBtn) editarBtn.addEventListener("click", editarNombre);
+    // Botones
+    const salirBtn = document.getElementById("salir") || document.getElementById("cerrarSesion") || document.querySelector("[data-role='salir']");
+    if (salirBtn) salirBtn.addEventListener("click", cerrarSesion);
+    const guardarBtn = document.getElementById("guardar") || document.getElementById("editarNombre") || document.querySelector("[data-role='guardar']");
+    if (guardarBtn) guardarBtn.addEventListener("click", guardarNombre);
 }
 
 // ==================== CARGA DE LA PÁGINA ====================
 
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("factorizados.js cargado");
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("📄 factorizados.html cargado");
 
     // Mostrar mensaje de carga
-    const feedback = document.getElementById("feedback");
+    const feedback = document.getElementById("feedback") || document.querySelector(".feedback");
     if (feedback) {
         feedback.textContent = "⏳ Verificando sesión...";
         feedback.style.color = "blue";
     }
 
-    // Comprobar si hay usuario autenticado en Firebase
     const user = firebase.auth().currentUser;
     if (user) {
-        console.log("Usuario autenticado:", user.displayName);
+        console.log("👤 Usuario autenticado:", user.displayName);
         usuario = user;
         sessionStorage.setItem("usuario", JSON.stringify(usuario));
         if (feedback) feedback.textContent = "";
         iniciarJuego();
     } else {
-        // Si no hay usuario, escuchar cambios de autenticación (por si se autentica después)
         firebase.auth().onAuthStateChanged(function(user) {
             if (user) {
-                console.log("Usuario autenticado (callback):", user.displayName);
+                console.log("👤 Usuario autenticado (callback):", user.displayName);
                 usuario = user;
                 sessionStorage.setItem("usuario", JSON.stringify(usuario));
                 if (feedback) feedback.textContent = "";
                 iniciarJuego();
             } else {
-                console.log("No hay usuario autenticado, redirigiendo al login");
+                console.log("❌ No hay usuario, redirigiendo...");
                 sessionStorage.removeItem("usuario");
                 window.location.href = "index.html";
             }
