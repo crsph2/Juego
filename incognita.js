@@ -1,6 +1,5 @@
+// incognita.js - ¿Dónde está la incógnita? (modificado)
 // ---------- Configuración ----------
-let uid = null;
-let jugador = null;
 let modoActual = 'alternativas';
 let racha = 0;
 let puntuacion = 0;
@@ -24,10 +23,9 @@ const elNextPracticaBtn = document.getElementById('next-practica-btn');
 
 // ---------- Generación de ecuaciones lineales ----------
 function generarEcuacionLineal() {
-    // Genera una ecuación de la forma ax + b = c, con solución entera
-    const a = Math.floor(Math.random() * 4) + 1; // 1-4
-    const b = Math.floor(Math.random() * 10) - 5; // -5 a 4
-    const x = Math.floor(Math.random() * 10) - 5; // -5 a 4
+    const a = Math.floor(Math.random() * 4) + 1;
+    const b = Math.floor(Math.random() * 10) - 5;
+    const x = Math.floor(Math.random() * 10) - 5;
     const c = a * x + b;
     return { a, b, c, x };
 }
@@ -45,13 +43,11 @@ function formatearEcuacion(a, b, c) {
 // ---------- Generación de pasos para la práctica ----------
 function generarPasos(a, b, c, x) {
     const pasos = [];
-    // Paso 0: ecuación original
     pasos.push({
         tipo: 'original',
         texto: formatearEcuacion(a, b, c)
     });
 
-    // Paso 1: mover constante (restar o sumar b)
     if (b !== 0) {
         const op = b > 0 ? 'restar' : 'sumar';
         const valor = Math.abs(b);
@@ -66,12 +62,10 @@ function generarPasos(a, b, c, x) {
             c: nuevoC,
             texto: formatearEcuacion(a, nuevoB, nuevoC)
         });
-        // Actualizar para el siguiente paso
         b = nuevoB;
         c = nuevoC;
     }
 
-    // Paso 2: dividir por a (si a !== 1)
     if (a !== 1) {
         const valor = a;
         const nuevoA = 1;
@@ -88,7 +82,6 @@ function generarPasos(a, b, c, x) {
         c = nuevoC;
     }
 
-    // Paso 3: solución final
     pasos.push({
         tipo: 'solucion',
         x: x,
@@ -101,10 +94,11 @@ function generarPasos(a, b, c, x) {
 // ---------- Estado de la práctica ----------
 let practicaState = {
     pasos: [],
-    pasoActual: 0,        // índice del paso en el que estamos
-    ecuacionOriginal: '', 
+    pasoActual: 0,
+    ecuacionOriginal: '',
     numerosUsados: [],
-    intentos: 0
+    intentos: 0,
+    eq: null
 };
 
 function iniciarPractica() {
@@ -120,7 +114,6 @@ function iniciarPractica() {
     elFeedbackPractica.textContent = '';
     elNextPracticaBtn.style.display = 'none';
 
-    // Mostrar el primer paso (la ecuación original)
     mostrarPasoActual();
     generarPoolNumeros();
 }
@@ -129,48 +122,35 @@ function mostrarPasoActual() {
     const paso = practicaState.pasos[practicaState.pasoActual];
     if (!paso) return;
 
-    // Limpiar
     elEcuacionActual.innerHTML = '';
     elPasosRealizados.innerHTML = '';
 
-    // Mostrar la ecuación actual con un slot si se necesita arrastrar
     if (paso.tipo === 'original') {
-        // Mostrar ecuación original sin slots
         elEcuacionActual.innerHTML = `<div class="ecuacion-linea">${paso.texto}</div>`;
-        // Mostrar mensaje de instrucción
         const hint = document.createElement('div');
         hint.className = 'hint-text';
         hint.textContent = 'Resuelve la ecuación paso a paso. Arrastra el número correcto.';
         elEcuacionActual.appendChild(hint);
-        // Si no hay siguiente paso? (no debería)
     } else if (paso.tipo === 'mover_constante' || paso.tipo === 'dividir') {
-        // Mostrar la ecuación con un slot para el número a arrastrar
         const linea = document.createElement('div');
         linea.className = 'ecuacion-linea';
         
-        // Construir la ecuación con un slot
         let html = '';
-        const { a, b, c, operacion, valor } = paso;
-        // Mostrar la ecuación actual antes de aplicar la operación
-        // Obtener la ecuación del paso anterior
         const pasoAnterior = practicaState.pasos[practicaState.pasoActual - 1];
         html += `<span>${pasoAnterior.texto}</span>`;
-        // Flecha y operación
         let opTexto = '';
         if (paso.tipo === 'mover_constante') {
-            opTexto = (operacion === 'restar') ? ` - ${valor}` : ` + ${valor}`;
+            opTexto = (paso.operacion === 'restar') ? ` - ${paso.valor}` : ` + ${paso.valor}`;
         } else if (paso.tipo === 'dividir') {
-            opTexto = ` ÷ ${valor}`;
+            opTexto = ` ÷ ${paso.valor}`;
         }
         html += `<span style="color: #fbbf24; margin: 0 10px;">→</span>`;
-        // Slot para arrastrar el número (se llenará con drag and drop)
         html += `<span class="slot-practica" id="slot-practica" data-paso="${practicaState.pasoActual}">?</span>`;
         html += `<span style="color: #94a3b8; font-size: 0.8rem; margin-left: 5px;">(${opTexto})</span>`;
         
         linea.innerHTML = html;
         elEcuacionActual.appendChild(linea);
 
-        // Configurar el slot para drag and drop
         const slot = document.getElementById('slot-practica');
         slot.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -184,11 +164,9 @@ function mostrarPasoActual() {
             slot.classList.remove('drag-over');
             const data = JSON.parse(e.dataTransfer.getData('text/plain'));
             const numeroArrastrado = data.valor;
-            // Verificar si es el número correcto
             verificarNumeroArrastrado(numeroArrastrado, paso);
         });
     } else if (paso.tipo === 'solucion') {
-        // Mostrar solución final
         elEcuacionActual.innerHTML = `<div class="ecuacion-linea" style="color: #22c55e;">${paso.texto}</div>`;
         elFeedbackPractica.textContent = '🎉 ¡Has resuelto la ecuación!';
         elFeedbackPractica.className = 'feedback feedback-exito';
@@ -196,7 +174,6 @@ function mostrarPasoActual() {
         elNextPracticaBtn.style.display = 'block';
     }
 
-    // Mostrar los pasos ya realizados (historial)
     for (let i = 0; i < practicaState.pasoActual; i++) {
         const p = practicaState.pasos[i];
         if (p.tipo === 'original') continue;
@@ -214,7 +191,6 @@ function generarPoolNumeros() {
         return;
     }
 
-    // Determinar el número correcto a arrastrar
     let correcto;
     if (paso.tipo === 'mover_constante') {
         correcto = paso.valor;
@@ -222,18 +198,15 @@ function generarPoolNumeros() {
         correcto = paso.valor;
     }
 
-    // Generar distractores (números que no son el correcto)
     const distractores = new Set();
     const eq = practicaState.eq;
     const posibles = [eq.a, eq.b, eq.c, eq.x, Math.abs(eq.a), Math.abs(eq.b), Math.abs(eq.c), Math.abs(eq.x)];
-    // Añadir algunos números aleatorios
     for (let i = 0; i < 4; i++) {
         let num = Math.floor(Math.random() * 8) + 1;
         if (num !== correcto && !distractores.has(num) && !posibles.includes(num)) {
             distractores.add(num);
         }
     }
-    // Si no hay suficientes distractores, añadir algunos fijos
     while (distractores.size < 3) {
         let num = Math.floor(Math.random() * 8) + 1;
         if (num !== correcto && !distractores.has(num)) {
@@ -257,7 +230,6 @@ function generarPoolNumeros() {
 }
 
 function verificarNumeroArrastrado(numero, paso) {
-    // Verificar si es el número correcto
     let correcto;
     if (paso.tipo === 'mover_constante') {
         correcto = paso.valor;
@@ -266,43 +238,36 @@ function verificarNumeroArrastrado(numero, paso) {
     }
 
     if (numero === correcto) {
-        // Correcto: avanzar al siguiente paso
         practicaState.pasoActual++;
-        // Marcar el número como usado (opcional)
         const slot = document.getElementById('slot-practica');
         if (slot) {
             slot.textContent = numero;
             slot.classList.add('filled');
         }
-        // Mostrar feedback positivo
         elFeedbackPractica.textContent = '✅ ¡Correcto!';
         elFeedbackPractica.className = 'feedback feedback-exito';
         elFeedbackPractica.classList.remove('hidden');
-        // Después de un breve delay, mostrar el siguiente paso
         setTimeout(() => {
             mostrarPasoActual();
             generarPoolNumeros();
             elFeedbackPractica.classList.add('hidden');
         }, 800);
     } else {
-        // Incorrecto
         elFeedbackPractica.textContent = '❌ Número incorrecto. Intenta de nuevo.';
         elFeedbackPractica.className = 'feedback feedback-error';
         elFeedbackPractica.classList.remove('hidden');
-        // Limpiar el slot
         const slot = document.getElementById('slot-practica');
         if (slot) {
             slot.textContent = '?';
             slot.classList.remove('filled');
         }
-        // Después de 1.5 segundos, ocultar el error y permitir reintentar
         setTimeout(() => {
             elFeedbackPractica.classList.add('hidden');
         }, 1500);
     }
 }
 
-// ---------- Modo Alternativas (sin cambios) ----------
+// ---------- Modo Alternativas ----------
 function generarPreguntaAlternativas() {
     const eq = generarEcuacionLineal();
     const { a, b, c, x } = eq;
@@ -324,6 +289,8 @@ function generarPreguntaAlternativas() {
         opciones: mezclarArray(Array.from(opciones))
     };
 }
+
+let preguntaActual = null;
 
 function nuevaPreguntaAlternativas() {
     preguntaActual = generarPreguntaAlternativas();
@@ -427,16 +394,36 @@ firebase.auth().onAuthStateChanged(async (user) => {
         return;
     }
     uid = user.uid;
-    const snap = await db.collection('usuarios').doc(uid).get();
-    if (!snap.exists) {
-        window.location.href = 'index.html';
-        return;
+    try {
+        const snap = await db.collection('usuarios').doc(uid).get();
+        if (!snap.exists) {
+            window.location.href = 'index.html';
+            return;
+        }
+        // No redeclaramos jugador, usamos la variable global de common.js
+        // Pero necesitamos asignar los datos locales
+        const data = snap.data();
+        // Actualizar UI con common.js
+        if (typeof actualizarUICompleta === 'function') {
+            // Forzamos actualización de la UI con los datos cargados
+            // Como common.js ya tiene jugador, solo necesitamos puntuación y racha
+            puntuacion = data.juegos?.incognita?.puntuacion || 0;
+            racha = data.juegos?.incognita?.racha || 0;
+            elPuntuacion.textContent = puntuacion;
+            elRachaAlt.textContent = racha;
+            // El nombre ya lo actualiza common.js
+            cambiarModo('alternativas');
+        } else {
+            // Fallback: cargar manualmente
+            elNombre.textContent = data.nombre || 'Jugador';
+            puntuacion = data.juegos?.incognita?.puntuacion || 0;
+            racha = data.juegos?.incognita?.racha || 0;
+            elPuntuacion.textContent = puntuacion;
+            elRachaAlt.textContent = racha;
+            cambiarModo('alternativas');
+        }
+    } catch (error) {
+        console.error('Error al cargar datos:', error);
+        elNombre.textContent = 'Error';
     }
-    jugador = snap.data();
-    elNombre.textContent = jugador.nombre;
-    puntuacion = jugador.juegos?.incognita?.puntuacion || 0;
-    racha = jugador.juegos?.incognita?.racha || 0;
-    elPuntuacion.textContent = puntuacion;
-    elRachaAlt.textContent = racha;
-    cambiarModo('alternativas');
 });
