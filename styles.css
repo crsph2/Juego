@@ -27,14 +27,14 @@ body {
     animation: fadeIn 1.5s ease-out;
 }
 
-/* Animación de entrada (mantenida) */
+/* Animación de entrada */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================================
-   TARJETAS Y CONTENEDORES (con blur y bordes dorados)
+   TARJETAS Y CONTENEDORES
    ============================================================ */
 .login-card,
 .game-card,
@@ -152,7 +152,7 @@ input::placeholder {
     cursor: pointer;
     transition: all 0.2s ease;
     text-decoration: none;
-    min-height: 48px; /* Toque amigable */
+    min-height: 48px;
     background: #334155;
     color: #e2e8f0;
 }
@@ -190,7 +190,6 @@ input::placeholder {
     background: #f87171;
 }
 
-/* Botón ícono (editar nombre) con estilo círculo */
 .btn-icon {
     background: transparent;
     border: none;
@@ -220,7 +219,6 @@ input::placeholder {
     transform: scale(0.9);
 }
 
-/* Agrupación de botones (formulario) */
 .button-group {
     display: flex;
     flex-wrap: wrap;
@@ -235,7 +233,7 @@ input::placeholder {
 }
 
 /* ============================================================
-   LOBBY – CABECERA (nombre, XP, logout)
+   LOBBY – CABECERA
    ============================================================ */
 .lobby-header {
     display: flex;
@@ -327,7 +325,7 @@ input::placeholder {
 }
 
 /* ============================================================
-   MENSAJES DE FEEDBACK (éxito/error)
+   MENSAJES DE FEEDBACK
    ============================================================ */
 #feedback-message {
     padding: 0.6rem 1rem;
@@ -355,7 +353,94 @@ input::placeholder {
 }
 
 /* ============================================================
-   RESPONSIVE (mobile-first)
+   NUEVOS ESTILOS PARA JUEGOS: EJERCICIO Y OPCIONES
+   ============================================================ */
+
+/* Contenedor del ejercicio (enunciado) */
+.exercise-container {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 16px;
+    padding: 1.8rem 1.2rem;
+    margin: 1.2rem 0 1.8rem;
+    border: 1px solid rgba(251, 191, 36, 0.15);
+    text-align: center;
+}
+
+/* Enunciado del ejercicio (texto matemático) */
+.exercise-text {
+    font-size: 2.2rem;          /* más grande */
+    font-weight: 700;
+    color: #f1f5f9;
+    font-family: 'Times New Roman', serif; /* opcional, para dar estilo matemático */
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* Etiqueta pequeña (ej: "Factoriza:") */
+.exercise-label {
+    display: block;
+    font-size: 1rem;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+    font-weight: 400;
+}
+
+/* Cuadrícula de opciones (2 columnas) */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+/* Cada opción es un botón grande */
+.option-btn {
+    background: rgba(30, 41, 59, 0.7);
+    border: 2px solid rgba(148, 163, 184, 0.2);
+    border-radius: 14px;
+    padding: 1.2rem 0.5rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: 'Times New Roman', serif;
+    word-break: break-word;
+}
+
+.option-btn:hover {
+    background: rgba(251, 191, 36, 0.1);
+    border-color: #fbbf24;
+    transform: scale(1.02);
+}
+
+.option-btn:active {
+    transform: scale(0.97);
+}
+
+/* Opción seleccionada o correcta (puedes usar clases con JS) */
+.option-btn.selected {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.option-btn.correct {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.15);
+}
+
+.option-btn.wrong {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+}
+
+/* ============================================================
+   RESPONSIVE
    ============================================================ */
 @media (max-width: 480px) {
     .quest-container {
@@ -411,6 +496,37 @@ input::placeholder {
 
     .player-info {
         justify-content: center;
+    }
+
+    /* Ajustes para el ejercicio en móvil */
+    .exercise-text {
+        font-size: 1.8rem;
+    }
+
+    .option-btn {
+        font-size: 1.2rem;
+        padding: 1rem 0.3rem;
+        min-height: 70px;
+    }
+
+    .options-grid {
+        gap: 0.8rem;
+    }
+}
+
+@media (max-width: 400px) {
+    /* En pantallas muy pequeñas, las opciones en una columna */
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .exercise-text {
+        font-size: 1.5rem;
+    }
+
+    .option-btn {
+        font-size: 1.1rem;
+        min-height: 60px;
     }
 }
 
