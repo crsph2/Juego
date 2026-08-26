@@ -50,17 +50,17 @@
                         Aplica la operación correcta a ambos lados de la ecuación para despejar la incógnita.
                     </p>
 
-                    <!-- Ecuación original y pasos confirmados -->
-                    <div id="pasos-confirmados" class="ecuacion-display">
-                        <!-- Aquí se irán mostrando la ecuación original y los pasos ya aplicados -->
+                    <!-- Historial de pasos -->
+                    <div id="historial-pasos" class="ecuacion-display">
+                        <!-- Aquí se mostrarán todos los pasos: original, operación aplicada, simplificación, etc. -->
                     </div>
 
-                    <!-- Vista previa del siguiente paso -->
+                    <!-- Vista previa de la operación (paso "Operar") -->
                     <div id="vista-previa" class="ecuacion-display" style="border-color: #fbbf24; background: rgba(251, 191, 36, 0.1); display: none;">
-                        <!-- Vista previa de la ecuación transformada -->
+                        <!-- Se mostrará la operación sin simplificar -->
                     </div>
 
-                    <!-- Controles (se ocultarán al llegar a la solución) -->
+                    <!-- Controles -->
                     <div id="controles-practica" class="practica-controles">
                         <p class="hint-text">Elige la operación y el número para aplicar a ambos lados:</p>
                         <div class="operacion-botones">
@@ -71,13 +71,13 @@
                         </div>
                         <div class="numero-input">
                             <input type="number" id="numero-practica" placeholder="Número" value="1" step="1">
-                            <button id="btn-operar" class="rpg-button primary" disabled>Confirmar paso</button>
+                            <button id="btn-accion" class="rpg-button primary" disabled>Operar</button>
                         </div>
                     </div>
 
-                    <!-- Mensaje de éxito (se muestra al llegar a la solución) -->
+                    <!-- Mensaje de éxito -->
                     <div id="mensaje-exito" style="display: none; text-align: center; margin: 1rem 0;">
-                        <p id="texto-felicitacion" style="font-size: 1.4rem; color: #22c55e; font-weight: bold;">🎉 ¡Felicidades! Has descubierto la incógnita:</p>
+                        <p style="font-size: 1.4rem; color: #22c55e; font-weight: bold;">🎉 ¡Felicidades! Has descubierto la incógnita:</p>
                         <p id="texto-solucion" style="font-size: 2rem; color: #fbbf24; font-family: 'Times New Roman', serif;"></p>
                     </div>
 
