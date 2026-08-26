@@ -5,6 +5,7 @@
 let modoActual = 'alternativas';
 let racha = 0;
 let puntuacion = 0;
+let feedbackTimeout = null; // Para controlar el temporizador de feedback
 
 // Elementos del DOM
 let elNombre, elPuntuacion;
@@ -105,37 +106,36 @@ function iniciarPractica() {
     const eq = generarEcuacionLineal();
     practicaState.eq = eq;
     practicaState.pasos = generarPasos(eq.a, eq.b, eq.c, eq.x);
-    practicaState.pasoActual = 0; // la original ya está confirmada
+    practicaState.pasoActual = 0;
 
     // Limpiar feedback y ocultar siguiente
     if (elFeedbackPractica) {
         elFeedbackPractica.className = 'feedback hidden';
         elFeedbackPractica.textContent = '';
+        if (feedbackTimeout) {
+            clearTimeout(feedbackTimeout);
+            feedbackTimeout = null;
+        }
     }
     if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'none';
 
-    // Mostrar la ecuación original en el área de pasos confirmados
     mostrarPasosConfirmados();
 
-    // Limpiar vista previa
     if (elVistaPrevia) {
         elVistaPrevia.style.display = 'none';
         elVistaPrevia.innerHTML = '';
     }
 
-    // Resetear controles
     resetearControles();
-
-    // Habilitar controles
     elOperacionBtns.forEach(btn => btn.disabled = false);
     elNumeroPractica.disabled = false;
     elBtnOperar.disabled = true;
+    elBtnOperar.textContent = 'Confirmar paso';
 }
 
 function mostrarPasosConfirmados() {
     if (!elPasosConfirmados) return;
     elPasosConfirmados.innerHTML = '';
-    // Mostrar todos los pasos confirmados (desde 0 hasta pasoActual inclusive)
     for (let i = 0; i <= practicaState.pasoActual; i++) {
         const paso = practicaState.pasos[i];
         if (!paso) continue;
@@ -147,11 +147,9 @@ function mostrarPasosConfirmados() {
 }
 
 function resetearControles() {
-    // Desmarcar operaciones
     elOperacionBtns.forEach(btn => btn.classList.remove('seleccionado'));
     elNumeroPractica.value = '';
     elBtnOperar.disabled = true;
-    // Ocultar vista previa
     if (elVistaPrevia) {
         elVistaPrevia.style.display = 'none';
         elVistaPrevia.innerHTML = '';
@@ -160,10 +158,8 @@ function resetearControles() {
 
 // ---------- Actualizar vista previa ----------
 function actualizarVistaPrevia() {
-    // Obtener operación seleccionada
     const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
     if (!opSeleccionada) {
-        // No hay operación seleccionada, ocultar vista previa
         if (elVistaPrevia) {
             elVistaPrevia.style.display = 'none';
             elVistaPrevia.innerHTML = '';
@@ -173,7 +169,6 @@ function actualizarVistaPrevia() {
     }
     const operacion = opSeleccionada.dataset.op;
 
-    // Obtener número
     const num = parseInt(elNumeroPractica.value);
     if (isNaN(num) || num <= 0) {
         if (elVistaPrevia) {
@@ -184,18 +179,15 @@ function actualizarVistaPrevia() {
         return;
     }
 
-    // Obtener la ecuación actual (la última confirmada)
     const ecuacionActual = practicaState.pasos[practicaState.pasoActual];
     if (!ecuacionActual || ecuacionActual.tipo === 'solucion') {
         elBtnOperar.disabled = true;
         return;
     }
 
-    // Aplicar operación
     const nuevaEcuacion = aplicarOperacion(ecuacionActual, operacion, num);
     const textoNuevo = formatearEcuacion(nuevaEcuacion.a, nuevaEcuacion.b, nuevaEcuacion.c);
 
-    // Mostrar vista previa
     if (elVistaPrevia) {
         elVistaPrevia.style.display = 'block';
         elVistaPrevia.innerHTML = '';
@@ -205,13 +197,12 @@ function actualizarVistaPrevia() {
         elVistaPrevia.appendChild(div);
     }
 
-    // Habilitar botón Operar
     elBtnOperar.disabled = false;
+    elBtnOperar.textContent = 'Operar';
 }
 
 // ---------- Operar (validar y aplicar paso) ----------
 function operar() {
-    // Obtener operación seleccionada
     const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
     if (!opSeleccionada) {
         mostrarFeedbackPractica('Selecciona una operación.', 'error');
@@ -219,48 +210,43 @@ function operar() {
     }
     const operacion = opSeleccionada.dataset.op;
 
-    // Obtener número
     const num = parseInt(elNumeroPractica.value);
     if (isNaN(num) || num <= 0) {
         mostrarFeedbackPractica('Ingresa un número positivo.', 'error');
         return;
     }
 
-    // Verificar si ya estamos en la solución
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
         mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error');
         return;
     }
 
-    // El paso esperado es el siguiente (pasoActual + 1)
     const pasoEsperado = practicaState.pasos[practicaState.pasoActual + 1];
     if (!pasoEsperado) {
         mostrarFeedbackPractica('No hay más pasos.', 'error');
         return;
     }
 
-    // Validar
     let esCorrecto = false;
     if (pasoEsperado.tipo === 'mover_constante' || pasoEsperado.tipo === 'dividir') {
         esCorrecto = (operacion === pasoEsperado.operacion && num === pasoEsperado.valor);
-    } else if (pasoEsperado.tipo === 'solucion') {
-        // No debería llegar aquí porque la solución no tiene operación
-        esCorrecto = false;
     }
 
     if (esCorrecto) {
-        // Avanzar al siguiente paso (confirmar)
         practicaState.pasoActual++;
-        // Mostrar los pasos confirmados actualizados
         mostrarPasosConfirmados();
-        // Limpiar vista previa y controles
         resetearControles();
-        mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
+        elBtnOperar.textContent = 'Confirmar paso';
 
         // Verificar si hemos llegado a la solución
         if (practicaState.pasoActual === practicaState.pasos.length - 1) {
             // Solución alcanzada
             const solucion = practicaState.pasos[practicaState.pasoActual];
+            // Cancelar cualquier timeout anterior
+            if (feedbackTimeout) {
+                clearTimeout(feedbackTimeout);
+                feedbackTimeout = null;
+            }
             if (elFeedbackPractica) {
                 elFeedbackPractica.textContent = `🎉 Felicitaciones, has descubierto la incógnita: ${solucion.texto}`;
                 elFeedbackPractica.className = 'feedback feedback-exito';
@@ -270,9 +256,10 @@ function operar() {
             elOperacionBtns.forEach(btn => btn.disabled = true);
             elNumeroPractica.disabled = true;
             elBtnOperar.disabled = true;
-            // Mostrar botón siguiente
             if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
         } else {
+            // Mostrar mensaje de éxito breve
+            mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
             // Habilitar controles para el siguiente paso
             elOperacionBtns.forEach(btn => btn.disabled = false);
             elNumeroPractica.disabled = false;
@@ -285,15 +272,23 @@ function operar() {
 
 function mostrarFeedbackPractica(mensaje, tipo) {
     if (!elFeedbackPractica) return;
+    // Cancelar cualquier timeout anterior para que no oculte un mensaje posterior
+    if (feedbackTimeout) {
+        clearTimeout(feedbackTimeout);
+        feedbackTimeout = null;
+    }
     elFeedbackPractica.textContent = mensaje;
     elFeedbackPractica.className = 'feedback';
     if (tipo === 'exito') elFeedbackPractica.classList.add('feedback-exito');
     else if (tipo === 'error') elFeedbackPractica.classList.add('feedback-error');
     elFeedbackPractica.classList.remove('hidden');
-    setTimeout(() => elFeedbackPractica.classList.add('hidden'), 2500);
+    feedbackTimeout = setTimeout(() => {
+        elFeedbackPractica.classList.add('hidden');
+        feedbackTimeout = null;
+    }, 2500);
 }
 
-// ---------- Modo Alternativas (sin cambios) ----------
+// ---------- Modo Alternativas ----------
 let preguntaActualAlt = null;
 
 function generarPreguntaAlternativas() {
@@ -414,7 +409,6 @@ function cambiarModo(modo) {
 
 // ---------- Inicialización ----------
 function iniciarJuego() {
-    // Referencias
     elNombre = document.getElementById('player-name');
     elPuntuacion = document.getElementById('player-score');
     elPreguntaAlt = document.getElementById('pregunta-enunciado-alt');
@@ -428,15 +422,14 @@ function iniciarJuego() {
     elNumeroPractica = document.getElementById('numero-practica');
     elBtnOperar = document.getElementById('btn-operar');
 
-    if (!elBtnOperar) {
-        console.error('❌ No se encontró el botón "Operar"');
-    } else {
+    if (elBtnOperar) {
         elBtnOperar.addEventListener('click', operar);
+    } else {
+        console.error('❌ No se encontró el botón "Operar"');
     }
 
     elOperacionBtns = document.querySelectorAll('.operacion-btn');
 
-    // Eventos para actualizar vista previa
     elOperacionBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             elOperacionBtns.forEach(b => b.classList.remove('seleccionado'));
@@ -447,7 +440,6 @@ function iniciarJuego() {
 
     elNumeroPractica.addEventListener('input', actualizarVistaPrevia);
 
-    // Cargar datos del jugador
     if (window.jugador) {
         elNombre.textContent = window.jugador.nombre || 'Jugador';
         puntuacion = window.jugador.juegos?.incognita?.puntuacion || 0;
@@ -456,18 +448,15 @@ function iniciarJuego() {
         if (elRachaAlt) elRachaAlt.textContent = racha;
     }
 
-    // Eventos de modo
     document.getElementById('mode-alternativas').addEventListener('click', () => cambiarModo('alternativas'));
     document.getElementById('mode-practica').addEventListener('click', () => cambiarModo('practica'));
 
-    // Siguiente ecuación
     if (elNextPracticaBtn) {
         elNextPracticaBtn.addEventListener('click', () => {
             iniciarPractica();
         });
     }
 
-    // Salir
     document.getElementById('btn-logout').addEventListener('click', async () => {
         if (confirm('¿Seguro que quieres cerrar sesión?')) {
             await firebase.auth().signOut();
