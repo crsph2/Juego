@@ -1,59 +1,95 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matejuegos - ¿Dónde está la incógnita?</title>
-    <link rel="stylesheet" href="styles.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="quest-container">
-        <div class="game-card">
-
-            <!-- Cabecera -->
-            <div class="lobby-header">
-                <div class="player-info">
-                    <span id="player-name">Trotamundos</span>
-                    <button id="edit-name-btn" class="btn-icon" title="Editar nombre">✏️</button>
-                    <span class="xp-display">⭐ <span id="player-xp">0</span> XP</span>
+    <main class="quest-container" style="max-width: 500px;">
+        <section class="game-card">
+            <header class="player-header">
+                <!-- Fila superior -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <a href="lobby.html" class="back-button" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem;">← Volver</a>
+                    <h1 class="game-title" style="font-size: 1.5rem; margin: 0;">🔍 ¿Dónde está la incógnita?</h1>
+                    <div style="width: 60px;"></div>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button id="btn-save" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Guardar</button>
-                    <button id="btn-exit" class="btn btn-danger" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Salir</button>
+
+                <!-- Info del jugador (nombre + puntuación) -->
+                <div class="player-info" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <span id="player-name" class="player-name" style="color: #fbbf24; font-family: 'Cinzel', serif;">Jugador</span>
+                    <button id="btn-edit-name" class="btn-icon" title="Editar nombre" style="font-size: 1.2rem;">✏️</button>
+                    <span class="player-level" style="color: #94a3b8;">⭐ <span id="player-score">0</span> pts</span>
+                </div>
+
+                <!-- Botón Salir -->
+                <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
+                    <button id="btn-logout" class="btn btn-danger" style="padding: 0.4rem 1.2rem; font-size: 0.85rem;">🚪 Salir</button>
+                </div>
+            </header>
+
+            <!-- Selector de modo (Alternativas / Práctica paso a paso) -->
+            <div class="mode-selector" style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem;">
+                <button id="mode-alternativas" class="btn btn-primary active" style="flex: 1;">📝 Alternativas</button>
+                <button id="mode-practica" class="btn btn-secondary" style="flex: 1;">✋ Práctica paso a paso</button>
+            </div>
+
+            <!-- Modo Alternativas -->
+            <div id="modo-alternativas" class="question-area">
+                <!-- Enunciado grande -->
+                <div class="exercise-container" style="margin-top: 0;">
+                    <span class="exercise-label" style="font-size: 0.9rem; color: #94a3b8;">Resuelve:</span>
+                    <div id="pregunta-enunciado-alt" class="exercise-text" style="font-family: 'Times New Roman', serif;">Cargando pregunta...</div>
+                </div>
+
+                <!-- Opciones 2×2 -->
+                <div id="opciones-container-alt" class="options-grid"></div>
+
+                <!-- Feedback y racha -->
+                <div id="feedback-message-alt" class="feedback hidden" style="margin-top: 0.5rem;"></div>
+                <div class="streak" style="color: #94a3b8; margin-top: 0.5rem;">
+                    Racha: <span id="racha-actual-alt">0</span>
                 </div>
             </div>
 
-            <h2 class="game-title">❓ ¿DÓNDE ESTÁ LA INCÓGNITA?</h2>
-            <p class="subtitle">Resuelve la ecuación eligiendo la solución correcta</p>
+            <!-- Modo Práctica paso a paso (se mantiene exactamente igual, solo ajustamos estilos con clases) -->
+            <div id="modo-practica" style="display: none;">
+                <div class="practica-container">
+                    <!-- Ecuación actual -->
+                    <div id="ecuacion-actual" class="ecuacion-display" style="background: rgba(15,23,42,0.6); padding: 1rem; border-radius: 12px; margin-bottom: 1rem; font-size: 1.5rem; text-align: center; color: #f1f5f9; font-family: 'Times New Roman', serif;">
+                        <!-- Se genera dinámicamente -->
+                    </div>
 
-            <!-- Ejercicio -->
-            <div class="exercise-container">
-                <span class="exercise-label">Resuelve:</span>
-                <div class="exercise-text" id="exercise-text">2x + 3 = 7</div>
+                    <!-- Pasos realizados -->
+                    <div id="pasos-realizados" class="pasos-container" style="margin-bottom: 1rem; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 8px;">
+                        <!-- Aquí se irán añadiendo los pasos -->
+                    </div>
+
+                    <!-- Zona de arrastre: números disponibles -->
+                    <div class="drag-zone" style="background: rgba(15,23,42,0.4); padding: 1rem; border-radius: 12px;">
+                        <p class="hint-text" style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem;">Arrastra el número correcto al espacio vacío para resolver</p>
+                        <div id="number-pool-practica" class="number-pool" style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
+                            <!-- Se genera dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Mensaje de feedback -->
+                    <div id="feedback-practica" class="feedback hidden" style="margin-top: 0.5rem;"></div>
+
+                    <!-- Botón siguiente -->
+                    <button id="next-practica-btn" class="btn btn-primary" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none;">Siguiente ecuación →</button>
+                </div>
             </div>
+        </section>
+    </main>
 
-            <!-- Opciones 2×2 -->
-            <div class="options-grid" id="options-container">
-                <button class="option-btn" data-index="0">x = 1</button>
-                <button class="option-btn" data-index="1">x = 2</button>
-                <button class="option-btn" data-index="2">x = 3</button>
-                <button class="option-btn" data-index="3">x = 4</button>
-            </div>
-
-            <!-- Racha y feedback -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-                <span style="color: #94a3b8;">Racha: <span id="streak">0</span></span>
-                <div id="feedback-message" class="hidden"></div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <!-- Firebase SDKs (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="common.js"></script>
     <script src="incognita.js"></script>
