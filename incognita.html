@@ -1,81 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Matejuegos - ¿Dónde está la incógnita?</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <main class="quest-container" style="max-width: 500px;">
-        <section class="game-card">
-            <header class="player-header">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <a href="lobby.html" class="back-button" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem;">← Volver</a>
-                    <h1 class="game-title" style="font-size: 1.5rem; margin: 0;">🔍 ¿Dónde está la incógnita?</h1>
-                    <div style="width: 60px;"></div>
-                </div>
+    <div class="quest-container">
+        <div class="game-card">
+
+            <!-- Cabecera -->
+            <div class="lobby-header">
                 <div class="player-info">
-                    <span id="player-name" class="player-name">Jugador</span>
-                    <span class="player-level">⭐ <span id="player-score">0</span> pts</span>
+                    <span id="player-name">Trotamundos</span>
+                    <button id="edit-name-btn" class="btn-icon" title="Editar nombre">✏️</button>
+                    <span class="xp-display">⭐ <span id="player-xp">0</span> XP</span>
                 </div>
-                <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
-                    <button id="btn-logout" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;">🚪 Salir</button>
-                </div>
-            </header>
-
-            <!-- Selector de modo -->
-            <div class="mode-selector">
-                <button id="mode-alternativas" class="active">📝 Alternativas</button>
-                <button id="mode-practica">✋ Práctica paso a paso</button>
-            </div>
-
-            <!-- Modo Alternativas (sin cambios) -->
-            <div id="modo-alternativas" class="question-area">
-                <p id="pregunta-enunciado-alt" class="question-text">Cargando pregunta...</p>
-                <div id="opciones-container-alt" class="options-container"></div>
-                <div id="feedback-message-alt" class="feedback hidden"></div>
-                <div class="streak">
-                    Racha: <span id="racha-actual-alt">0</span>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="btn-save" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Guardar</button>
+                    <button id="btn-exit" class="btn btn-danger" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Salir</button>
                 </div>
             </div>
 
-            <!-- Modo Práctica paso a paso -->
-            <div id="modo-practica" style="display: none;">
-                <div class="practica-container">
-                    <!-- Ecuación actual -->
-                    <div id="ecuacion-actual" class="ecuacion-display">
-                        <!-- Se genera dinámicamente -->
-                    </div>
+            <h2 class="game-title">❓ ¿DÓNDE ESTÁ LA INCÓGNITA?</h2>
+            <p class="subtitle">Resuelve la ecuación eligiendo la solución correcta</p>
 
-                    <!-- Pasos realizados -->
-                    <div id="pasos-realizados" class="pasos-container">
-                        <!-- Aquí se irán añadiendo los pasos -->
-                    </div>
-
-                    <!-- Zona de arrastre: números disponibles -->
-                    <div class="drag-zone">
-                        <p class="hint-text">Arrastra el número correcto al espacio vacío para resolver</p>
-                        <div id="number-pool-practica" class="number-pool">
-                            <!-- Se genera dinámicamente -->
-                        </div>
-                    </div>
-
-                    <!-- Mensaje de feedback -->
-                    <div id="feedback-practica" class="feedback hidden"></div>
-
-                    <!-- Botón para siguiente pregunta (se muestra al final) -->
-                    <button id="next-practica-btn" class="rpg-button" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;">Siguiente ecuación →</button>
-                </div>
+            <!-- Ejercicio -->
+            <div class="exercise-container">
+                <span class="exercise-label">Resuelve:</span>
+                <div class="exercise-text" id="exercise-text">2x + 3 = 7</div>
             </div>
-        </section>
-    </main>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+            <!-- Opciones 2×2 -->
+            <div class="options-grid" id="options-container">
+                <button class="option-btn" data-index="0">x = 1</button>
+                <button class="option-btn" data-index="1">x = 2</button>
+                <button class="option-btn" data-index="2">x = 3</button>
+                <button class="option-btn" data-index="3">x = 4</button>
+            </div>
+
+            <!-- Racha y feedback -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                <span style="color: #94a3b8;">Racha: <span id="streak">0</span></span>
+                <div id="feedback-message" class="hidden"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="firebase-config.js"></script>
+    <script src="common.js"></script>
     <script src="incognita.js"></script>
 </body>
 </html>
