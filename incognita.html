@@ -60,8 +60,8 @@
                         <!-- Vista previa de la ecuación transformada -->
                     </div>
 
-                    <!-- Controles -->
-                    <div class="practica-controles">
+                    <!-- Controles (se ocultarán al llegar a la solución) -->
+                    <div id="controles-practica" class="practica-controles">
                         <p class="hint-text">Elige la operación y el número para aplicar a ambos lados:</p>
                         <div class="operacion-botones">
                             <button class="rpg-button operacion-btn" data-op="sumar">+</button>
@@ -73,6 +73,12 @@
                             <input type="number" id="numero-practica" placeholder="Número" value="1" step="1">
                             <button id="btn-operar" class="rpg-button primary" disabled>Confirmar paso</button>
                         </div>
+                    </div>
+
+                    <!-- Mensaje de éxito (se muestra al llegar a la solución) -->
+                    <div id="mensaje-exito" style="display: none; text-align: center; margin: 1rem 0;">
+                        <p id="texto-felicitacion" style="font-size: 1.4rem; color: #22c55e; font-weight: bold;">🎉 ¡Felicidades! Has descubierto la incógnita:</p>
+                        <p id="texto-solucion" style="font-size: 2rem; color: #fbbf24; font-family: 'Times New Roman', serif;"></p>
                     </div>
 
                     <div id="feedback-practica" class="feedback hidden"></div>
