@@ -5,13 +5,14 @@
 let modoActual = 'alternativas';
 let racha = 0;
 let puntuacion = 0;
-let feedbackTimeout = null; // Para controlar el temporizador de feedback
+let feedbackTimeout = null;
 
 // Elementos del DOM
 let elNombre, elPuntuacion;
 let elPreguntaAlt, elOpcionesAlt, elFeedbackAlt, elRachaAlt;
 let elPasosConfirmados, elVistaPrevia, elFeedbackPractica, elNextPracticaBtn;
 let elNumeroPractica, elBtnOperar, elOperacionBtns;
+let elControlesPractica, elMensajeExito, elTextoSolucion;
 
 // ---------- Generación de ecuaciones ----------
 function generarEcuacionLineal() {
@@ -80,24 +81,19 @@ function generarPasos(a, b, c, x) {
 // ---------- Estado de práctica ----------
 let practicaState = {
     pasos: [],
-    pasoActual: 0,        // índice del último paso confirmado (0 = original)
+    pasoActual: 0,
     eq: null
 };
 
-// ---------- Funciones auxiliares para aplicar operaciones ----------
+// ---------- Funciones auxiliares ----------
 function aplicarOperacion(ecuacion, op, num) {
     let { a, b, c } = ecuacion;
     switch (op) {
-        case 'sumar':
-            return { a, b: b + num, c: c + num };
-        case 'restar':
-            return { a, b: b - num, c: c - num };
-        case 'multiplicar':
-            return { a: a * num, b: b * num, c: c * num };
-        case 'dividir':
-            return { a: a / num, b: b / num, c: c / num };
-        default:
-            return { a, b, c };
+        case 'sumar': return { a, b: b + num, c: c + num };
+        case 'restar': return { a, b: b - num, c: c - num };
+        case 'multiplicar': return { a: a * num, b: b * num, c: c * num };
+        case 'dividir': return { a: a / num, b: b / num, c: c / num };
+        default: return { a, b, c };
     }
 }
 
@@ -108,7 +104,10 @@ function iniciarPractica() {
     practicaState.pasos = generarPasos(eq.a, eq.b, eq.c, eq.x);
     practicaState.pasoActual = 0;
 
-    // Limpiar feedback y ocultar siguiente
+    // Ocultar mensaje de éxito y mostrar controles
+    if (elMensajeExito) elMensajeExito.style.display = 'none';
+    if (elControlesPractica) elControlesPractica.style.display = 'block';
+    if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'none';
     if (elFeedbackPractica) {
         elFeedbackPractica.className = 'feedback hidden';
         elFeedbackPractica.textContent = '';
@@ -117,7 +116,6 @@ function iniciarPractica() {
             feedbackTimeout = null;
         }
     }
-    if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'none';
 
     mostrarPasosConfirmados();
 
@@ -168,7 +166,6 @@ function actualizarVistaPrevia() {
         return;
     }
     const operacion = opSeleccionada.dataset.op;
-
     const num = parseInt(elNumeroPractica.value);
     if (isNaN(num) || num <= 0) {
         if (elVistaPrevia) {
@@ -209,7 +206,6 @@ function operar() {
         return;
     }
     const operacion = opSeleccionada.dataset.op;
-
     const num = parseInt(elNumeroPractica.value);
     if (isNaN(num) || num <= 0) {
         mostrarFeedbackPractica('Ingresa un número positivo.', 'error');
@@ -240,25 +236,30 @@ function operar() {
 
         // Verificar si hemos llegado a la solución
         if (practicaState.pasoActual === practicaState.pasos.length - 1) {
-            // Solución alcanzada
+            // Solución alcanzada: ocultar controles y mostrar mensaje de éxito
             const solucion = practicaState.pasos[practicaState.pasoActual];
-            // Cancelar cualquier timeout anterior
-            if (feedbackTimeout) {
-                clearTimeout(feedbackTimeout);
-                feedbackTimeout = null;
+            if (elControlesPractica) elControlesPractica.style.display = 'none';
+            if (elMensajeExito) {
+                elMensajeExito.style.display = 'block';
+                if (elTextoSolucion) elTextoSolucion.textContent = solucion.texto;
             }
+            // Ocultar feedback temporal (por si acaso)
             if (elFeedbackPractica) {
-                elFeedbackPractica.textContent = `🎉 Felicitaciones, has descubierto la incógnita: ${solucion.texto}`;
-                elFeedbackPractica.className = 'feedback feedback-exito';
-                elFeedbackPractica.classList.remove('hidden');
+                elFeedbackPractica.className = 'feedback hidden';
+                elFeedbackPractica.textContent = '';
+                if (feedbackTimeout) {
+                    clearTimeout(feedbackTimeout);
+                    feedbackTimeout = null;
+                }
             }
-            // Deshabilitar controles
+            // Mostrar botón siguiente
+            if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
+            // Deshabilitar controles por si acaso
             elOperacionBtns.forEach(btn => btn.disabled = true);
             elNumeroPractica.disabled = true;
             elBtnOperar.disabled = true;
-            if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
         } else {
-            // Mostrar mensaje de éxito breve
+            // Paso intermedio correcto
             mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
             // Habilitar controles para el siguiente paso
             elOperacionBtns.forEach(btn => btn.disabled = false);
@@ -272,7 +273,6 @@ function operar() {
 
 function mostrarFeedbackPractica(mensaje, tipo) {
     if (!elFeedbackPractica) return;
-    // Cancelar cualquier timeout anterior para que no oculte un mensaje posterior
     if (feedbackTimeout) {
         clearTimeout(feedbackTimeout);
         feedbackTimeout = null;
@@ -421,6 +421,9 @@ function iniciarJuego() {
     elNextPracticaBtn = document.getElementById('next-practica-btn');
     elNumeroPractica = document.getElementById('numero-practica');
     elBtnOperar = document.getElementById('btn-operar');
+    elControlesPractica = document.getElementById('controles-practica');
+    elMensajeExito = document.getElementById('mensaje-exito');
+    elTextoSolucion = document.getElementById('texto-solucion');
 
     if (elBtnOperar) {
         elBtnOperar.addEventListener('click', operar);
