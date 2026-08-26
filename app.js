@@ -1,9 +1,8 @@
+// app.js - Lógica de autenticación (sin campo de nombre)
 const form = document.getElementById('auth-form');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
-const nicknameInput = document.getElementById('nickname');
 const errorDiv = document.getElementById('error-message');
-
 const btnRegister = document.getElementById('btn-register');
 const btnLogin = document.getElementById('btn-login');
 
@@ -16,26 +15,23 @@ function hideError() {
     errorDiv.classList.add('hidden');
 }
 
-// ---- Registro ----
-async function registrarUsuario(email, password, nickname) {
+// ---- Registro (asigna "Trotamundos" por defecto) ----
+async function registrarUsuario(email, password) {
     try {
         const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const uid = cred.user.uid;
-
-        await db.collection("usuarios").doc(uid).set({
-            nombre: nickname,
+        // Se asigna "Trotamundos" como nombre por defecto
+        await db.collection('usuarios').doc(uid).set({
+            nombre: 'Trotamundos',
             fechaCreacion: new Date(),
-            // Datos generales de la plataforma
             xpTotal: 0,
-            juegosCompletados: [],
-            // Datos específicos de cada juego se guardarán en subcolecciones o con prefijos
+            juegosCompletados: []
         });
-
         sessionStorage.setItem('mathquest_uid', uid);
-        sessionStorage.setItem('mathquest_nombre', nickname);
+        sessionStorage.setItem('mathquest_nombre', 'Trotamundos');
         window.location.href = 'lobby.html';
     } catch (error) {
-        console.error("Error en registro:", error);
+        console.error('Error en registro:', error);
         let msg = error.message;
         if (error.code === 'auth/email-already-in-use') {
             msg = 'Este correo ya está registrado. Por favor, inicia sesión.';
@@ -51,19 +47,17 @@ async function iniciarSesion(email, password) {
     try {
         const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
         const uid = cred.user.uid;
-
         const snap = await db.collection('usuarios').doc(uid).get();
         if (!snap.exists) {
             showError('No se encontraron datos de este jugador.');
             return;
         }
-
         const jugador = snap.data();
         sessionStorage.setItem('mathquest_uid', uid);
-        sessionStorage.setItem('mathquest_nombre', jugador.nombre);
+        sessionStorage.setItem('mathquest_nombre', jugador.nombre || 'Trotamundos');
         window.location.href = 'lobby.html';
     } catch (error) {
-        console.error("Error en inicio de sesión:", error);
+        console.error('Error en inicio de sesión:', error);
         let msg = error.message;
         if (error.code === 'auth/user-not-found') {
             msg = 'No existe una cuenta con ese correo. Regístrate primero.';
@@ -81,34 +75,25 @@ btnRegister.addEventListener('click', () => {
     hideError();
     const email = emailInput.value.trim();
     const password = passwordInput.value;
-    const nickname = nicknameInput.value.trim();
-
-    if (!email || !password || !nickname) {
+    if (!email || !password) {
         showError('Completa todos los campos.');
-        return;
-    }
-    if (nickname.length < 3) {
-        showError('El nombre debe tener al menos 3 caracteres.');
         return;
     }
     if (password.length < 6) {
         showError('La contraseña debe tener al menos 6 caracteres.');
         return;
     }
-
-    registrarUsuario(email, password, nickname);
+    registrarUsuario(email, password);
 });
 
 btnLogin.addEventListener('click', () => {
     hideError();
     const email = emailInput.value.trim();
     const password = passwordInput.value;
-
     if (!email || !password) {
         showError('Ingresa tu correo y contraseña.');
         return;
     }
-
     iniciarSesion(email, password);
 });
 
