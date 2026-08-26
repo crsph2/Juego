@@ -9,8 +9,8 @@ let puntuacion = 0;
 // Elementos del DOM
 let elNombre, elPuntuacion;
 let elPreguntaAlt, elOpcionesAlt, elFeedbackAlt, elRachaAlt;
-let elEcuacionActual, elPasosRealizados, elFeedbackPractica, elNextPracticaBtn;
-let elNumeroPractica, elAplicarPasoBtn, elOperacionBtns;
+let elPasosConfirmados, elVistaPrevia, elFeedbackPractica, elNextPracticaBtn;
+let elNumeroPractica, elBtnOperar, elOperacionBtns;
 
 // ---------- Generación de ecuaciones ----------
 function generarEcuacionLineal() {
@@ -79,142 +79,142 @@ function generarPasos(a, b, c, x) {
 // ---------- Estado de práctica ----------
 let practicaState = {
     pasos: [],
-    pasoActual: 0,
+    pasoActual: 0,        // índice del último paso confirmado (0 = original)
     eq: null
 };
 
+// ---------- Funciones auxiliares para aplicar operaciones ----------
+function aplicarOperacion(ecuacion, op, num) {
+    let { a, b, c } = ecuacion;
+    switch (op) {
+        case 'sumar':
+            return { a, b: b + num, c: c + num };
+        case 'restar':
+            return { a, b: b - num, c: c - num };
+        case 'multiplicar':
+            return { a: a * num, b: b * num, c: c * num };
+        case 'dividir':
+            return { a: a / num, b: b / num, c: c / num };
+        default:
+            return { a, b, c };
+    }
+}
+
+// ---------- Iniciar práctica ----------
 function iniciarPractica() {
     const eq = generarEcuacionLineal();
     practicaState.eq = eq;
     practicaState.pasos = generarPasos(eq.a, eq.b, eq.c, eq.x);
-    practicaState.pasoActual = 0;
+    practicaState.pasoActual = 0; // la original ya está confirmada
 
+    // Limpiar feedback y ocultar siguiente
     if (elFeedbackPractica) {
         elFeedbackPractica.className = 'feedback hidden';
         elFeedbackPractica.textContent = '';
     }
     if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'none';
 
+    // Mostrar la ecuación original en el área de pasos confirmados
+    mostrarPasosConfirmados();
+
+    // Limpiar vista previa
+    if (elVistaPrevia) {
+        elVistaPrevia.style.display = 'none';
+        elVistaPrevia.innerHTML = '';
+    }
+
+    // Resetear controles
+    resetearControles();
+
     // Habilitar controles
-    if (elOperacionBtns) {
-        elOperacionBtns.forEach(btn => btn.disabled = false);
-    }
-    if (elNumeroPractica) elNumeroPractica.disabled = false;
-    if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = false; // Siempre habilitado excepto en solución
-
-    mostrarPasoActual();
-    actualizarHistorial();
+    elOperacionBtns.forEach(btn => btn.disabled = false);
+    elNumeroPractica.disabled = false;
+    elBtnOperar.disabled = true;
 }
 
-function mostrarPasoActual() {
-    if (!elEcuacionActual) return;
-    const paso = practicaState.pasos[practicaState.pasoActual];
-    if (!paso) return;
-
-    elEcuacionActual.innerHTML = '';
-
-    if (paso.tipo === 'original') {
+function mostrarPasosConfirmados() {
+    if (!elPasosConfirmados) return;
+    elPasosConfirmados.innerHTML = '';
+    // Mostrar todos los pasos confirmados (desde 0 hasta pasoActual inclusive)
+    for (let i = 0; i <= practicaState.pasoActual; i++) {
+        const paso = practicaState.pasos[i];
+        if (!paso) continue;
         const div = document.createElement('div');
-        div.className = 'ecuacion-linea';
+        div.className = 'ecuacion-linea paso-confirmado';
         div.textContent = paso.texto;
-        elEcuacionActual.appendChild(div);
-        const hint = document.createElement('div');
-        hint.className = 'hint-text';
-        hint.textContent = 'Elige una operación y un número, luego presiona "Aplicar paso" para resolver paso a paso.';
-        hint.style.color = '#fbbf24';
-        elEcuacionActual.appendChild(hint);
-        // Botón habilitado
-        if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = false;
-    } else if (paso.tipo === 'mover_constante' || paso.tipo === 'dividir') {
-        const pasoAnterior = practicaState.pasos[practicaState.pasoActual - 1];
-        const div = document.createElement('div');
-        div.className = 'ecuacion-linea';
-        div.textContent = pasoAnterior.texto;
-        elEcuacionActual.appendChild(div);
-        const pista = document.createElement('div');
-        pista.className = 'hint-text';
-        let opTexto = '';
-        if (paso.tipo === 'mover_constante') {
-            opTexto = (paso.operacion === 'restar') ? `restar ${paso.valor}` : `sumar ${paso.valor}`;
-        } else if (paso.tipo === 'dividir') {
-            opTexto = `dividir entre ${paso.valor}`;
-        }
-        pista.textContent = `👉 El siguiente paso es ${opTexto} en ambos lados.`;
-        pista.style.color = '#93c5fd';
-        elEcuacionActual.appendChild(pista);
-        // Botón habilitado
-        if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = false;
-    } else if (paso.tipo === 'solucion') {
-        const div = document.createElement('div');
-        div.className = 'ecuacion-linea';
-        div.style.color = '#22c55e';
-        div.textContent = paso.texto;
-        elEcuacionActual.appendChild(div);
-        if (elFeedbackPractica) {
-            elFeedbackPractica.textContent = '🎉 ¡Has resuelto la ecuación!';
-            elFeedbackPractica.className = 'feedback feedback-exito';
-            elFeedbackPractica.classList.remove('hidden');
-        }
-        if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
-        if (elOperacionBtns) {
-            elOperacionBtns.forEach(btn => btn.disabled = true);
-        }
-        if (elNumeroPractica) elNumeroPractica.disabled = true;
-        if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = true;
-        document.querySelectorAll('.operacion-btn').forEach(b => b.classList.remove('seleccionado'));
+        elPasosConfirmados.appendChild(div);
     }
 }
 
-function actualizarHistorial() {
-    if (!elPasosRealizados) return;
-    elPasosRealizados.innerHTML = '';
-    for (let i = 1; i < practicaState.pasoActual; i++) {
-        const p = practicaState.pasos[i];
-        if (p.tipo === 'solucion') continue;
-        const div = document.createElement('div');
-        div.className = 'paso-realizado';
-        div.textContent = p.texto;
-        elPasosRealizados.appendChild(div);
+function resetearControles() {
+    // Desmarcar operaciones
+    elOperacionBtns.forEach(btn => btn.classList.remove('seleccionado'));
+    elNumeroPractica.value = '';
+    elBtnOperar.disabled = true;
+    // Ocultar vista previa
+    if (elVistaPrevia) {
+        elVistaPrevia.style.display = 'none';
+        elVistaPrevia.innerHTML = '';
     }
 }
 
-// ---------- Aplicar paso (validación) ----------
-function aplicarPaso() {
-    console.log('🔘 Aplicar paso ejecutado');
-
-    const pasoActual = practicaState.pasos[practicaState.pasoActual];
-    if (!pasoActual) {
-        console.error('No hay paso actual');
-        return;
-    }
-
-    // Si estamos en original o en un paso intermedio, debemos validar contra el siguiente paso
-    let pasoValidar = null;
-    if (pasoActual.tipo === 'original') {
-        // Tomamos el paso 1 si existe
-        if (practicaState.pasos.length > 1) {
-            pasoValidar = practicaState.pasos[1];
-        } else {
-            // Si no hay más pasos, es solución
-            mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error');
-            return;
-        }
-    } else if (pasoActual.tipo === 'mover_constante' || pasoActual.tipo === 'dividir') {
-        pasoValidar = pasoActual;
-    } else if (pasoActual.tipo === 'solucion') {
-        mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error');
-        return;
-    }
-
-    if (!pasoValidar) {
-        mostrarFeedbackPractica('No hay pasos para validar.', 'error');
-        return;
-    }
-
+// ---------- Actualizar vista previa ----------
+function actualizarVistaPrevia() {
     // Obtener operación seleccionada
     const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
     if (!opSeleccionada) {
-        mostrarFeedbackPractica('Selecciona una operación primero (+, −, ×, ÷).', 'error');
+        // No hay operación seleccionada, ocultar vista previa
+        if (elVistaPrevia) {
+            elVistaPrevia.style.display = 'none';
+            elVistaPrevia.innerHTML = '';
+        }
+        elBtnOperar.disabled = true;
+        return;
+    }
+    const operacion = opSeleccionada.dataset.op;
+
+    // Obtener número
+    const num = parseInt(elNumeroPractica.value);
+    if (isNaN(num) || num <= 0) {
+        if (elVistaPrevia) {
+            elVistaPrevia.style.display = 'none';
+            elVistaPrevia.innerHTML = '';
+        }
+        elBtnOperar.disabled = true;
+        return;
+    }
+
+    // Obtener la ecuación actual (la última confirmada)
+    const ecuacionActual = practicaState.pasos[practicaState.pasoActual];
+    if (!ecuacionActual || ecuacionActual.tipo === 'solucion') {
+        elBtnOperar.disabled = true;
+        return;
+    }
+
+    // Aplicar operación
+    const nuevaEcuacion = aplicarOperacion(ecuacionActual, operacion, num);
+    const textoNuevo = formatearEcuacion(nuevaEcuacion.a, nuevaEcuacion.b, nuevaEcuacion.c);
+
+    // Mostrar vista previa
+    if (elVistaPrevia) {
+        elVistaPrevia.style.display = 'block';
+        elVistaPrevia.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'ecuacion-linea vista-previa';
+        div.textContent = textoNuevo;
+        elVistaPrevia.appendChild(div);
+    }
+
+    // Habilitar botón Operar
+    elBtnOperar.disabled = false;
+}
+
+// ---------- Operar (validar y aplicar paso) ----------
+function operar() {
+    // Obtener operación seleccionada
+    const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
+    if (!opSeleccionada) {
+        mostrarFeedbackPractica('Selecciona una operación.', 'error');
         return;
     }
     const operacion = opSeleccionada.dataset.op;
@@ -226,29 +226,58 @@ function aplicarPaso() {
         return;
     }
 
-    // Validar
-    let esCorrecto = false;
-    if (pasoValidar.tipo === 'mover_constante') {
-        esCorrecto = (operacion === pasoValidar.operacion && num === pasoValidar.valor);
-    } else if (pasoValidar.tipo === 'dividir') {
-        esCorrecto = (operacion === pasoValidar.operacion && num === pasoValidar.valor);
+    // Verificar si ya estamos en la solución
+    if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
+        mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error');
+        return;
     }
 
-    console.log('Validación:', { operacion, num, esperadoOperacion: pasoValidar.operacion, esperadoValor: pasoValidar.valor, esCorrecto });
+    // El paso esperado es el siguiente (pasoActual + 1)
+    const pasoEsperado = practicaState.pasos[practicaState.pasoActual + 1];
+    if (!pasoEsperado) {
+        mostrarFeedbackPractica('No hay más pasos.', 'error');
+        return;
+    }
+
+    // Validar
+    let esCorrecto = false;
+    if (pasoEsperado.tipo === 'mover_constante' || pasoEsperado.tipo === 'dividir') {
+        esCorrecto = (operacion === pasoEsperado.operacion && num === pasoEsperado.valor);
+    } else if (pasoEsperado.tipo === 'solucion') {
+        // No debería llegar aquí porque la solución no tiene operación
+        esCorrecto = false;
+    }
 
     if (esCorrecto) {
-        // Avanzamos al paso siguiente (el que hemos validado)
-        // Si estábamos en original, avanzamos a 1; si estábamos en un paso intermedio, avanzamos al siguiente
-        if (pasoActual.tipo === 'original') {
-            practicaState.pasoActual = 1;
-        } else {
-            practicaState.pasoActual++;
-        }
-        actualizarHistorial();
-        mostrarPasoActual();
+        // Avanzar al siguiente paso (confirmar)
+        practicaState.pasoActual++;
+        // Mostrar los pasos confirmados actualizados
+        mostrarPasosConfirmados();
+        // Limpiar vista previa y controles
+        resetearControles();
         mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
-        document.querySelectorAll('.operacion-btn').forEach(b => b.classList.remove('seleccionado'));
-        if (elNumeroPractica) elNumeroPractica.value = '';
+
+        // Verificar si hemos llegado a la solución
+        if (practicaState.pasoActual === practicaState.pasos.length - 1) {
+            // Solución alcanzada
+            const solucion = practicaState.pasos[practicaState.pasoActual];
+            if (elFeedbackPractica) {
+                elFeedbackPractica.textContent = `🎉 Felicitaciones, has descubierto la incógnita: ${solucion.texto}`;
+                elFeedbackPractica.className = 'feedback feedback-exito';
+                elFeedbackPractica.classList.remove('hidden');
+            }
+            // Deshabilitar controles
+            elOperacionBtns.forEach(btn => btn.disabled = true);
+            elNumeroPractica.disabled = true;
+            elBtnOperar.disabled = true;
+            // Mostrar botón siguiente
+            if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
+        } else {
+            // Habilitar controles para el siguiente paso
+            elOperacionBtns.forEach(btn => btn.disabled = false);
+            elNumeroPractica.disabled = false;
+            elBtnOperar.disabled = true;
+        }
     } else {
         mostrarFeedbackPractica('❌ Ese paso no es correcto. Revisa la pista.', 'error');
     }
@@ -392,22 +421,31 @@ function iniciarJuego() {
     elOpcionesAlt = document.getElementById('opciones-container-alt');
     elFeedbackAlt = document.getElementById('feedback-message-alt');
     elRachaAlt = document.getElementById('racha-actual-alt');
-    elEcuacionActual = document.getElementById('ecuacion-actual');
-    elPasosRealizados = document.getElementById('pasos-realizados');
+    elPasosConfirmados = document.getElementById('pasos-confirmados');
+    elVistaPrevia = document.getElementById('vista-previa');
     elFeedbackPractica = document.getElementById('feedback-practica');
     elNextPracticaBtn = document.getElementById('next-practica-btn');
     elNumeroPractica = document.getElementById('numero-practica');
-    elAplicarPasoBtn = document.getElementById('aplicar-paso-btn');
+    elBtnOperar = document.getElementById('btn-operar');
 
-    if (!elAplicarPasoBtn) {
-        console.error('❌ No se encontró el botón "Aplicar paso"');
+    if (!elBtnOperar) {
+        console.error('❌ No se encontró el botón "Operar"');
     } else {
-        console.log('✅ Botón "Aplicar paso" encontrado');
-        elAplicarPasoBtn.addEventListener('click', aplicarPaso);
-        console.log('✅ Listener añadido al botón');
+        elBtnOperar.addEventListener('click', operar);
     }
 
     elOperacionBtns = document.querySelectorAll('.operacion-btn');
+
+    // Eventos para actualizar vista previa
+    elOperacionBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            elOperacionBtns.forEach(b => b.classList.remove('seleccionado'));
+            btn.classList.add('seleccionado');
+            actualizarVistaPrevia();
+        });
+    });
+
+    elNumeroPractica.addEventListener('input', actualizarVistaPrevia);
 
     // Cargar datos del jugador
     if (window.jugador) {
@@ -421,19 +459,6 @@ function iniciarJuego() {
     // Eventos de modo
     document.getElementById('mode-alternativas').addEventListener('click', () => cambiarModo('alternativas'));
     document.getElementById('mode-practica').addEventListener('click', () => cambiarModo('practica'));
-
-    // Selección de operación
-    elOperacionBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            elOperacionBtns.forEach(b => b.classList.remove('seleccionado'));
-            btn.classList.add('seleccionado');
-            // Habilitar botón (si no está en solución)
-            const paso = practicaState.pasos?.[practicaState.pasoActual];
-            if (elAplicarPasoBtn && paso && paso.tipo !== 'solucion') {
-                elAplicarPasoBtn.disabled = false;
-            }
-        });
-    });
 
     // Siguiente ecuación
     if (elNextPracticaBtn) {
