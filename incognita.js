@@ -100,10 +100,7 @@ function iniciarPractica() {
         elOperacionBtns.forEach(btn => btn.disabled = false);
     }
     if (elNumeroPractica) elNumeroPractica.disabled = false;
-    // El botón siempre habilitado en pasos intermedios, pero se deshabilitará en original/solución
-    if (elAplicarPasoBtn) {
-        elAplicarPasoBtn.disabled = false; // Se ajusta en mostrarPasoActual
-    }
+    if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = false; // Siempre habilitado excepto en solución
 
     mostrarPasoActual();
     actualizarHistorial();
@@ -123,10 +120,11 @@ function mostrarPasoActual() {
         elEcuacionActual.appendChild(div);
         const hint = document.createElement('div');
         hint.className = 'hint-text';
-        hint.textContent = 'Elige una operación y un número, luego presiona "Aplicar paso".';
+        hint.textContent = 'Elige una operación y un número, luego presiona "Aplicar paso" para resolver paso a paso.';
         hint.style.color = '#fbbf24';
         elEcuacionActual.appendChild(hint);
-        if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = true;
+        // Botón habilitado
+        if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = false;
     } else if (paso.tipo === 'mover_constante' || paso.tipo === 'dividir') {
         const pasoAnterior = practicaState.pasos[practicaState.pasoActual - 1];
         const div = document.createElement('div');
@@ -144,7 +142,7 @@ function mostrarPasoActual() {
         pista.textContent = `👉 El siguiente paso es ${opTexto} en ambos lados.`;
         pista.style.color = '#93c5fd';
         elEcuacionActual.appendChild(pista);
-        // Habilitar botón
+        // Botón habilitado
         if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = false;
     } else if (paso.tipo === 'solucion') {
         const div = document.createElement('div');
@@ -180,19 +178,36 @@ function actualizarHistorial() {
     }
 }
 
-// ---------- Aplicar paso ----------
+// ---------- Aplicar paso (validación) ----------
 function aplicarPaso() {
-    console.log('🔘 Aplicar paso ejecutado'); // <-- LOG para confirmar
+    console.log('🔘 Aplicar paso ejecutado');
 
-    const paso = practicaState.pasos[practicaState.pasoActual];
-    if (!paso) {
+    const pasoActual = practicaState.pasos[practicaState.pasoActual];
+    if (!pasoActual) {
         console.error('No hay paso actual');
         return;
     }
 
-    if (paso.tipo === 'original' || paso.tipo === 'solucion') {
-        console.warn('Paso no válido:', paso.tipo);
-        mostrarFeedbackPractica('Este paso no requiere operación.', 'error');
+    // Si estamos en original o en un paso intermedio, debemos validar contra el siguiente paso
+    let pasoValidar = null;
+    if (pasoActual.tipo === 'original') {
+        // Tomamos el paso 1 si existe
+        if (practicaState.pasos.length > 1) {
+            pasoValidar = practicaState.pasos[1];
+        } else {
+            // Si no hay más pasos, es solución
+            mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error');
+            return;
+        }
+    } else if (pasoActual.tipo === 'mover_constante' || pasoActual.tipo === 'dividir') {
+        pasoValidar = pasoActual;
+    } else if (pasoActual.tipo === 'solucion') {
+        mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error');
+        return;
+    }
+
+    if (!pasoValidar) {
+        mostrarFeedbackPractica('No hay pasos para validar.', 'error');
         return;
     }
 
@@ -213,16 +228,22 @@ function aplicarPaso() {
 
     // Validar
     let esCorrecto = false;
-    if (paso.tipo === 'mover_constante') {
-        esCorrecto = (operacion === paso.operacion && num === paso.valor);
-    } else if (paso.tipo === 'dividir') {
-        esCorrecto = (operacion === paso.operacion && num === paso.valor);
+    if (pasoValidar.tipo === 'mover_constante') {
+        esCorrecto = (operacion === pasoValidar.operacion && num === pasoValidar.valor);
+    } else if (pasoValidar.tipo === 'dividir') {
+        esCorrecto = (operacion === pasoValidar.operacion && num === pasoValidar.valor);
     }
 
-    console.log('Validación:', { operacion, num, esperadoOperacion: paso.operacion, esperadoValor: paso.valor, esCorrecto });
+    console.log('Validación:', { operacion, num, esperadoOperacion: pasoValidar.operacion, esperadoValor: pasoValidar.valor, esCorrecto });
 
     if (esCorrecto) {
-        practicaState.pasoActual++;
+        // Avanzamos al paso siguiente (el que hemos validado)
+        // Si estábamos en original, avanzamos a 1; si estábamos en un paso intermedio, avanzamos al siguiente
+        if (pasoActual.tipo === 'original') {
+            practicaState.pasoActual = 1;
+        } else {
+            practicaState.pasoActual++;
+        }
         actualizarHistorial();
         mostrarPasoActual();
         mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
@@ -243,7 +264,7 @@ function mostrarFeedbackPractica(mensaje, tipo) {
     setTimeout(() => elFeedbackPractica.classList.add('hidden'), 2500);
 }
 
-// ---------- Modo Alternativas ----------
+// ---------- Modo Alternativas (sin cambios) ----------
 let preguntaActualAlt = null;
 
 function generarPreguntaAlternativas() {
@@ -382,7 +403,6 @@ function iniciarJuego() {
         console.error('❌ No se encontró el botón "Aplicar paso"');
     } else {
         console.log('✅ Botón "Aplicar paso" encontrado');
-        // Aseguramos que el evento se añada correctamente
         elAplicarPasoBtn.addEventListener('click', aplicarPaso);
         console.log('✅ Listener añadido al botón');
     }
@@ -407,9 +427,9 @@ function iniciarJuego() {
         btn.addEventListener('click', () => {
             elOperacionBtns.forEach(b => b.classList.remove('seleccionado'));
             btn.classList.add('seleccionado');
-            // Habilitar botón si no está en paso original
+            // Habilitar botón (si no está en solución)
             const paso = practicaState.pasos?.[practicaState.pasoActual];
-            if (elAplicarPasoBtn && paso && paso.tipo !== 'original' && paso.tipo !== 'solucion') {
+            if (elAplicarPasoBtn && paso && paso.tipo !== 'solucion') {
                 elAplicarPasoBtn.disabled = false;
             }
         });
