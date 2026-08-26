@@ -19,7 +19,6 @@ body {
     padding: 20px 0;
 }
 
-/* Contenedor principal */
 .quest-container {
     width: 100%;
     max-width: 500px;
@@ -27,7 +26,6 @@ body {
     animation: fadeIn 1.5s ease-out;
 }
 
-/* Animación de entrada */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -137,8 +135,9 @@ input::placeholder {
 }
 
 /* ============================================================
-   BOTONES (unificados)
+   BOTONES (unificados: .rpg-button y .btn)
    ============================================================ */
+.rpg-button,
 .btn {
     display: inline-flex;
     align-items: center;
@@ -155,41 +154,52 @@ input::placeholder {
     min-height: 48px;
     background: #334155;
     color: #e2e8f0;
+    font-family: 'Roboto', sans-serif;
 }
 
+.rpg-button:hover,
 .btn:hover {
     transform: scale(1.03);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
+.rpg-button:active,
 .btn:active {
     transform: scale(0.97);
 }
 
-.btn-primary {
+/* Variantes de color */
+.btn-primary,
+.rpg-button.primary {
     background: #fbbf24;
     color: #0f172a;
 }
-.btn-primary:hover {
+.btn-primary:hover,
+.rpg-button.primary:hover {
     background: #fcd34d;
 }
 
-.btn-secondary {
+.btn-secondary,
+.rpg-button.secondary {
     background: #3b82f6;
     color: #fff;
 }
-.btn-secondary:hover {
+.btn-secondary:hover,
+.rpg-button.secondary:hover {
     background: #60a5fa;
 }
 
-.btn-danger {
+.btn-danger,
+.rpg-button.danger {
     background: #ef4444;
     color: #fff;
 }
-.btn-danger:hover {
+.btn-danger:hover,
+.rpg-button.danger:hover {
     background: #f87171;
 }
 
+/* Botón ícono (editar nombre) */
 .btn-icon {
     background: transparent;
     border: none;
@@ -227,174 +237,115 @@ input::placeholder {
     margin-top: 1.5rem;
 }
 
-.button-group .btn {
+.button-group .btn,
+.button-group .rpg-button {
     flex: 1 1 auto;
     min-width: 120px;
 }
 
 /* ============================================================
-   LOBBY – CABECERA
+   LOBBY – CABECERA (player-info, xp-bar, etc.)
    ============================================================ */
-.lobby-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+.player-header {
     margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(251, 191, 36, 0.15);
 }
 
 .player-info {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #f1f5f9;
-    flex-wrap: wrap;
-}
-
-#player-name {
-    color: #fbbf24;
-    font-family: 'Cinzel', serif;
-}
-
-.xp-display {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    background: rgba(251, 191, 36, 0.1);
-    padding: 0.2rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    color: #fbbf24;
-    border: 1px solid rgba(251, 191, 36, 0.15);
-}
-
-/* ============================================================
-   TARJETAS DE JUEGOS (en lobby)
-   ============================================================ */
-.game-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
     justify-content: center;
-    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-size: 1.1rem;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(251, 191, 36, 0.1);
 }
 
-.card {
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    padding: 1.5rem 1.2rem;
-    border-radius: 16px;
-    text-align: center;
-    flex: 1 1 180px;
-    max-width: 240px;
-    border: 1px solid rgba(251, 191, 36, 0.15);
-    transition: all 0.3s ease;
+.player-name {
+    font-family: 'Cinzel', serif;
+    color: #fbbf24;
+    font-weight: 700;
+    font-size: 1.2rem;
 }
 
-.card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(251, 191, 36, 0.4);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+.player-level {
+    color: #94a3b8;
+    font-size: 0.9rem;
 }
 
-.card-icon {
-    font-size: 2.8rem;
-    margin-bottom: 0.5rem;
+.player-coins {
+    color: #fbbf24;
+    font-size: 0.9rem;
 }
 
-.badge {
-    display: inline-block;
-    background: rgba(59, 130, 246, 0.2);
-    color: #93c5fd;
-    padding: 0.2rem 1rem;
-    border-radius: 20px;
+/* Barra de XP */
+.xp-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(15, 23, 42, 0.7);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    margin: 8px 0;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.xp-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    transition: width 0.5s ease;
+}
+
+.xp-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     font-size: 0.75rem;
     font-weight: 600;
-    margin: 0.5rem 0;
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-.card .btn {
-    width: 100%;
-    margin-top: 0.5rem;
-}
-
-/* ============================================================
-   MENSAJES DE FEEDBACK
-   ============================================================ */
-#feedback-message {
-    padding: 0.6rem 1rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-    text-align: center;
-    font-weight: 500;
-    transition: all 0.3s;
-}
-
-#feedback-message.exito {
-    background: rgba(34, 197, 94, 0.15);
-    color: #86efac;
-    border: 1px solid rgba(34, 197, 94, 0.2);
-}
-
-#feedback-message.error {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.hidden {
-    display: none !important;
+.region-info {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-top: 4px;
+    font-style: italic;
 }
 
 /* ============================================================
-   NUEVOS ESTILOS PARA JUEGOS: EJERCICIO Y OPCIONES
+   ÁREA DE PREGUNTAS (ejercicio grande y opciones en 2×2)
    ============================================================ */
-
-/* Contenedor del ejercicio (enunciado) */
-.exercise-container {
-    background: rgba(15, 23, 42, 0.6);
-    border-radius: 16px;
-    padding: 1.8rem 1.2rem;
-    margin: 1.2rem 0 1.8rem;
-    border: 1px solid rgba(251, 191, 36, 0.15);
-    text-align: center;
+.question-area {
+    margin-top: 1rem;
 }
 
-/* Enunciado del ejercicio (texto matemático) */
-.exercise-text {
-    font-size: 2.2rem;          /* más grande */
+.question-text {
+    font-size: 2.2rem;
     font-weight: 700;
     color: #f1f5f9;
-    font-family: 'Times New Roman', serif; /* opcional, para dar estilo matemático */
+    background: rgba(15, 23, 42, 0.5);
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(251, 191, 36, 0.15);
+    margin-bottom: 1.5rem;
+    font-family: 'Times New Roman', serif;
     line-height: 1.4;
     word-break: break-word;
 }
 
-/* Etiqueta pequeña (ej: "Factoriza:") */
-.exercise-label {
-    display: block;
-    font-size: 1rem;
-    color: #94a3b8;
-    margin-bottom: 0.5rem;
-    font-weight: 400;
-}
-
-/* Cuadrícula de opciones (2 columnas) */
-.options-grid {
+.options-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    margin: 1.5rem 0;
+    margin: 1.2rem 0;
 }
 
-/* Cada opción es un botón grande */
-.option-btn {
+.btn-opcion {
     background: rgba(30, 41, 59, 0.7);
     border: 2px solid rgba(148, 163, 184, 0.2);
     border-radius: 14px;
@@ -411,32 +362,204 @@ input::placeholder {
     text-align: center;
     font-family: 'Times New Roman', serif;
     word-break: break-word;
+    background: rgba(30, 41, 59, 0.7);
 }
 
-.option-btn:hover {
+.btn-opcion:hover {
     background: rgba(251, 191, 36, 0.1);
     border-color: #fbbf24;
     transform: scale(1.02);
 }
 
-.option-btn:active {
+.btn-opcion:active {
     transform: scale(0.97);
 }
 
-/* Opción seleccionada o correcta (puedes usar clases con JS) */
-.option-btn.selected {
-    border-color: #3b82f6;
-    background: rgba(59, 130, 246, 0.15);
-}
-
-.option-btn.correct {
+.btn-opcion.opcion-correcta {
     border-color: #22c55e;
-    background: rgba(34, 197, 94, 0.15);
+    background: rgba(34, 197, 94, 0.2);
+    color: #86efac;
 }
 
-.option-btn.wrong {
+.btn-opcion.opcion-incorrecta {
     border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.btn-opcion:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* ============================================================
+   FEEDBACK
+   ============================================================ */
+.feedback {
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    margin: 0.5rem 0;
+    font-weight: 500;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.feedback-exito {
+    background: rgba(34, 197, 94, 0.15);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.feedback-error {
     background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.feedback.hidden {
+    display: none;
+}
+
+/* ============================================================
+   RACHA
+   ============================================================ */
+.streak {
+    color: #94a3b8;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* ============================================================
+   MODO PRÁCTICA (incógnita)
+   ============================================================ */
+.practica-container {
+    margin-top: 1rem;
+}
+
+.ecuacion-display {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(251, 191, 36, 0.15);
+}
+
+.ecuacion-linea {
+    font-size: 1.8rem;
+    font-family: 'Times New Roman', serif;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.slot-practica {
+    display: inline-block;
+    min-width: 50px;
+    padding: 0.2rem 0.8rem;
+    background: rgba(251, 191, 36, 0.1);
+    border: 2px dashed #fbbf24;
+    border-radius: 8px;
+    font-size: 1.8rem;
+    color: #fbbf24;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.slot-practica.drag-over {
+    background: rgba(251, 191, 36, 0.2);
+    border-color: #f59e0b;
+}
+
+.slot-practica.filled {
+    border-style: solid;
+    background: rgba(34, 197, 94, 0.1);
+    border-color: #22c55e;
+    color: #86efac;
+}
+
+.pasos-container {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 8px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.paso-realizado {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.drag-zone {
+    margin: 1rem 0;
+}
+
+.number-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+}
+
+.number-tile {
+    background: rgba(30, 41, 59, 0.7);
+    border: 2px solid rgba(148, 163, 184, 0.3);
+    border-radius: 12px;
+    padding: 0.8rem 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    cursor: grab;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.number-tile:hover {
+    transform: scale(1.05);
+    border-color: #fbbf24;
+}
+
+.number-tile:active {
+    cursor: grabbing;
+}
+
+.hint-text {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+}
+
+.mode-selector {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.mode-selector button {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mode-selector button.active {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: #fbbf24;
+    color: #fbbf24;
+}
+
+.mode-selector button:hover {
+    background: rgba(251, 191, 36, 0.05);
 }
 
 /* ============================================================
@@ -457,10 +580,26 @@ input::placeholder {
         font-size: 1.8rem;
     }
 
+    .question-text {
+        font-size: 1.8rem;
+        padding: 1.2rem 0.8rem;
+    }
+
+    .btn-opcion {
+        font-size: 1.2rem;
+        padding: 1rem 0.3rem;
+        min-height: 70px;
+    }
+
+    .options-container {
+        gap: 0.8rem;
+    }
+
     .player-info {
         font-size: 1rem;
     }
 
+    .rpg-button,
     .btn {
         font-size: 0.9rem;
         padding: 0.6rem 1.2rem;
@@ -472,61 +611,24 @@ input::placeholder {
         min-height: 38px;
         min-width: 38px;
     }
-
-    .card {
-        flex: 1 1 140px;
-        max-width: 200px;
-        padding: 1rem 0.8rem;
-    }
-
-    .card-icon {
-        font-size: 2.2rem;
-    }
-
-    .button-group .btn {
-        min-width: 100px;
-        flex: 1 1 100%;
-    }
-
-    .lobby-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.5rem;
-    }
-
-    .player-info {
-        justify-content: center;
-    }
-
-    /* Ajustes para el ejercicio en móvil */
-    .exercise-text {
-        font-size: 1.8rem;
-    }
-
-    .option-btn {
-        font-size: 1.2rem;
-        padding: 1rem 0.3rem;
-        min-height: 70px;
-    }
-
-    .options-grid {
-        gap: 0.8rem;
-    }
 }
 
 @media (max-width: 400px) {
-    /* En pantallas muy pequeñas, las opciones en una columna */
-    .options-grid {
+    .options-container {
         grid-template-columns: 1fr;
     }
 
-    .exercise-text {
+    .question-text {
         font-size: 1.5rem;
     }
 
-    .option-btn {
+    .btn-opcion {
         font-size: 1.1rem;
         min-height: 60px;
+    }
+
+    .ecuacion-linea {
+        font-size: 1.4rem;
     }
 }
 
