@@ -29,11 +29,9 @@ function obtenerDificultad(nivel) {
   return 5;
 }
 
-// ---------- Normalización de factorizaciones ----------
+// ---------- Normalización ----------
 function normalizarFactorizacion(exp) {
   exp = exp.replace(/\s/g, '');
-
-  // Factor común: a(bx + c)
   let matchComun = exp.match(/^(\d+)\(([+-]?\d*)x([+-]\d+)\)$/);
   if (matchComun) {
     let a = parseInt(matchComun[1]);
@@ -50,7 +48,6 @@ function normalizarFactorizacion(exp) {
     return a + '(' + parteX + parteConst + ')';
   }
 
-  // Diferencia de cuadrados: (x+a)(x-a) o (ax+b)(ax-b)
   let matchCuadrados = exp.match(/^\(([+-]?\d*)x([+-]\d+)\)\(([+-]?\d*)x([+-]\d+)\)$/);
   if (matchCuadrados) {
     let a1 = matchCuadrados[1] === '' ? 1 : (matchCuadrados[1] === '-' ? -1 : parseInt(matchCuadrados[1]));
@@ -81,7 +78,6 @@ function normalizarFactorizacion(exp) {
     return fmt(factores[0]) + fmt(factores[1]);
   }
 
-  // Suma o diferencia de cubos
   let matchCubos = exp.match(/^\(x([+-])(\d+)\)\(x²([+-])(\d+)x\+(\d+)\)$/);
   if (matchCubos) {
     let signo1 = matchCubos[1];
@@ -95,7 +91,6 @@ function normalizarFactorizacion(exp) {
     }
     return exp;
   }
-
   return exp;
 }
 
@@ -286,13 +281,13 @@ function mezclarArray(arr) {
 let preguntaActual = null;
 let racha = 0;
 
-// Elementos del DOM (se asignan al iniciar)
+// Elementos del DOM
 let elNombre, elNivel, elMonedas, elXpBarra, elXpTexto, elRegion;
 let elPregunta, elOpciones, elFeedback, elRacha;
 
 // ---------- Inicialización ----------
 function iniciarJuego() {
-  // Asignar referencias del DOM
+  // Obtener referencias
   elNombre = document.getElementById('player-name');
   elNivel = document.getElementById('player-level');
   elMonedas = document.getElementById('player-coins');
@@ -304,15 +299,10 @@ function iniciarJuego() {
   elFeedback = document.getElementById('feedback-message');
   elRacha = document.getElementById('racha-actual');
 
-  // Cargar datos del jugador desde window.jugador
-  if (window.jugador) {
-    actualizarUI();
-  }
-
-  // Cargar primera pregunta
+  actualizarUI();
   nuevaPregunta();
 
-  // Botón Guardar (si existe)
+  // Botón guardar
   const btnGuardar = document.getElementById('btn-save');
   if (btnGuardar) {
     btnGuardar.addEventListener('click', () => {
@@ -320,7 +310,7 @@ function iniciarJuego() {
     });
   }
 
-  // Botón Salir (ya existe en el HTML)
+  // Botón salir
   const btnSalir = document.getElementById('btn-logout');
   if (btnSalir) {
     btnSalir.addEventListener('click', async () => {
@@ -335,19 +325,16 @@ function iniciarJuego() {
 
 function actualizarUI() {
   if (!window.jugador) return;
-
   const j = window.jugador;
   if (elNombre) elNombre.textContent = j.nombre || "Aventurero";
   if (elNivel) elNivel.textContent = j.nivel || 1;
   if (elMonedas) elMonedas.textContent = j.monedas || 0;
   if (elRegion) elRegion.textContent = j.regionActual || "Aldea del Factor Común";
-
   if (elXpBarra && elXpTexto) {
     const xpEnNivel = (j.xp || 0) % XP_POR_NIVEL;
     elXpBarra.style.width = `${xpEnNivel}%`;
     elXpTexto.textContent = `${xpEnNivel} / ${XP_POR_NIVEL} XP`;
   }
-
   if (elRacha) {
     elRacha.textContent = racha;
     if (racha >= 5) elRacha.style.color = '#ffd700';
@@ -360,26 +347,19 @@ function mostrarFeedback(mensaje, tipo) {
   if (!elFeedback) return;
   elFeedback.textContent = mensaje;
   elFeedback.className = 'feedback';
-  if (tipo === 'exito') {
-    elFeedback.classList.add('feedback-exito');
-  } else if (tipo === 'error') {
-    elFeedback.classList.add('feedback-error');
-  }
+  if (tipo === 'exito') elFeedback.classList.add('feedback-exito');
+  else if (tipo === 'error') elFeedback.classList.add('feedback-error');
   elFeedback.classList.remove('hidden');
   setTimeout(() => elFeedback.classList.add('hidden'), 2500);
 }
 
-// ---------- Lógica del juego ----------
 function nuevaPregunta() {
   if (elFeedback) elFeedback.classList.add('hidden');
-
   const nivelActual = window.jugador ? window.jugador.nivel : 1;
   const dificultad = obtenerDificultad(nivelActual);
   preguntaActual = generarPregunta(dificultad);
-
   if (elPregunta) elPregunta.textContent = preguntaActual.enunciado + ' = ?';
   if (!elOpciones) return;
-
   elOpciones.innerHTML = '';
   preguntaActual.opciones.forEach((opcion) => {
     const btn = document.createElement('button');
@@ -395,7 +375,6 @@ async function responder(opcionElegida, btnElegido) {
   [...elOpciones.children].forEach(b => b.disabled = true);
 
   const esCorrecta = normalizarFactorizacion(opcionElegida) === preguntaActual.respuestaNormalizada;
-
   let xpGanada = 0;
   let monedasGanadas = 0;
 
@@ -420,7 +399,6 @@ async function responder(opcionElegida, btnElegido) {
     }
   }
 
-  // Actualizar jugador usando window.jugador y window.uid
   if (window.jugador && window.uid) {
     const j = window.jugador;
     const nuevoXp = (j.xp || 0) + xpGanada;
@@ -456,30 +434,22 @@ async function responder(opcionElegida, btnElegido) {
     }
 
     actualizarUI();
-
     if (subioNivel && elFeedback) {
       elFeedback.textContent += ` ¡Subiste a nivel ${j.nivel}!`;
     }
   }
 
-  // Cargar siguiente pregunta después de un breve retraso
   setTimeout(nuevaPregunta, 1600);
 }
 
-// ---------- Esperar a que common.js cargue el jugador ----------
-function esperarJugador() {
-  if (window.jugador) {
-    iniciarJuego();
-  } else {
-    setTimeout(esperarJugador, 100);
-  }
-}
+// ---------- Escuchar evento de jugador cargado ----------
+document.addEventListener('jugador-cargado', () => {
+  iniciarJuego();
+});
 
-// Iniciar cuando el DOM esté listo
+// También ejecutar si ya estaba cargado (por si el evento ya ocurrió)
 document.addEventListener('DOMContentLoaded', () => {
   if (window.jugador) {
     iniciarJuego();
-  } else {
-    esperarJugador();
   }
 });
