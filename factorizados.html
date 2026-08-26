@@ -6,72 +6,134 @@
     <title>Matejuegos - Factorizados</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ESTILOS FORZADOS PARA FACTORIZADOS */
+        /* Asegura que el enunciado sea grande */
+        #pregunta-enunciado {
+            font-size: 2.4rem !important;
+            font-weight: 700 !important;
+            color: #f1f5f9 !important;
+            background: rgba(15, 23, 42, 0.5) !important;
+            padding: 1.8rem 1rem !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(251, 191, 36, 0.2) !important;
+            margin-bottom: 1.5rem !important;
+            font-family: 'Times New Roman', serif !important;
+            line-height: 1.4 !important;
+            word-break: break-word !important;
+            text-align: center !important;
+        }
+
+        /* Asegura que las opciones estén en grid 2×2 */
+        #opciones-container {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 1rem !important;
+            margin: 1.2rem 0 !important;
+        }
+
+        /* Estilo de cada opción */
+        .btn-opcion {
+            background: rgba(30, 41, 59, 0.7) !important;
+            border: 2px solid rgba(148, 163, 184, 0.2) !important;
+            border-radius: 14px !important;
+            padding: 1.2rem 0.5rem !important;
+            font-size: 1.4rem !important;
+            font-weight: 600 !important;
+            color: #e2e8f0 !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            min-height: 80px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            font-family: 'Times New Roman', serif !important;
+            word-break: break-word !important;
+        }
+        .btn-opcion:hover {
+            background: rgba(251, 191, 36, 0.1) !important;
+            border-color: #fbbf24 !important;
+            transform: scale(1.02) !important;
+        }
+        .btn-opcion:active {
+            transform: scale(0.97) !important;
+        }
+        .btn-opcion.opcion-correcta {
+            border-color: #22c55e !important;
+            background: rgba(34, 197, 94, 0.2) !important;
+            color: #86efac !important;
+        }
+        .btn-opcion.opcion-incorrecta {
+            border-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.2) !important;
+            color: #fca5a5 !important;
+        }
+        .btn-opcion:disabled {
+            opacity: 0.7 !important;
+            cursor: not-allowed !important;
+        }
+
+        /* Ajuste responsive para móviles */
+        @media (max-width: 400px) {
+            #opciones-container {
+                grid-template-columns: 1fr !important;
+            }
+            #pregunta-enunciado {
+                font-size: 1.5rem !important;
+                padding: 1.2rem 0.8rem !important;
+            }
+            .btn-opcion {
+                font-size: 1.1rem !important;
+                min-height: 60px !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <main class="quest-container">
         <section class="game-card">
             <header class="player-header">
-                <!-- Fila superior: Volver, Título, espacio -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <a href="lobby.html" class="back-button" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem;">← Volver</a>
                     <h1 class="game-title" style="font-size: 1.8rem; margin: 0;">⚔️ Factorizados</h1>
                     <div style="width: 60px;"></div>
                 </div>
-
-                <!-- Información del jugador (nombre, nivel, monedas) con estilo unificado -->
-                <div class="player-info" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
-                    <span id="player-name" class="player-name" style="color: #fbbf24; font-family: 'Cinzel', serif;">Aventurero</span>
-                    <button id="btn-edit-name" class="btn-icon" title="Editar nombre" style="font-size: 1.2rem;">✏️</button>
-                    <span class="player-level" style="color: #94a3b8;">Nivel <span id="player-level">1</span></span>
-                    <span class="player-coins" style="color: #fbbf24;">🪙 <span id="player-coins">0</span></span>
+                <div class="player-info">
+                    <span id="player-name" class="player-name">Aventurero</span>
+                    <span class="player-level">Nivel <span id="player-level">1</span></span>
+                    <span class="player-coins">🪙 <span id="player-coins">0</span></span>
                 </div>
-
-                <!-- Botones de acción (Guardar, Salir) con estilo unificado -->
                 <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
-                    <button id="btn-save" class="btn btn-secondary" style="padding: 0.4rem 1.2rem; font-size: 0.85rem;">💾 Guardar</button>
-                    <button id="btn-logout" class="btn btn-danger" style="padding: 0.4rem 1.2rem; font-size: 0.85rem;">🚪 Salir</button>
+                    <button id="btn-edit-name" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #fbbf24, #b45309);">✏️ Nombre</button>
+                    <button id="btn-save" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;">💾 Guardar</button>
+                    <button id="btn-logout" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;">🚪 Salir</button>
                 </div>
-
-                <!-- Barra de XP (se mantiene igual) -->
-                <div class="xp-bar" style="background: rgba(15,23,42,0.7); border-radius: 20px; height: 20px; overflow: hidden; position: relative; margin: 8px 0;">
-                    <div id="xp-bar-fill" class="xp-bar-fill" style="width:0%; height:100%; background: linear-gradient(90deg, #fbbf24, #f59e0b); transition: width 0.5s;"></div>
-                    <span id="xp-text" class="xp-text" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #0f172a;">0 / 100 XP</span>
+                <div class="xp-bar">
+                    <div id="xp-bar-fill" class="xp-bar-fill" style="width:0%"></div>
+                    <span id="xp-text" class="xp-text">0 / 100 XP</span>
                 </div>
-
-                <!-- Región -->
-                <div class="region-info" style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                <div class="region-info">
                     <span id="player-region">Bosque de la Suma</span>
                 </div>
             </header>
 
-            <!-- Área de pregunta (ejercicio + opciones) con el nuevo estilo -->
             <div class="question-area">
-                <!-- Enunciado del ejercicio (grande) -->
-                <div class="exercise-container" style="margin-top: 0;">
-                    <span class="exercise-label" style="font-size: 0.9rem; color: #94a3b8;">Factoriza:</span>
-                    <div id="pregunta-enunciado" class="exercise-text" style="font-family: 'Times New Roman', serif;">Cargando pregunta...</div>
-                </div>
-
-                <!-- Opciones en cuadrícula 2×2 -->
-                <div id="opciones-container" class="options-grid"></div>
-
-                <!-- Feedback y racha (se mantienen) -->
-                <div id="feedback-message" class="feedback hidden" style="margin-top: 0.5rem;"></div>
-                <div class="streak" style="color: #94a3b8; margin-top: 0.5rem;">
+                <p id="pregunta-enunciado" class="question-text">Cargando pregunta...</p>
+                <div id="opciones-container" class="options-container"></div>
+                <div id="feedback-message" class="feedback hidden"></div>
+                <div class="streak">
                     Racha: <span id="racha-actual">0</span>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Firebase SDKs (versión compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <!-- Cargamos common.js para manejar nombre y edición -->
     <script src="common.js"></script>
-    <!-- El script específico del juego (factorizados.js) debe cargar después -->
     <script src="factorizados.js"></script>
 </body>
 </html>
