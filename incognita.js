@@ -10,8 +10,8 @@ let feedbackTimeout = null;
 // Elementos del DOM
 let elNombre, elPuntuacion;
 let elPreguntaAlt, elOpcionesAlt, elFeedbackAlt, elRachaAlt;
-let elPasosConfirmados, elVistaPrevia, elFeedbackPractica, elNextPracticaBtn;
-let elNumeroPractica, elBtnOperar, elOperacionBtns;
+let elHistorialPasos, elVistaPrevia, elFeedbackPractica, elNextPracticaBtn;
+let elNumeroPractica, elBtnAccion, elOperacionBtns;
 let elControlesPractica, elMensajeExito, elTextoSolucion;
 
 // ---------- Generación de ecuaciones ----------
@@ -81,7 +81,8 @@ function generarPasos(a, b, c, x) {
 // ---------- Estado de práctica ----------
 let practicaState = {
     pasos: [],
-    pasoActual: 0,
+    pasoActual: 0,              // índice del último paso confirmado (original + simplificaciones)
+    operacionPendiente: null,   // { operacion, numero, textoVistaPrevia } cuando se ha presionado "Operar"
     eq: null
 };
 
@@ -103,10 +104,11 @@ function iniciarPractica() {
     practicaState.eq = eq;
     practicaState.pasos = generarPasos(eq.a, eq.b, eq.c, eq.x);
     practicaState.pasoActual = 0;
+    practicaState.operacionPendiente = null;
 
-    // Ocultar mensaje de éxito y mostrar controles
-    if (elMensajeExito) elMensajeExito.style.display = 'none';
+    // Mostrar controles, ocultar mensaje de éxito y siguiente
     if (elControlesPractica) elControlesPractica.style.display = 'block';
+    if (elMensajeExito) elMensajeExito.style.display = 'none';
     if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'none';
     if (elFeedbackPractica) {
         elFeedbackPractica.className = 'feedback hidden';
@@ -117,7 +119,7 @@ function iniciarPractica() {
         }
     }
 
-    mostrarPasosConfirmados();
+    mostrarHistorial();
 
     if (elVistaPrevia) {
         elVistaPrevia.style.display = 'none';
@@ -127,42 +129,49 @@ function iniciarPractica() {
     resetearControles();
     elOperacionBtns.forEach(btn => btn.disabled = false);
     elNumeroPractica.disabled = false;
-    elBtnOperar.disabled = true;
-    elBtnOperar.textContent = 'Confirmar paso';
+    elBtnAccion.disabled = true;
+    elBtnAccion.textContent = 'Operar';
 }
 
-function mostrarPasosConfirmados() {
-    if (!elPasosConfirmados) return;
-    elPasosConfirmados.innerHTML = '';
+function mostrarHistorial() {
+    if (!elHistorialPasos) return;
+    elHistorialPasos.innerHTML = '';
+    // Mostrar todos los pasos confirmados (desde 0 hasta pasoActual inclusive)
     for (let i = 0; i <= practicaState.pasoActual; i++) {
         const paso = practicaState.pasos[i];
         if (!paso) continue;
         const div = document.createElement('div');
         div.className = 'ecuacion-linea paso-confirmado';
         div.textContent = paso.texto;
-        elPasosConfirmados.appendChild(div);
+        elHistorialPasos.appendChild(div);
     }
 }
 
 function resetearControles() {
     elOperacionBtns.forEach(btn => btn.classList.remove('seleccionado'));
     elNumeroPractica.value = '';
-    elBtnOperar.disabled = true;
+    elBtnAccion.disabled = true;
     if (elVistaPrevia) {
         elVistaPrevia.style.display = 'none';
         elVistaPrevia.innerHTML = '';
     }
 }
 
-// ---------- Actualizar vista previa ----------
+// ---------- Actualizar vista previa (solo para "Operar") ----------
 function actualizarVistaPrevia() {
+    // Solo si no hay operación pendiente
+    if (practicaState.operacionPendiente) {
+        // Ya hay una operación en espera, no actualizar vista previa
+        return;
+    }
+
     const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
     if (!opSeleccionada) {
         if (elVistaPrevia) {
             elVistaPrevia.style.display = 'none';
             elVistaPrevia.innerHTML = '';
         }
-        elBtnOperar.disabled = true;
+        elBtnAccion.disabled = true;
         return;
     }
     const operacion = opSeleccionada.dataset.op;
@@ -172,34 +181,46 @@ function actualizarVistaPrevia() {
             elVistaPrevia.style.display = 'none';
             elVistaPrevia.innerHTML = '';
         }
-        elBtnOperar.disabled = true;
+        elBtnAccion.disabled = true;
         return;
     }
 
     const ecuacionActual = practicaState.pasos[practicaState.pasoActual];
     if (!ecuacionActual || ecuacionActual.tipo === 'solucion') {
-        elBtnOperar.disabled = true;
+        elBtnAccion.disabled = true;
         return;
     }
 
+    // Generar la ecuación con la operación aplicada (sin simplificar)
     const nuevaEcuacion = aplicarOperacion(ecuacionActual, operacion, num);
-    const textoNuevo = formatearEcuacion(nuevaEcuacion.a, nuevaEcuacion.b, nuevaEcuacion.c);
+    const textoConOperacion = `${ecuacionActual.texto}  →  ${formatearEcuacion(nuevaEcuacion.a, nuevaEcuacion.b, nuevaEcuacion.c)}`;
 
     if (elVistaPrevia) {
         elVistaPrevia.style.display = 'block';
         elVistaPrevia.innerHTML = '';
         const div = document.createElement('div');
         div.className = 'ecuacion-linea vista-previa';
-        div.textContent = textoNuevo;
+        div.textContent = textoConOperacion;
         elVistaPrevia.appendChild(div);
     }
 
-    elBtnOperar.disabled = false;
-    elBtnOperar.textContent = 'Operar';
+    elBtnAccion.disabled = false;
+    elBtnAccion.textContent = 'Operar';
 }
 
-// ---------- Operar (validar y aplicar paso) ----------
-function operar() {
+// ---------- Manejar el botón (alterna entre Operar y Confirmar paso) ----------
+function manejarBoton() {
+    if (practicaState.operacionPendiente) {
+        // Estamos en modo "Confirmar paso"
+        confirmarPaso();
+    } else {
+        // Estamos en modo "Operar"
+        realizarOperacion();
+    }
+}
+
+// ---------- Operar: mostrar la operación sin simplificar ----------
+function realizarOperacion() {
     const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
     if (!opSeleccionada) {
         mostrarFeedbackPractica('Selecciona una operación.', 'error');
@@ -212,62 +233,141 @@ function operar() {
         return;
     }
 
+    // Verificar que no estemos ya en la solución
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
         mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error');
         return;
     }
 
-    const pasoEsperado = practicaState.pasos[practicaState.pasoActual + 1];
-    if (!pasoEsperado) {
+    const ecuacionActual = practicaState.pasos[practicaState.pasoActual];
+    if (!ecuacionActual || ecuacionActual.tipo === 'solucion') {
         mostrarFeedbackPractica('No hay más pasos.', 'error');
         return;
     }
 
-    let esCorrecto = false;
-    if (pasoEsperado.tipo === 'mover_constante' || pasoEsperado.tipo === 'dividir') {
-        esCorrecto = (operacion === pasoEsperado.operacion && num === pasoEsperado.valor);
+    // Generar la ecuación con la operación aplicada (sin simplificar)
+    const nuevaEcuacion = aplicarOperacion(ecuacionActual, operacion, num);
+    const textoConOperacion = `${ecuacionActual.texto}  →  ${formatearEcuacion(nuevaEcuacion.a, nuevaEcuacion.b, nuevaEcuacion.c)}`;
+
+    // Guardar la operación pendiente
+    practicaState.operacionPendiente = {
+        operacion,
+        numero: num,
+        ecuacionOriginal: ecuacionActual,
+        ecuacionAplicada: nuevaEcuacion,
+        textoVistaPrevia: textoConOperacion
+    };
+
+    // Mostrar la vista previa (ya está mostrada, pero aseguramos)
+    if (elVistaPrevia) {
+        elVistaPrevia.style.display = 'block';
+        elVistaPrevia.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'ecuacion-linea vista-previa';
+        div.textContent = textoConOperacion;
+        elVistaPrevia.appendChild(div);
     }
 
-    if (esCorrecto) {
-        practicaState.pasoActual++;
-        mostrarPasosConfirmados();
-        resetearControles();
-        elBtnOperar.textContent = 'Confirmar paso';
+    // Cambiar el botón a "Confirmar paso"
+    elBtnAccion.textContent = 'Confirmar paso';
+    // Deshabilitar los botones de operación y número para que no se cambien
+    elOperacionBtns.forEach(btn => btn.disabled = true);
+    elNumeroPractica.disabled = true;
+    // El botón ya está habilitado
+    elBtnAccion.disabled = false;
+}
 
-        // Verificar si hemos llegado a la solución
-        if (practicaState.pasoActual === practicaState.pasos.length - 1) {
-            // Solución alcanzada: ocultar controles y mostrar mensaje de éxito
-            const solucion = practicaState.pasos[practicaState.pasoActual];
-            if (elControlesPractica) elControlesPractica.style.display = 'none';
-            if (elMensajeExito) {
-                elMensajeExito.style.display = 'block';
-                if (elTextoSolucion) elTextoSolucion.textContent = solucion.texto;
-            }
-            // Ocultar feedback temporal (por si acaso)
-            if (elFeedbackPractica) {
-                elFeedbackPractica.className = 'feedback hidden';
-                elFeedbackPractica.textContent = '';
-                if (feedbackTimeout) {
-                    clearTimeout(feedbackTimeout);
-                    feedbackTimeout = null;
-                }
-            }
-            // Mostrar botón siguiente
-            if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
-            // Deshabilitar controles por si acaso
-            elOperacionBtns.forEach(btn => btn.disabled = true);
-            elNumeroPractica.disabled = true;
-            elBtnOperar.disabled = true;
-        } else {
-            // Paso intermedio correcto
-            mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
-            // Habilitar controles para el siguiente paso
-            elOperacionBtns.forEach(btn => btn.disabled = false);
-            elNumeroPractica.disabled = false;
-            elBtnOperar.disabled = true;
-        }
-    } else {
+// ---------- Confirmar paso: simplificar y agregar al historial ----------
+function confirmarPaso() {
+    if (!practicaState.operacionPendiente) {
+        // No debería ocurrir
+        return;
+    }
+
+    const pendiente = practicaState.operacionPendiente;
+    const ecuacionAplicada = pendiente.ecuacionAplicada;
+    const ecuacionSimplificada = aplicarOperacion(
+        pendiente.ecuacionOriginal,
+        pendiente.operacion,
+        pendiente.numero
+    );
+    // La ecuación simplificada ya la tenemos (es la misma que aplicada, pero la calculamos de nuevo por claridad)
+    // En realidad, `ecuacionAplicada` ya es el resultado de aplicar la operación, que es la simplificada.
+    // Pero para evitar redondeos, usamos la que tenemos.
+    const textoSimplificado = formatearEcuacion(ecuacionAplicada.a, ecuacionAplicada.b, ecuacionAplicada.c);
+
+    // Verificar si este paso coincide con el siguiente paso esperado
+    const pasoEsperado = practicaState.pasos[practicaState.pasoActual + 1];
+    let esCorrecto = false;
+    if (pasoEsperado && (pasoEsperado.tipo === 'mover_constante' || pasoEsperado.tipo === 'dividir')) {
+        // Comparar con la operación y número esperados
+        esCorrecto = (pendiente.operacion === pasoEsperado.operacion && pendiente.numero === pasoEsperado.valor);
+    }
+
+    if (!esCorrecto) {
+        // El paso no es correcto
         mostrarFeedbackPractica('❌ Ese paso no es correcto. Revisa la pista.', 'error');
+        // Dejamos la operación pendiente para que pueda corregir? Mejor reiniciamos el estado de pendiente y habilitamos controles
+        practicaState.operacionPendiente = null;
+        resetearControles();
+        elOperacionBtns.forEach(btn => btn.disabled = false);
+        elNumeroPractica.disabled = false;
+        elBtnAccion.textContent = 'Operar';
+        elBtnAccion.disabled = true;
+        // Ocultar vista previa
+        if (elVistaPrevia) {
+            elVistaPrevia.style.display = 'none';
+            elVistaPrevia.innerHTML = '';
+        }
+        return;
+    }
+
+    // Paso correcto: avanzar al siguiente paso confirmado (el simplificado)
+    practicaState.pasoActual++;
+    // Agregar al historial el texto simplificado
+    mostrarHistorial();  // Esto mostrará todos los pasos confirmados hasta el actual
+
+    // Limpiar la operación pendiente
+    practicaState.operacionPendiente = null;
+
+    // Ocultar vista previa
+    if (elVistaPrevia) {
+        elVistaPrevia.style.display = 'none';
+        elVistaPrevia.innerHTML = '';
+    }
+
+    // Restablecer controles
+    resetearControles();
+    elOperacionBtns.forEach(btn => btn.disabled = false);
+    elNumeroPractica.disabled = false;
+    elBtnAccion.textContent = 'Operar';
+    elBtnAccion.disabled = true;
+
+    // Verificar si hemos llegado a la solución
+    if (practicaState.pasoActual === practicaState.pasos.length - 1) {
+        // Solución alcanzada
+        const solucion = practicaState.pasos[practicaState.pasoActual];
+        if (elControlesPractica) elControlesPractica.style.display = 'none';
+        if (elMensajeExito) {
+            elMensajeExito.style.display = 'block';
+            if (elTextoSolucion) elTextoSolucion.textContent = solucion.texto;
+        }
+        if (elFeedbackPractica) {
+            elFeedbackPractica.className = 'feedback hidden';
+            elFeedbackPractica.textContent = '';
+            if (feedbackTimeout) {
+                clearTimeout(feedbackTimeout);
+                feedbackTimeout = null;
+            }
+        }
+        if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
+        // Deshabilitar todo
+        elOperacionBtns.forEach(btn => btn.disabled = true);
+        elNumeroPractica.disabled = true;
+        elBtnAccion.disabled = true;
+    } else {
+        // Mostrar feedback de éxito
+        mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
     }
 }
 
@@ -415,33 +515,36 @@ function iniciarJuego() {
     elOpcionesAlt = document.getElementById('opciones-container-alt');
     elFeedbackAlt = document.getElementById('feedback-message-alt');
     elRachaAlt = document.getElementById('racha-actual-alt');
-    elPasosConfirmados = document.getElementById('pasos-confirmados');
+    elHistorialPasos = document.getElementById('historial-pasos');
     elVistaPrevia = document.getElementById('vista-previa');
     elFeedbackPractica = document.getElementById('feedback-practica');
     elNextPracticaBtn = document.getElementById('next-practica-btn');
     elNumeroPractica = document.getElementById('numero-practica');
-    elBtnOperar = document.getElementById('btn-operar');
+    elBtnAccion = document.getElementById('btn-accion');
     elControlesPractica = document.getElementById('controles-practica');
     elMensajeExito = document.getElementById('mensaje-exito');
     elTextoSolucion = document.getElementById('texto-solucion');
 
-    if (elBtnOperar) {
-        elBtnOperar.addEventListener('click', operar);
-    } else {
-        console.error('❌ No se encontró el botón "Operar"');
+    if (elBtnAccion) {
+        elBtnAccion.addEventListener('click', manejarBoton);
     }
 
     elOperacionBtns = document.querySelectorAll('.operacion-btn');
 
     elOperacionBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            // Si hay operación pendiente, no permitir cambiar
+            if (practicaState.operacionPendiente) return;
             elOperacionBtns.forEach(b => b.classList.remove('seleccionado'));
             btn.classList.add('seleccionado');
             actualizarVistaPrevia();
         });
     });
 
-    elNumeroPractica.addEventListener('input', actualizarVistaPrevia);
+    elNumeroPractica.addEventListener('input', () => {
+        if (practicaState.operacionPendiente) return;
+        actualizarVistaPrevia();
+    });
 
     if (window.jugador) {
         elNombre.textContent = window.jugador.nombre || 'Jugador';
