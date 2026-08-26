@@ -1,27 +1,31 @@
-// common.js - Funciones compartidas para todas las páginas (actualizado)
-let uid = null;
-let jugador = null;
+// common.js - Funciones compartidas para todas las páginas
+// Exporta variables globales para que los juegos las usen
+
+window.uid = null;
+window.jugador = null;
 
 function getUid() {
     return sessionStorage.getItem('mathquest_uid');
 }
 
 async function cargarJugador() {
-    uid = getUid();
-    if (!uid) {
+    window.uid = getUid();
+    if (!window.uid) {
         window.location.href = 'index.html';
         return;
     }
     try {
-        const snap = await db.collection('usuarios').doc(uid).get();
+        const snap = await db.collection('usuarios').doc(window.uid).get();
         if (!snap.exists) {
             window.location.href = 'index.html';
             return;
         }
-        jugador = snap.data();
-        if (!jugador.nombre) jugador.nombre = 'Trotamundos';
+        window.jugador = snap.data();
+        if (!window.jugador.nombre) window.jugador.nombre = 'Trotamundos';
         actualizarUICompleta();
         configurarEdicionNombre();
+        // Disparar evento personalizado para que los juegos sepan que el jugador está listo
+        document.dispatchEvent(new CustomEvent('jugador-cargado', { detail: window.jugador }));
     } catch (error) {
         console.error('Error al cargar jugador:', error);
         const elNombre = document.getElementById('player-name');
@@ -29,28 +33,27 @@ async function cargarJugador() {
     }
 }
 
-// Actualiza todos los elementos de la UI que puedan existir
 function actualizarUICompleta() {
-    if (!jugador) return;
+    if (!window.jugador) return;
 
     // Nombre
     const elNombre = document.getElementById('player-name');
-    if (elNombre) elNombre.textContent = jugador.nombre;
+    if (elNombre) elNombre.textContent = window.jugador.nombre;
 
     // Nivel
     const elNivel = document.getElementById('player-level');
-    if (elNivel) elNivel.textContent = jugador.nivel || 1;
+    if (elNivel) elNivel.textContent = window.jugador.nivel || 1;
 
     // Monedas
     const elMonedas = document.getElementById('player-coins');
-    if (elMonedas) elMonedas.textContent = jugador.monedas || 0;
+    if (elMonedas) elMonedas.textContent = window.jugador.monedas || 0;
 
     // XP bar
     const elXpBarra = document.getElementById('xp-bar-fill');
     const elXpTexto = document.getElementById('xp-text');
     if (elXpBarra && elXpTexto) {
         const XP_POR_NIVEL = 100;
-        const xpEnNivel = (jugador.xp || 0) % XP_POR_NIVEL;
+        const xpEnNivel = (window.jugador.xp || 0) % XP_POR_NIVEL;
         elXpBarra.style.width = `${xpEnNivel}%`;
         elXpTexto.textContent = `${xpEnNivel} / ${XP_POR_NIVEL} XP`;
     }
@@ -58,34 +61,30 @@ function actualizarUICompleta() {
     // Región
     const elRegion = document.getElementById('player-region');
     if (elRegion) {
-        // Si tienes función regionParaNivel, la puedes usar; si no, mostrar región guardada
-        elRegion.textContent = jugador.regionActual || 'Aldea del Factor Común';
+        elRegion.textContent = window.jugador.regionActual || 'Aldea del Factor Común';
     }
 
     // Puntuación (para incógnita)
     const elPuntuacion = document.getElementById('player-score');
     if (elPuntuacion) {
-        elPuntuacion.textContent = jugador.juegos?.incognita?.puntuacion || 0;
+        elPuntuacion.textContent = window.jugador.juegos?.incognita?.puntuacion || 0;
     }
 }
 
 function configurarEdicionNombre() {
-    // Buscar tanto el botón del lobby (edit-name-btn) como el de los juegos (btn-edit-name)
     const btnEditar = document.getElementById('edit-name-btn') || document.getElementById('btn-edit-name');
     if (!btnEditar) return;
-    
-    // Reemplazar cualquier listener anterior clonando el botón (para evitar duplicados)
     const nuevoBtn = btnEditar.cloneNode(true);
     btnEditar.parentNode.replaceChild(nuevoBtn, btnEditar);
 
     nuevoBtn.addEventListener('click', () => {
-        if (!jugador) return;
-        const nuevoNombre = prompt('Ingresa tu nuevo nombre de aventurero:', jugador.nombre);
-        if (nuevoNombre && nuevoNombre.trim() !== '' && nuevoNombre !== jugador.nombre) {
+        if (!window.jugador) return;
+        const nuevoNombre = prompt('Ingresa tu nuevo nombre de aventurero:', window.jugador.nombre);
+        if (nuevoNombre && nuevoNombre.trim() !== '' && nuevoNombre !== window.jugador.nombre) {
             const nombreLimpio = nuevoNombre.trim();
-            db.collection('usuarios').doc(uid).update({ nombre: nombreLimpio })
+            db.collection('usuarios').doc(window.uid).update({ nombre: nombreLimpio })
                 .then(() => {
-                    jugador.nombre = nombreLimpio;
+                    window.jugador.nombre = nombreLimpio;
                     sessionStorage.setItem('mathquest_nombre', nombreLimpio);
                     actualizarUICompleta();
                     mostrarFeedback('¡Nombre actualizado!', 'exito');
@@ -99,24 +98,19 @@ function configurarEdicionNombre() {
 }
 
 function mostrarFeedback(mensaje, tipo) {
-    // Buscar cualquier elemento con id feedback-message (puede estar en lobby o juegos)
     const feedback = document.getElementById('feedback-message');
     if (feedback) {
         feedback.textContent = mensaje;
         feedback.className = 'feedback';
-        if (tipo === 'exito') {
-            feedback.classList.add('feedback-exito');
-        } else if (tipo === 'error') {
-            feedback.classList.add('feedback-error');
-        }
+        if (tipo === 'exito') feedback.classList.add('feedback-exito');
+        else if (tipo === 'error') feedback.classList.add('feedback-error');
         feedback.classList.remove('hidden');
         setTimeout(() => feedback.classList.add('hidden'), 2500);
     }
 }
 
-// Escuchar cambios de autenticación para redirigir si es necesario (opcional)
+// Redirigir si no hay usuario (solo en páginas protegidas)
 firebase.auth().onAuthStateChanged((user) => {
-    // Si no hay usuario y estamos en una página que requiere login, redirigir
     const paginasPublicas = ['index.html', 'register.html'];
     const path = window.location.pathname.split('/').pop();
     if (!user && !paginasPublicas.includes(path)) {
@@ -124,5 +118,4 @@ firebase.auth().onAuthStateChanged((user) => {
     }
 });
 
-// Cargar jugador al iniciar
 document.addEventListener('DOMContentLoaded', cargarJugador);
