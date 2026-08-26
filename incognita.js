@@ -2,22 +2,21 @@
 // incognita.js – Lógica del juego "¿Dónde está la incógnita?"
 // ============================================================
 
-// ---------- Configuración ----------
 let modoActual = 'alternativas';
 let racha = 0;
 let puntuacion = 0;
 
-// ---------- Elementos del DOM (se asignan al iniciar) ----------
+// Elementos del DOM
 let elNombre, elPuntuacion;
 let elPreguntaAlt, elOpcionesAlt, elFeedbackAlt, elRachaAlt;
 let elEcuacionActual, elPasosRealizados, elFeedbackPractica, elNextPracticaBtn;
 let elNumeroPractica, elAplicarPasoBtn, elOperacionBtns;
 
-// ---------- Generación de ecuaciones lineales ----------
+// ---------- Generación de ecuaciones ----------
 function generarEcuacionLineal() {
-    const a = Math.floor(Math.random() * 4) + 1; // 1-4
-    const b = Math.floor(Math.random() * 10) - 5; // -5 a 4
-    const x = Math.floor(Math.random() * 10) - 5; // -5 a 4
+    const a = Math.floor(Math.random() * 4) + 1;
+    const b = Math.floor(Math.random() * 10) - 5;
+    const x = Math.floor(Math.random() * 10) - 5;
     const c = a * x + b;
     return { a, b, c, x };
 }
@@ -35,16 +34,10 @@ function formatearEcuacion(a, b, c) {
 // ---------- Generación de pasos correctos ----------
 function generarPasos(a, b, c, x) {
     const pasos = [];
-    // Paso 0: ecuación original
-    pasos.push({
-        tipo: 'original',
-        texto: formatearEcuacion(a, b, c),
-        a: a, b: b, c: c
-    });
+    pasos.push({ tipo: 'original', texto: formatearEcuacion(a, b, c), a, b, c });
 
     let pasoActual = { a, b, c };
 
-    // Paso 1: mover constante (sumar/restar)
     if (b !== 0) {
         const valor = Math.abs(b);
         const operacion = b > 0 ? 'restar' : 'sumar';
@@ -52,8 +45,8 @@ function generarPasos(a, b, c, x) {
         const nuevoC = c - b;
         pasos.push({
             tipo: 'mover_constante',
-            operacion: operacion,
-            valor: valor,
+            operacion,
+            valor,
             a: a,
             b: nuevoB,
             c: nuevoC,
@@ -62,7 +55,6 @@ function generarPasos(a, b, c, x) {
         pasoActual = { a, b: nuevoB, c: nuevoC };
     }
 
-    // Paso 2: dividir por a (si a !== 1)
     if (a !== 1) {
         const valor = a;
         const operacion = 'dividir';
@@ -70,8 +62,8 @@ function generarPasos(a, b, c, x) {
         const nuevoC = pasoActual.c / a;
         pasos.push({
             tipo: 'dividir',
-            operacion: operacion,
-            valor: valor,
+            operacion,
+            valor,
             a: nuevoA,
             b: pasoActual.b,
             c: nuevoC,
@@ -80,22 +72,15 @@ function generarPasos(a, b, c, x) {
         pasoActual = { a: nuevoA, b: pasoActual.b, c: nuevoC };
     }
 
-    // Paso 3: solución final
-    pasos.push({
-        tipo: 'solucion',
-        x: x,
-        texto: 'x = ' + x
-    });
-
+    pasos.push({ tipo: 'solucion', x, texto: 'x = ' + x });
     return pasos;
 }
 
 // ---------- Estado de práctica ----------
 let practicaState = {
     pasos: [],
-    pasoActual: 0,        // índice del paso en el que estamos
-    eq: null,
-    pasosRealizados: []   // historial de pasos aplicados (texto)
+    pasoActual: 0,
+    eq: null
 };
 
 function iniciarPractica() {
@@ -103,7 +88,6 @@ function iniciarPractica() {
     practicaState.eq = eq;
     practicaState.pasos = generarPasos(eq.a, eq.b, eq.c, eq.x);
     practicaState.pasoActual = 0;
-    practicaState.pasosRealizados = [];
 
     if (elFeedbackPractica) {
         elFeedbackPractica.className = 'feedback hidden';
@@ -125,28 +109,23 @@ function mostrarPasoActual() {
     const paso = practicaState.pasos[practicaState.pasoActual];
     if (!paso) return;
 
-    // Limpiar
     elEcuacionActual.innerHTML = '';
 
     if (paso.tipo === 'original') {
-        // Mostrar ecuación original
         const div = document.createElement('div');
         div.className = 'ecuacion-linea';
         div.textContent = paso.texto;
         elEcuacionActual.appendChild(div);
-        // Instrucción
         const hint = document.createElement('div');
         hint.className = 'hint-text';
         hint.textContent = 'Aplica el primer paso para despejar la incógnita.';
         elEcuacionActual.appendChild(hint);
     } else if (paso.tipo === 'mover_constante' || paso.tipo === 'dividir') {
-        // Mostrar ecuación actual (la del paso anterior)
         const pasoAnterior = practicaState.pasos[practicaState.pasoActual - 1];
         const div = document.createElement('div');
         div.className = 'ecuacion-linea';
         div.textContent = pasoAnterior.texto;
         elEcuacionActual.appendChild(div);
-        // Flecha y operación esperada (pista)
         const pista = document.createElement('div');
         pista.className = 'hint-text';
         let opTexto = '';
@@ -158,7 +137,6 @@ function mostrarPasoActual() {
         pista.textContent = `👉 El siguiente paso es ${opTexto} en ambos lados.`;
         elEcuacionActual.appendChild(pista);
     } else if (paso.tipo === 'solucion') {
-        // Mostrar solución final
         const div = document.createElement('div');
         div.className = 'ecuacion-linea';
         div.style.color = '#22c55e';
@@ -181,7 +159,6 @@ function mostrarPasoActual() {
 function actualizarHistorial() {
     if (!elPasosRealizados) return;
     elPasosRealizados.innerHTML = '';
-    // Mostrar todos los pasos ya realizados (excepto el original)
     for (let i = 1; i < practicaState.pasoActual; i++) {
         const p = practicaState.pasos[i];
         if (p.tipo === 'solucion') continue;
@@ -192,10 +169,15 @@ function actualizarHistorial() {
     }
 }
 
-// ---------- Aplicar paso (validación) ----------
+// ---------- Aplicar paso (con depuración) ----------
 function aplicarPaso() {
+    console.log('Aplicar paso ejecutado'); // <-- LOG DE DEPURACIÓN
+
     const paso = practicaState.pasos[practicaState.pasoActual];
-    if (!paso || paso.tipo === 'original' || paso.tipo === 'solucion') return;
+    if (!paso || paso.tipo === 'original' || paso.tipo === 'solucion') {
+        console.warn('Paso no válido:', paso);
+        return;
+    }
 
     // Obtener operación seleccionada
     const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
@@ -212,7 +194,7 @@ function aplicarPaso() {
         return;
     }
 
-    // Validar paso
+    // Validar
     let esCorrecto = false;
     if (paso.tipo === 'mover_constante') {
         esCorrecto = (operacion === paso.operacion && num === paso.valor);
@@ -220,13 +202,13 @@ function aplicarPaso() {
         esCorrecto = (operacion === paso.operacion && num === paso.valor);
     }
 
+    console.log('Validación:', { operacion, num, esperadoOperacion: paso.operacion, esperadoValor: paso.valor, esCorrecto });
+
     if (esCorrecto) {
-        // Avanzar al siguiente paso
         practicaState.pasoActual++;
         actualizarHistorial();
         mostrarPasoActual();
         mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
-        // Limpiar selección de operación
         document.querySelectorAll('.operacion-btn').forEach(b => b.classList.remove('seleccionado'));
     } else {
         mostrarFeedbackPractica('❌ Ese paso no es correcto. Revisa la pista.', 'error');
@@ -243,7 +225,7 @@ function mostrarFeedbackPractica(mensaje, tipo) {
     setTimeout(() => elFeedbackPractica.classList.add('hidden'), 2500);
 }
 
-// ---------- Modo Alternativas ----------
+// ---------- Modo Alternativas (sin cambios) ----------
 let preguntaActualAlt = null;
 
 function generarPreguntaAlternativas() {
@@ -317,7 +299,6 @@ function responderAlternativa(opcionElegida, btnElegido) {
     setTimeout(nuevaPreguntaAlternativas, 1600);
 }
 
-// ---------- Guardar progreso ----------
 async function guardarProgreso(acerto) {
     if (!window.uid) return;
     try {
@@ -335,7 +316,6 @@ async function guardarProgreso(acerto) {
     }
 }
 
-// ---------- Utilidades ----------
 function mezclarArray(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -378,7 +358,20 @@ function iniciarJuego() {
     elFeedbackPractica = document.getElementById('feedback-practica');
     elNextPracticaBtn = document.getElementById('next-practica-btn');
     elNumeroPractica = document.getElementById('numero-practica');
+
+    // Búsqueda robusta del botón "Aplicar paso"
     elAplicarPasoBtn = document.getElementById('aplicar-paso-btn');
+    if (!elAplicarPasoBtn) {
+        // Fallback: buscar por querySelector
+        elAplicarPasoBtn = document.querySelector('#aplicar-paso-btn, #aplicar-paso, button[text="Aplicar paso"]');
+    }
+    if (!elAplicarPasoBtn) {
+        console.error('❌ No se encontró el botón "Aplicar paso"');
+    } else {
+        console.log('✅ Botón "Aplicar paso" encontrado');
+        elAplicarPasoBtn.addEventListener('click', aplicarPaso);
+    }
+
     elOperacionBtns = document.querySelectorAll('.operacion-btn');
 
     // Cargar datos del jugador
@@ -394,7 +387,7 @@ function iniciarJuego() {
     document.getElementById('mode-alternativas').addEventListener('click', () => cambiarModo('alternativas'));
     document.getElementById('mode-practica').addEventListener('click', () => cambiarModo('practica'));
 
-    // Evento: selección de operación
+    // Selección de operación
     elOperacionBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             elOperacionBtns.forEach(b => b.classList.remove('seleccionado'));
@@ -402,15 +395,14 @@ function iniciarJuego() {
         });
     });
 
-    // Evento: aplicar paso
-    elAplicarPasoBtn.addEventListener('click', aplicarPaso);
+    // Siguiente ecuación
+    if (elNextPracticaBtn) {
+        elNextPracticaBtn.addEventListener('click', () => {
+            iniciarPractica();
+        });
+    }
 
-    // Evento: siguiente ecuación
-    elNextPracticaBtn.addEventListener('click', () => {
-        iniciarPractica();
-    });
-
-    // Botón salir
+    // Salir
     document.getElementById('btn-logout').addEventListener('click', async () => {
         if (confirm('¿Seguro que quieres cerrar sesión?')) {
             await firebase.auth().signOut();
@@ -419,11 +411,10 @@ function iniciarJuego() {
         }
     });
 
-    // Iniciar en modo alternativas
     cambiarModo('alternativas');
 }
 
-// ---------- Esperar a que common.js cargue el jugador ----------
+// ---------- Esperar a common.js ----------
 function esperarJugador() {
     if (window.jugador) {
         iniciarJuego();
