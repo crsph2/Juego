@@ -80,9 +80,10 @@ function generarPasos(a, b, c, x) {
 
 // ---------- Estado de práctica ----------
 let practicaState = {
-    pasos: [],
-    pasoActual: 0,              // índice del último paso confirmado (original + simplificaciones)
-    operacionPendiente: null,   // { operacion, numero, ecuacionOriginal, ecuacionAplicada, textoOperacion }
+    pasos: [],                 // pasos esperados (original, simplificaciones, solucion)
+    pasoActual: 0,            // índice del último paso simplificado confirmado (0 = original)
+    historialLineas: [],      // array de objetos { texto, tipo } para mostrar en el historial
+    operacionPendiente: null, // { operacion, numero, ecuacionOriginal, ecuacionAplicada, textoOperacion }
     eq: null
 };
 
@@ -102,35 +103,27 @@ function aplicarOperacion(ecuacion, op, num) {
 function formatearEcuacionConOperacion(original, op, num) {
     const textoOriginal = formatearEcuacion(original.a, original.b, original.c);
     let operador = '';
-    let numStr = num;
     if (op === 'sumar') operador = '+';
     else if (op === 'restar') operador = '-';
     else if (op === 'multiplicar') operador = '·';
     else if (op === 'dividir') operador = '÷';
 
-    // Para mostrar la operación a ambos lados
-    // Ej: "4x + 1 - 1 = -15 - 1"
     const partes = textoOriginal.split('=');
-    if (partes.length !== 2) return textoOriginal; // fallback
-    const izq = partes[0].trim();
-    const der = partes[1].trim();
-    let nuevaIzq = izq;
-    let nuevaDer = der;
-    // Para sumar/restar, simplemente añadimos al final
+    if (partes.length !== 2) return textoOriginal;
+    let izq = partes[0].trim();
+    let der = partes[1].trim();
     if (op === 'sumar' || op === 'restar') {
         const signo = (op === 'sumar') ? '+' : '-';
-        nuevaIzq += ` ${signo} ${num}`;
-        nuevaDer += ` ${signo} ${num}`;
+        izq += ` ${signo} ${num}`;
+        der += ` ${signo} ${num}`;
     } else if (op === 'multiplicar') {
-        // Multiplicar: agregamos · num al final de cada lado, pero con paréntesis? mejor simple
-        // Para mantenerlo simple: añadimos " · num" al final
-        nuevaIzq += ` · ${num}`;
-        nuevaDer += ` · ${num}`;
+        izq += ` · ${num}`;
+        der += ` · ${num}`;
     } else if (op === 'dividir') {
-        nuevaIzq += ` ÷ ${num}`;
-        nuevaDer += ` ÷ ${num}`;
+        izq += ` ÷ ${num}`;
+        der += ` ÷ ${num}`;
     }
-    return `${nuevaIzq} = ${nuevaDer}`;
+    return `${izq} = ${der}`;
 }
 
 // ---------- Iniciar práctica ----------
@@ -140,6 +133,9 @@ function iniciarPractica() {
     practicaState.pasos = generarPasos(eq.a, eq.b, eq.c, eq.x);
     practicaState.pasoActual = 0;
     practicaState.operacionPendiente = null;
+    practicaState.historialLineas = [
+        { texto: formatearEcuacion(eq.a, eq.b, eq.c), tipo: 'original' }
+    ];
 
     // Mostrar controles, ocultar mensaje de éxito y siguiente
     if (elControlesPractica) elControlesPractica.style.display = 'block';
@@ -155,37 +151,26 @@ function iniciarPractica() {
     }
 
     mostrarHistorial();
-
     resetearControles();
-    elOperacionBtns.forEach(btn => btn.disabled = false);
-    elNumeroPractica.disabled = false;
-    elBtnAccion.disabled = true;
-    elBtnAccion.textContent = 'Operar';
+    actualizarBoton();
 }
 
 function mostrarHistorial() {
     if (!elHistorialPasos) return;
     elHistorialPasos.innerHTML = '';
-    // Mostrar todos los pasos confirmados (desde 0 hasta pasoActual inclusive)
-    // Pero también, si hay operación pendiente, ya se agregó al historial, pero no está en pasos confirmados.
-    // La operación pendiente se agrega directamente al historial al presionar "Operar".
-    // Por tanto, el historial se construye a partir de los pasos confirmados + la operación pendiente (si existe).
-    // Los pasos confirmados son los índices 0..pasoActual.
-    for (let i = 0; i <= practicaState.pasoActual; i++) {
-        const paso = practicaState.pasos[i];
-        if (!paso) continue;
+    practicaState.historialLineas.forEach(linea => {
         const div = document.createElement('div');
         div.className = 'ecuacion-linea paso-confirmado';
-        div.textContent = paso.texto;
+        if (linea.tipo === 'operacion') {
+            div.style.color = '#fbbf24';
+            div.style.fontWeight = 'bold';
+        } else if (linea.tipo === 'solucion') {
+            div.style.color = '#22c55e';
+            div.style.fontWeight = 'bold';
+        }
+        div.textContent = linea.texto;
         elHistorialPasos.appendChild(div);
-    }
-    // Si hay operación pendiente, mostramos la línea de operación (sin simplificar)
-    if (practicaState.operacionPendiente) {
-        const div = document.createElement('div');
-        div.className = 'ecuacion-linea paso-operacion';
-        div.textContent = practicaState.operacionPendiente.textoOperacion;
-        elHistorialPasos.appendChild(div);
-    }
+    });
 }
 
 function resetearControles() {
@@ -194,13 +179,11 @@ function resetearControles() {
     elBtnAccion.disabled = true;
 }
 
-// ---------- Actualizar disponibilidad del botón ----------
 function actualizarBoton() {
     if (practicaState.operacionPendiente) {
-        // Estamos en modo "Confirmar paso"
+        // Modo "Confirmar paso"
         elBtnAccion.textContent = 'Confirmar paso';
         elBtnAccion.disabled = false;
-        // Bloquear controles de operación y número
         elOperacionBtns.forEach(btn => btn.disabled = true);
         elNumeroPractica.disabled = true;
     } else {
@@ -210,13 +193,12 @@ function actualizarBoton() {
         const haySeleccion = opSeleccionada && !isNaN(num) && num > 0;
         elBtnAccion.textContent = 'Operar';
         elBtnAccion.disabled = !haySeleccion;
-        // Habilitar controles (si no hay pendiente)
         elOperacionBtns.forEach(btn => btn.disabled = false);
         elNumeroPractica.disabled = false;
     }
 }
 
-// ---------- Manejar el botón (alterna entre Operar y Confirmar paso) ----------
+// ---------- Manejar el botón ----------
 function manejarBoton() {
     if (practicaState.operacionPendiente) {
         confirmarPaso();
@@ -239,7 +221,6 @@ function realizarOperacion() {
         return;
     }
 
-    // Verificar que no estemos ya en la solución
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
         mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error');
         return;
@@ -251,11 +232,10 @@ function realizarOperacion() {
         return;
     }
 
-    // Generar la ecuación con la operación aplicada (sin simplificar)
     const ecuacionAplicada = aplicarOperacion(ecuacionActual, operacion, num);
     const textoOperacion = formatearEcuacionConOperacion(ecuacionActual, operacion, num);
 
-    // Guardar la operación pendiente
+    // Guardar pendiente
     practicaState.operacionPendiente = {
         operacion,
         numero: num,
@@ -264,24 +244,20 @@ function realizarOperacion() {
         textoOperacion: textoOperacion
     };
 
-    // Actualizar el historial (se añade la línea de operación)
+    // Añadir al historial
+    practicaState.historialLineas.push({ texto: textoOperacion, tipo: 'operacion' });
     mostrarHistorial();
-
-    // Cambiar el botón a "Confirmar paso" y bloquear controles
-    actualizarBoton();
+    actualizarBoton(); // cambia a "Confirmar paso" y bloquea controles
 }
 
-// ---------- Confirmar paso: simplificar y agregar al historial ----------
+// ---------- Confirmar paso: validar y agregar simplificación ----------
 function confirmarPaso() {
-    if (!practicaState.operacionPendiente) {
-        return;
-    }
+    if (!practicaState.operacionPendiente) return;
 
     const pendiente = practicaState.operacionPendiente;
     const ecuacionAplicada = pendiente.ecuacionAplicada;
     const textoSimplificado = formatearEcuacion(ecuacionAplicada.a, ecuacionAplicada.b, ecuacionAplicada.c);
 
-    // Verificar si este paso coincide con el siguiente paso esperado
     const pasoEsperado = practicaState.pasos[practicaState.pasoActual + 1];
     let esCorrecto = false;
     if (pasoEsperado && (pasoEsperado.tipo === 'mover_constante' || pasoEsperado.tipo === 'dividir')) {
@@ -289,54 +265,42 @@ function confirmarPaso() {
     }
 
     if (!esCorrecto) {
-        // El paso no es correcto: eliminar la línea de operación del historial y restaurar
-        mostrarFeedbackPractica('❌ Ese paso no es correcto. Revisa la pista.', 'error');
-        // Quitar la operación pendiente
+        // Error: eliminar la última línea (la operación) y restaurar
+        practicaState.historialLineas.pop();
         practicaState.operacionPendiente = null;
-        // Restaurar historial (mostrar solo confirmados)
         mostrarHistorial();
-        // Restablecer controles
         resetearControles();
-        actualizarBoton(); // esto lo pondrá en modo Operar y habilitará controles
-        // También permitir que se pueda seleccionar de nuevo
+        actualizarBoton();
+        mostrarFeedbackPractica('❌ Ese paso no es correcto. Revisa la pista.', 'error');
         return;
     }
 
-    // Paso correcto: avanzar al siguiente paso confirmado (el simplificado)
+    // Correcto: avanzar y añadir simplificación
     practicaState.pasoActual++;
-    // Limpiar la operación pendiente
+    practicaState.historialLineas.push({ texto: textoSimplificado, tipo: 'simplificacion' });
     practicaState.operacionPendiente = null;
-    // Actualizar historial (mostrar todos los confirmados, incluido el nuevo simplificado)
+
     mostrarHistorial();
-
-    // Restablecer controles
     resetearControles();
-    actualizarBoton(); // esto lo pondrá en modo Operar (deshabilitado)
+    actualizarBoton(); // vuelve a "Operar" (deshabilitado)
 
-    // Verificar si hemos llegado a la solución
+    // Verificar si llegamos a la solución
     if (practicaState.pasoActual === practicaState.pasos.length - 1) {
-        // Solución alcanzada
-        const solucion = practicaState.pasos[practicaState.pasoActual];
+        // Marcar la última línea como solución
+        const ultimaLinea = practicaState.historialLineas[practicaState.historialLineas.length - 1];
+        if (ultimaLinea) ultimaLinea.tipo = 'solucion';
+        mostrarHistorial();
+
         if (elControlesPractica) elControlesPractica.style.display = 'none';
         if (elMensajeExito) {
             elMensajeExito.style.display = 'block';
-            if (elTextoSolucion) elTextoSolucion.textContent = solucion.texto;
-        }
-        if (elFeedbackPractica) {
-            elFeedbackPractica.className = 'feedback hidden';
-            elFeedbackPractica.textContent = '';
-            if (feedbackTimeout) {
-                clearTimeout(feedbackTimeout);
-                feedbackTimeout = null;
-            }
+            if (elTextoSolucion) elTextoSolucion.textContent = practicaState.pasos[practicaState.pasoActual].texto;
         }
         if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
-        // Deshabilitar todo
         elOperacionBtns.forEach(btn => btn.disabled = true);
         elNumeroPractica.disabled = true;
         elBtnAccion.disabled = true;
     } else {
-        // Mostrar feedback de éxito
         mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
     }
 }
@@ -502,7 +466,6 @@ function iniciarJuego() {
 
     elOperacionBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Si hay operación pendiente, no permitir cambiar
             if (practicaState.operacionPendiente) return;
             elOperacionBtns.forEach(b => b.classList.remove('seleccionado'));
             btn.classList.add('seleccionado');
