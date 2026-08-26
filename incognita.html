@@ -42,11 +42,25 @@
                 </div>
             </div>
 
-            <!-- Modo Práctica paso a paso -->
+            <!-- Modo Práctica paso a paso (NUEVA ESTRUCTURA) -->
             <div id="modo-practica" style="display: none;">
                 <div class="practica-container">
-                    <div id="ecuacion-actual" class="ecuacion-display"></div>
+                    <!-- Instrucción -->
+                    <p class="hint-text" style="text-align:center; margin-bottom: 10px;">
+                        Aplica la operación correcta a ambos lados de la ecuación para despejar la incógnita.
+                    </p>
 
+                    <!-- Ecuación original y pasos confirmados -->
+                    <div id="pasos-confirmados" class="ecuacion-display">
+                        <!-- Aquí se irán mostrando la ecuación original y los pasos ya aplicados -->
+                    </div>
+
+                    <!-- Vista previa del siguiente paso (se muestra al seleccionar operación y número) -->
+                    <div id="vista-previa" class="ecuacion-display" style="border-color: #fbbf24; background: rgba(251, 191, 36, 0.1); display: none;">
+                        <!-- Aquí se mostrará la ecuación transformada como vista previa -->
+                    </div>
+
+                    <!-- Controles -->
                     <div class="practica-controles">
                         <p class="hint-text">Elige la operación y el número para aplicar a ambos lados:</p>
                         <div class="operacion-botones">
@@ -57,11 +71,10 @@
                         </div>
                         <div class="numero-input">
                             <input type="number" id="numero-practica" placeholder="Número" value="1" step="1">
-                            <button id="aplicar-paso-btn" class="rpg-button primary">Aplicar paso</button>
+                            <button id="btn-operar" class="rpg-button primary" disabled>Operar</button>
                         </div>
                     </div>
 
-                    <div id="pasos-realizados" class="pasos-container"></div>
                     <div id="feedback-practica" class="feedback hidden"></div>
                     <button id="next-practica-btn" class="rpg-button" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;">Siguiente ecuación →</button>
                 </div>
