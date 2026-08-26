@@ -5,7 +5,6 @@
 // ---------- Configuración ----------
 const XP_POR_NIVEL = 100;
 
-// Regiones según nivel (mínimos actualizados)
 const REGIONES = [
   { minNivel: 1, nombre: "Aldea del Factor Común" },
   { minNivel: 2, nombre: "Ciudad del Factor Común" },
@@ -14,7 +13,6 @@ const REGIONES = [
   { minNivel: 13, nombre: "Ciudadela de los Polinomios" }
 ];
 
-// Calcula la región según el nivel
 function regionParaNivel(nivel) {
   let region = REGIONES[0].nombre;
   for (const r of REGIONES) {
@@ -23,7 +21,6 @@ function regionParaNivel(nivel) {
   return region;
 }
 
-// Calcula la dificultad (1 a 5) a partir del nivel
 function obtenerDificultad(nivel) {
   if (nivel === 1) return 1;
   if (nivel >= 2 && nivel <= 4) return 2;
@@ -36,6 +33,7 @@ function obtenerDificultad(nivel) {
 function normalizarFactorizacion(exp) {
   exp = exp.replace(/\s/g, '');
 
+  // Factor común: a(bx + c)
   let matchComun = exp.match(/^(\d+)\(([+-]?\d*)x([+-]\d+)\)$/);
   if (matchComun) {
     let a = parseInt(matchComun[1]);
@@ -52,6 +50,7 @@ function normalizarFactorizacion(exp) {
     return a + '(' + parteX + parteConst + ')';
   }
 
+  // Diferencia de cuadrados: (x+a)(x-a) o (ax+b)(ax-b)
   let matchCuadrados = exp.match(/^\(([+-]?\d*)x([+-]\d+)\)\(([+-]?\d*)x([+-]\d+)\)$/);
   if (matchCuadrados) {
     let a1 = matchCuadrados[1] === '' ? 1 : (matchCuadrados[1] === '-' ? -1 : parseInt(matchCuadrados[1]));
@@ -82,6 +81,7 @@ function normalizarFactorizacion(exp) {
     return fmt(factores[0]) + fmt(factores[1]);
   }
 
+  // Suma o diferencia de cubos
   let matchCubos = exp.match(/^\(x([+-])(\d+)\)\(x²([+-])(\d+)x\+(\d+)\)$/);
   if (matchCubos) {
     let signo1 = matchCubos[1];
@@ -292,7 +292,7 @@ let elPregunta, elOpciones, elFeedback, elRacha;
 
 // ---------- Inicialización ----------
 function iniciarJuego() {
-  // Obtener referencia a los elementos del DOM
+  // Asignar referencias del DOM
   elNombre = document.getElementById('player-name');
   elNivel = document.getElementById('player-level');
   elMonedas = document.getElementById('player-coins');
@@ -304,13 +304,15 @@ function iniciarJuego() {
   elFeedback = document.getElementById('feedback-message');
   elRacha = document.getElementById('racha-actual');
 
-  // Actualizar la UI con los datos del jugador
-  actualizarUI();
+  // Cargar datos del jugador desde window.jugador
+  if (window.jugador) {
+    actualizarUI();
+  }
 
-  // Cargar la primera pregunta
+  // Cargar primera pregunta
   nuevaPregunta();
 
-  // Configurar botón de guardar (si existe)
+  // Botón Guardar (si existe)
   const btnGuardar = document.getElementById('btn-save');
   if (btnGuardar) {
     btnGuardar.addEventListener('click', () => {
@@ -318,7 +320,7 @@ function iniciarJuego() {
     });
   }
 
-  // Configurar botón de salir (si existe)
+  // Botón Salir (ya existe en el HTML)
   const btnSalir = document.getElementById('btn-logout');
   if (btnSalir) {
     btnSalir.addEventListener('click', async () => {
@@ -331,7 +333,6 @@ function iniciarJuego() {
   }
 }
 
-// ---------- Funciones de UI ----------
 function actualizarUI() {
   if (!window.jugador) return;
 
@@ -419,7 +420,7 @@ async function responder(opcionElegida, btnElegido) {
     }
   }
 
-  // Actualizar datos del jugador
+  // Actualizar jugador usando window.jugador y window.uid
   if (window.jugador && window.uid) {
     const j = window.jugador;
     const nuevoXp = (j.xp || 0) + xpGanada;
@@ -461,7 +462,7 @@ async function responder(opcionElegida, btnElegido) {
     }
   }
 
-  // Esperar y cargar siguiente pregunta
+  // Cargar siguiente pregunta después de un breve retraso
   setTimeout(nuevaPregunta, 1600);
 }
 
@@ -476,7 +477,6 @@ function esperarJugador() {
 
 // Iniciar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-  // Si common.js ya cargó el jugador, iniciar; si no, esperar
   if (window.jugador) {
     iniciarJuego();
   } else {
