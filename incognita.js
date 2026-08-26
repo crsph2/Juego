@@ -80,10 +80,10 @@ function generarPasos(a, b, c, x) {
 
 // ---------- Estado de práctica ----------
 let practicaState = {
-    pasos: [],                 // pasos esperados (original, simplificaciones, solucion)
-    pasoActual: 0,            // índice del último paso simplificado confirmado (0 = original)
-    historialLineas: [],      // array de objetos { texto, tipo } para mostrar en el historial
-    operacionPendiente: null, // { operacion, numero, ecuacionOriginal, ecuacionAplicada, textoOperacion }
+    pasos: [],
+    pasoActual: 0,
+    historialLineas: [],
+    operacionPendiente: null,
     eq: null
 };
 
@@ -99,15 +99,8 @@ function aplicarOperacion(ecuacion, op, num) {
     }
 }
 
-// Formatea la ecuación con la operación aplicada de forma explícita
 function formatearEcuacionConOperacion(original, op, num) {
     const textoOriginal = formatearEcuacion(original.a, original.b, original.c);
-    let operador = '';
-    if (op === 'sumar') operador = '+';
-    else if (op === 'restar') operador = '-';
-    else if (op === 'multiplicar') operador = '·';
-    else if (op === 'dividir') operador = '÷';
-
     const partes = textoOriginal.split('=');
     if (partes.length !== 2) return textoOriginal;
     let izq = partes[0].trim();
@@ -137,7 +130,6 @@ function iniciarPractica() {
         { texto: formatearEcuacion(eq.a, eq.b, eq.c), tipo: 'original' }
     ];
 
-    // Mostrar controles, ocultar mensaje de éxito y siguiente
     if (elControlesPractica) elControlesPractica.style.display = 'block';
     if (elMensajeExito) elMensajeExito.style.display = 'none';
     if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'none';
@@ -181,13 +173,11 @@ function resetearControles() {
 
 function actualizarBoton() {
     if (practicaState.operacionPendiente) {
-        // Modo "Confirmar paso"
         elBtnAccion.textContent = 'Confirmar paso';
         elBtnAccion.disabled = false;
         elOperacionBtns.forEach(btn => btn.disabled = true);
         elNumeroPractica.disabled = true;
     } else {
-        // Modo "Operar"
         const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
         const num = parseInt(elNumeroPractica.value);
         const haySeleccion = opSeleccionada && !isNaN(num) && num > 0;
@@ -207,7 +197,7 @@ function manejarBoton() {
     }
 }
 
-// ---------- Operar: agregar la operación explícita al historial ----------
+// ---------- Operar ----------
 function realizarOperacion() {
     const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
     if (!opSeleccionada) {
@@ -235,7 +225,6 @@ function realizarOperacion() {
     const ecuacionAplicada = aplicarOperacion(ecuacionActual, operacion, num);
     const textoOperacion = formatearEcuacionConOperacion(ecuacionActual, operacion, num);
 
-    // Guardar pendiente
     practicaState.operacionPendiente = {
         operacion,
         numero: num,
@@ -244,13 +233,12 @@ function realizarOperacion() {
         textoOperacion: textoOperacion
     };
 
-    // Añadir al historial
     practicaState.historialLineas.push({ texto: textoOperacion, tipo: 'operacion' });
     mostrarHistorial();
-    actualizarBoton(); // cambia a "Confirmar paso" y bloquea controles
+    actualizarBoton();
 }
 
-// ---------- Confirmar paso: validar y agregar simplificación ----------
+// ---------- Confirmar paso ----------
 function confirmarPaso() {
     if (!practicaState.operacionPendiente) return;
 
@@ -265,7 +253,6 @@ function confirmarPaso() {
     }
 
     if (!esCorrecto) {
-        // Error: eliminar la última línea (la operación) y restaurar
         practicaState.historialLineas.pop();
         practicaState.operacionPendiente = null;
         mostrarHistorial();
@@ -275,34 +262,51 @@ function confirmarPaso() {
         return;
     }
 
-    // Correcto: avanzar y añadir simplificación
+    // Paso correcto: avanzar
     practicaState.pasoActual++;
     practicaState.historialLineas.push({ texto: textoSimplificado, tipo: 'simplificacion' });
     practicaState.operacionPendiente = null;
 
     mostrarHistorial();
     resetearControles();
-    actualizarBoton(); // vuelve a "Operar" (deshabilitado)
 
-    // Verificar si llegamos a la solución
-    if (practicaState.pasoActual === practicaState.pasos.length - 1) {
-        // Marcar la última línea como solución
-        const ultimaLinea = practicaState.historialLineas[practicaState.historialLineas.length - 1];
-        if (ultimaLinea) ultimaLinea.tipo = 'solucion';
+    // Verificar si el siguiente paso es la solución (se muestra automáticamente)
+    if (practicaState.pasoActual + 1 < practicaState.pasos.length &&
+        practicaState.pasos[practicaState.pasoActual + 1].tipo === 'solucion') {
+        // Mostrar solución automáticamente
+        practicaState.pasoActual++;
+        practicaState.historialLineas.push({
+            texto: practicaState.pasos[practicaState.pasoActual].texto,
+            tipo: 'solucion'
+        });
         mostrarHistorial();
 
+        // Ocultar controles y mostrar mensaje de éxito
         if (elControlesPractica) elControlesPractica.style.display = 'none';
         if (elMensajeExito) {
             elMensajeExito.style.display = 'block';
-            if (elTextoSolucion) elTextoSolucion.textContent = practicaState.pasos[practicaState.pasoActual].texto;
+            if (elTextoSolucion) {
+                elTextoSolucion.textContent = practicaState.pasos[practicaState.pasoActual].texto;
+            }
         }
         if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
         elOperacionBtns.forEach(btn => btn.disabled = true);
         elNumeroPractica.disabled = true;
         elBtnAccion.disabled = true;
-    } else {
-        mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
+        if (elFeedbackPractica) {
+            elFeedbackPractica.className = 'feedback hidden';
+            elFeedbackPractica.textContent = '';
+            if (feedbackTimeout) {
+                clearTimeout(feedbackTimeout);
+                feedbackTimeout = null;
+            }
+        }
+        return;
     }
+
+    // Si no hay solución automática, continuar con el siguiente paso
+    actualizarBoton();
+    mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
 }
 
 function mostrarFeedbackPractica(mensaje, tipo) {
@@ -322,7 +326,7 @@ function mostrarFeedbackPractica(mensaje, tipo) {
     }, 2500);
 }
 
-// ---------- Modo Alternativas ----------
+// ---------- Modo Alternativas (sin cambios) ----------
 let preguntaActualAlt = null;
 
 function generarPreguntaAlternativas() {
