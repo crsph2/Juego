@@ -1,52 +1,49 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Matejuegos - Lobby</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <main class="quest-container">
-        <section class="game-card lobby-card">
-            <header class="lobby-header">
-                <h1 class="game-title">🎮 Matejuegos</h1>
-                <div class="player-info">
-                    <span id="player-name" class="player-name">Jugador</span>
-                    <span class="player-coins">⭐ <span id="player-xp">0</span> XP</span>
-                </div>
-                <button id="btn-logout" class="rpg-button" style="padding: 8px 20px; font-size: 0.8rem; width: auto; background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; margin-top: 10px;">🚪 Cerrar sesión</button>
-            </header>
-
-            <div class="lobby-games">
-                <h2 class="lobby-subtitle">Elige tu aventura</h2>
-                
-                <div class="game-card-item" onclick="location.href='factorizados.html'">
-                    <div class="game-icon">⚔️</div>
-                    <div class="game-info">
-                        <h3>Factorizados</h3>
-                        <p>Factoriza expresiones algebraicas y sube de nivel</p>
-                        <span class="game-tag">Álgebra</span>
-                    </div>
-                </div>
-
-                <div class="game-card-item" onclick="location.href='incognita.html'">
-                    <div class="game-icon">🔍</div>
-                    <div class="game-info">
-                        <h3>¿Dónde está la incógnita?</h3>
-                        <p>Resuelve ecuaciones lineales de dos formas diferentes</p>
-                        <span class="game-tag">Ecuaciones</span>
-                    </div>
-                </div>
+    <div class="container">
+        <header>
+            <div class="player-info">
+                <span id="player-name">Trotamundos</span>
+                <button id="edit-name-btn" class="btn-icon" title="Editar nombre">✏️</button>
+                <span class="xp">⭐ <span id="player-xp">0</span> XP</span>
             </div>
-        </section>
-    </main>
+            <button id="btn-logout" class="btn btn-danger">Cerrar sesión</button>
+        </header>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+        <div id="feedback-message" class="hidden"></div>
+
+        <h2>🏰 Elige tu aventura</h2>
+        <div class="game-cards">
+            <div class="card">
+                <div class="card-icon">⚔️</div>
+                <h3>Factorizados</h3>
+                <p>Factoriza expresiones algebraicas y sube de nivel</p>
+                <span class="badge">Álgebra</span>
+                <button class="btn btn-primary" id="btn-factorizados">Jugar</button>
+            </div>
+            <div class="card">
+                <div class="card-icon">❓</div>
+                <h3>¿Dónde está la incógnita?</h3>
+                <p>Resuelve ecuaciones lineales de dos formas diferentes</p>
+                <span class="badge">Ecuaciones</span>
+                <button class="btn btn-primary" id="btn-incognita">Jugar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="firebase-config.js"></script>
+    <script src="common.js"></script>
     <script src="lobby.js"></script>
 </body>
 </html>
