@@ -100,7 +100,10 @@ function iniciarPractica() {
         elOperacionBtns.forEach(btn => btn.disabled = false);
     }
     if (elNumeroPractica) elNumeroPractica.disabled = false;
-    if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = true; // Deshabilitado en paso original
+    // El botón siempre habilitado en pasos intermedios, pero se deshabilitará en original/solución
+    if (elAplicarPasoBtn) {
+        elAplicarPasoBtn.disabled = false; // Se ajusta en mostrarPasoActual
+    }
 
     mostrarPasoActual();
     actualizarHistorial();
@@ -123,7 +126,6 @@ function mostrarPasoActual() {
         hint.textContent = 'Elige una operación y un número, luego presiona "Aplicar paso".';
         hint.style.color = '#fbbf24';
         elEcuacionActual.appendChild(hint);
-        // Deshabilitar botón en paso original
         if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = true;
     } else if (paso.tipo === 'mover_constante' || paso.tipo === 'dividir') {
         const pasoAnterior = practicaState.pasos[practicaState.pasoActual - 1];
@@ -161,7 +163,6 @@ function mostrarPasoActual() {
         }
         if (elNumeroPractica) elNumeroPractica.disabled = true;
         if (elAplicarPasoBtn) elAplicarPasoBtn.disabled = true;
-        // Limpiar selección
         document.querySelectorAll('.operacion-btn').forEach(b => b.classList.remove('seleccionado'));
     }
 }
@@ -181,7 +182,7 @@ function actualizarHistorial() {
 
 // ---------- Aplicar paso ----------
 function aplicarPaso() {
-    console.log('Aplicar paso ejecutado');
+    console.log('🔘 Aplicar paso ejecutado'); // <-- LOG para confirmar
 
     const paso = practicaState.pasos[practicaState.pasoActual];
     if (!paso) {
@@ -189,9 +190,8 @@ function aplicarPaso() {
         return;
     }
 
-    // No permitir aplicar en paso original o solución
     if (paso.tipo === 'original' || paso.tipo === 'solucion') {
-        console.warn('No se puede aplicar paso en:', paso.tipo);
+        console.warn('Paso no válido:', paso.tipo);
         mostrarFeedbackPractica('Este paso no requiere operación.', 'error');
         return;
     }
@@ -199,7 +199,7 @@ function aplicarPaso() {
     // Obtener operación seleccionada
     const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
     if (!opSeleccionada) {
-        mostrarFeedbackPractica('Selecciona una operación primero.', 'error');
+        mostrarFeedbackPractica('Selecciona una operación primero (+, −, ×, ÷).', 'error');
         return;
     }
     const operacion = opSeleccionada.dataset.op;
@@ -227,7 +227,6 @@ function aplicarPaso() {
         mostrarPasoActual();
         mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
         document.querySelectorAll('.operacion-btn').forEach(b => b.classList.remove('seleccionado'));
-        // Limpiar input
         if (elNumeroPractica) elNumeroPractica.value = '';
     } else {
         mostrarFeedbackPractica('❌ Ese paso no es correcto. Revisa la pista.', 'error');
@@ -383,7 +382,9 @@ function iniciarJuego() {
         console.error('❌ No se encontró el botón "Aplicar paso"');
     } else {
         console.log('✅ Botón "Aplicar paso" encontrado');
+        // Aseguramos que el evento se añada correctamente
         elAplicarPasoBtn.addEventListener('click', aplicarPaso);
+        console.log('✅ Listener añadido al botón');
     }
 
     elOperacionBtns = document.querySelectorAll('.operacion-btn');
