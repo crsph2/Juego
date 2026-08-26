@@ -21,9 +21,7 @@
                     <span class="player-level">⭐ <span id="player-score">0</span> pts</span>
                 </div>
                 <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
-                    <!-- Botón para editar nombre -->
                     <button id="btn-edit-name" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #fbbf24, #b45309);">✏️ Nombre</button>
-                    <!-- Botón de salir -->
                     <button id="btn-logout" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;">🚪 Salir</button>
                 </div>
             </header>
@@ -34,7 +32,7 @@
                 <button id="mode-practica">✋ Práctica paso a paso</button>
             </div>
 
-            <!-- Modo Alternativas (sin cambios) -->
+            <!-- Modo Alternativas -->
             <div id="modo-alternativas" class="question-area">
                 <p id="pregunta-enunciado-alt" class="question-text">Cargando pregunta...</p>
                 <div id="opciones-container-alt" class="options-container"></div>
@@ -44,7 +42,7 @@
                 </div>
             </div>
 
-            <!-- Modo Práctica paso a paso -->
+            <!-- Modo Práctica paso a paso (NUEVO) -->
             <div id="modo-practica" style="display: none;">
                 <div class="practica-container">
                     <!-- Ecuación actual -->
@@ -52,23 +50,30 @@
                         <!-- Se genera dinámicamente -->
                     </div>
 
-                    <!-- Pasos realizados -->
-                    <div id="pasos-realizados" class="pasos-container">
-                        <!-- Aquí se irán añadiendo los pasos -->
+                    <!-- Controles para elegir operación y número -->
+                    <div class="practica-controles">
+                        <p class="hint-text">Elige la operación y el número para aplicar a ambos lados:</p>
+                        <div class="operacion-botones">
+                            <button class="rpg-button operacion-btn" data-op="sumar">+</button>
+                            <button class="rpg-button operacion-btn" data-op="restar">−</button>
+                            <button class="rpg-button operacion-btn" data-op="multiplicar">×</button>
+                            <button class="rpg-button operacion-btn" data-op="dividir">÷</button>
+                        </div>
+                        <div class="numero-input">
+                            <input type="number" id="numero-practica" placeholder="Número" value="1" step="1">
+                            <button id="aplicar-paso-btn" class="rpg-button primary">Aplicar paso</button>
+                        </div>
                     </div>
 
-                    <!-- Zona de arrastre: números disponibles -->
-                    <div class="drag-zone">
-                        <p class="hint-text">Arrastra el número correcto al espacio vacío para resolver</p>
-                        <div id="number-pool-practica" class="number-pool">
-                            <!-- Se genera dinámicamente -->
-                        </div>
+                    <!-- Historial de pasos -->
+                    <div id="pasos-realizados" class="pasos-container">
+                        <!-- Aquí se irán añadiendo los pasos -->
                     </div>
 
                     <!-- Mensaje de feedback -->
                     <div id="feedback-practica" class="feedback hidden"></div>
 
-                    <!-- Botón para siguiente pregunta (se muestra al final) -->
+                    <!-- Botón para siguiente ecuación (se muestra al final) -->
                     <button id="next-practica-btn" class="rpg-button" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;">Siguiente ecuación →</button>
                 </div>
             </div>
