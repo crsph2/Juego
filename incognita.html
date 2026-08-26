@@ -11,82 +11,70 @@
     <main class="quest-container" style="max-width: 500px;">
         <section class="game-card">
             <header class="player-header">
-                <!-- Fila superior -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <a href="lobby.html" class="back-button" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem;">← Volver</a>
                     <h1 class="game-title" style="font-size: 1.5rem; margin: 0;">🔍 ¿Dónde está la incógnita?</h1>
                     <div style="width: 60px;"></div>
                 </div>
-
-                <!-- Info del jugador (nombre + puntuación) -->
-                <div class="player-info" style="justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
-                    <span id="player-name" class="player-name" style="color: #fbbf24; font-family: 'Cinzel', serif;">Jugador</span>
-                    <button id="btn-edit-name" class="btn-icon" title="Editar nombre" style="font-size: 1.2rem;">✏️</button>
-                    <span class="player-level" style="color: #94a3b8;">⭐ <span id="player-score">0</span> pts</span>
+                <div class="player-info">
+                    <span id="player-name" class="player-name">Jugador</span>
+                    <span class="player-level">⭐ <span id="player-score">0</span> pts</span>
                 </div>
-
-                <!-- Botón Salir -->
                 <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
-                    <button id="btn-logout" class="btn btn-danger" style="padding: 0.4rem 1.2rem; font-size: 0.85rem;">🚪 Salir</button>
+                    <!-- Botón para editar nombre -->
+                    <button id="btn-edit-name" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #fbbf24, #b45309);">✏️ Nombre</button>
+                    <!-- Botón de salir -->
+                    <button id="btn-logout" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff;">🚪 Salir</button>
                 </div>
             </header>
 
-            <!-- Selector de modo (Alternativas / Práctica paso a paso) -->
-            <div class="mode-selector" style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem;">
-                <button id="mode-alternativas" class="btn btn-primary active" style="flex: 1;">📝 Alternativas</button>
-                <button id="mode-practica" class="btn btn-secondary" style="flex: 1;">✋ Práctica paso a paso</button>
+            <!-- Selector de modo -->
+            <div class="mode-selector">
+                <button id="mode-alternativas" class="active">📝 Alternativas</button>
+                <button id="mode-practica">✋ Práctica paso a paso</button>
             </div>
 
-            <!-- Modo Alternativas -->
+            <!-- Modo Alternativas (sin cambios) -->
             <div id="modo-alternativas" class="question-area">
-                <!-- Enunciado grande -->
-                <div class="exercise-container" style="margin-top: 0;">
-                    <span class="exercise-label" style="font-size: 0.9rem; color: #94a3b8;">Resuelve:</span>
-                    <div id="pregunta-enunciado-alt" class="exercise-text" style="font-family: 'Times New Roman', serif;">Cargando pregunta...</div>
-                </div>
-
-                <!-- Opciones 2×2 -->
-                <div id="opciones-container-alt" class="options-grid"></div>
-
-                <!-- Feedback y racha -->
-                <div id="feedback-message-alt" class="feedback hidden" style="margin-top: 0.5rem;"></div>
-                <div class="streak" style="color: #94a3b8; margin-top: 0.5rem;">
+                <p id="pregunta-enunciado-alt" class="question-text">Cargando pregunta...</p>
+                <div id="opciones-container-alt" class="options-container"></div>
+                <div id="feedback-message-alt" class="feedback hidden"></div>
+                <div class="streak">
                     Racha: <span id="racha-actual-alt">0</span>
                 </div>
             </div>
 
-            <!-- Modo Práctica paso a paso (se mantiene exactamente igual, solo ajustamos estilos con clases) -->
+            <!-- Modo Práctica paso a paso -->
             <div id="modo-practica" style="display: none;">
                 <div class="practica-container">
                     <!-- Ecuación actual -->
-                    <div id="ecuacion-actual" class="ecuacion-display" style="background: rgba(15,23,42,0.6); padding: 1rem; border-radius: 12px; margin-bottom: 1rem; font-size: 1.5rem; text-align: center; color: #f1f5f9; font-family: 'Times New Roman', serif;">
+                    <div id="ecuacion-actual" class="ecuacion-display">
                         <!-- Se genera dinámicamente -->
                     </div>
 
                     <!-- Pasos realizados -->
-                    <div id="pasos-realizados" class="pasos-container" style="margin-bottom: 1rem; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 8px;">
+                    <div id="pasos-realizados" class="pasos-container">
                         <!-- Aquí se irán añadiendo los pasos -->
                     </div>
 
                     <!-- Zona de arrastre: números disponibles -->
-                    <div class="drag-zone" style="background: rgba(15,23,42,0.4); padding: 1rem; border-radius: 12px;">
-                        <p class="hint-text" style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem;">Arrastra el número correcto al espacio vacío para resolver</p>
-                        <div id="number-pool-practica" class="number-pool" style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
+                    <div class="drag-zone">
+                        <p class="hint-text">Arrastra el número correcto al espacio vacío para resolver</p>
+                        <div id="number-pool-practica" class="number-pool">
                             <!-- Se genera dinámicamente -->
                         </div>
                     </div>
 
                     <!-- Mensaje de feedback -->
-                    <div id="feedback-practica" class="feedback hidden" style="margin-top: 0.5rem;"></div>
+                    <div id="feedback-practica" class="feedback hidden"></div>
 
-                    <!-- Botón siguiente -->
-                    <button id="next-practica-btn" class="btn btn-primary" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none;">Siguiente ecuación →</button>
+                    <!-- Botón para siguiente pregunta (se muestra al final) -->
+                    <button id="next-practica-btn" class="rpg-button" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none; background: linear-gradient(135deg, #22c55e, #15803d); color: #fff;">Siguiente ecuación →</button>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Firebase SDKs (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
