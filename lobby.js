@@ -1,6 +1,6 @@
 // lobby.js - Lógica del lobby y tienda
 
-// ---------- Datos de la tienda ----------
+// ---------- Datos de la tienda (Sin emojis, usamos params de DiceBear) ----------
 const ITEMS = {
     avatar: [
         { id: 'avatar_base', nombre: 'Aventurero', categoria: 'avatar', precio: 0, params: {} }
@@ -33,7 +33,7 @@ const ITEMS = {
         { id: 'zapatillas_azules', nombre: 'Zapatillas Azules', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: '0055ff' } },
         { id: 'zapatillas_verdes', nombre: 'Zapatillas Verdes', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: '00aa00' } }
     ],
-    insignia: [] // Las insignias no tienen parámetro directo en DiceBear, puedes usar un colgante en el pecho si quieres, pero por ahora se omite para mantener la coherencia visual.
+    insignia: [] // Las insignias se mantienen vacías por ahora para no romper el estilo
 };
 
 // Función global para obtener item por ID (usada por common.js)
@@ -89,8 +89,8 @@ function mostrarItemsCategoria(categoria) {
         const card = document.createElement('div');
         card.className = 'item-card';
         if (equipado) card.classList.add('equipado');
+        // AQUÍ SE CORRIGE EL ERROR "undefined": Se eliminó ${item.emoji}
         card.innerHTML = `
-            <div class="item-emoji">${item.emoji}</div>
             <div class="item-nombre">${item.nombre}</div>
             <div class="item-precio">${item.precio} 🪙</div>
             <div class="item-acciones">
@@ -170,6 +170,7 @@ async function equiparItem(id, categoria) {
     }
 }
 
+// Actualizar vista previa usando los parámetros de DiceBear (sin emojis)
 function actualizarVistaPrevia() {
     if (!elAvatarPreview) return;
     const equipo = jugadorData.equipo;
@@ -194,7 +195,7 @@ function actualizarVistaPrevia() {
     const queryString = Object.keys(params).map(key => `${key}=${params[key]}`).join('&');
     if (queryString) url += `&${queryString}`;
 
-    // Generar HTML
+    // Generar HTML con el busto recortado
     elAvatarPreview.innerHTML = `
         <div style="position:relative; width:120px; height:140px; overflow:hidden; border-radius: 50% 50% 0 0; background:#e3f2fd;">
             <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
