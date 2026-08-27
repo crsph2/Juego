@@ -1,42 +1,25 @@
 // lobby.js - Lógica del lobby y tienda
 
-// ---------- Datos de la tienda (Sin emojis, usamos params de DiceBear) ----------
+// Nuevos datos de la tienda (Avatares y Símbolos)
 const ITEMS = {
     avatar: [
-        { id: 'avatar_base', nombre: 'Aventurero', categoria: 'avatar', precio: 0, params: {} }
+        { id: 'avatar_base', nombre: 'Clásico', categoria: 'avatar', precio: 0, desc: 'Estilo Aventurero' },
+        { id: 'avatar_robot', nombre: 'Robot', categoria: 'avatar', precio: 1500, desc: 'Estilo Robot' },
+        { id: 'avatar_personas', nombre: 'Caricatura', categoria: 'avatar', precio: 1500, desc: 'Estilo Personas' },
+        { id: 'avatar_notionists', nombre: 'Minimalista', categoria: 'avatar', precio: 1500, desc: 'Estilo Notionists' }
     ],
-    superior: [
-        { id: 'camiseta_roja', nombre: 'Camiseta Roja', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: 'ff0000' } },
-        { id: 'camiseta_azul', nombre: 'Camiseta Azul', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: '0055ff' } },
-        { id: 'camiseta_verde', nombre: 'Camiseta Verde', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: '00aa00' } },
-        { id: 'camiseta_negra_estrella', nombre: 'Camiseta Negra', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: '111111' } },
-        { id: 'camiseta_naranja', nombre: 'Camiseta Naranja', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: 'ff8800' } }
-    ],
-    inferior: [
-        { id: 'pantalon_vaquero', nombre: 'Pantalón Vaquero', categoria: 'inferior', precio: 500, params: { pants: 'pants', pantsColor: '003366' } },
-        { id: 'pantalon_corto_beige', nombre: 'Pantalón Corto Beige', categoria: 'inferior', precio: 500, params: { pants: 'shorts', pantsColor: 'd2b48c' } },
-        { id: 'pantalon_negro', nombre: 'Pantalón Negro', categoria: 'inferior', precio: 500, params: { pants: 'pants', pantsColor: '222222' } },
-        { id: 'pantalon_azul_marino', nombre: 'Pantalón Azul Marino', categoria: 'inferior', precio: 500, params: { pants: 'pants', pantsColor: '000080' } },
-        { id: 'pantalon_gris', nombre: 'Pantalón Gris', categoria: 'inferior', precio: 500, params: { pants: 'pants', pantsColor: '808080' } }
-    ],
-    sombrero: [
-        { id: 'gorra_roja', nombre: 'Gorra Roja', categoria: 'sombrero', precio: 500, params: { hat: 'cap', hatColor: 'ff0000' } },
-        { id: 'sombrero_copa', nombre: 'Sombrero de Copa', categoria: 'sombrero', precio: 500, params: { hat: 'tophat', hatColor: '111111' } },
-        { id: 'boina', nombre: 'Boina', categoria: 'sombrero', precio: 500, params: { hat: 'beanie', hatColor: '333333' } },
-        { id: 'sombrero_vaquero', nombre: 'Sombrero Vaquero', categoria: 'sombrero', precio: 500, params: { hat: 'cowboy', hatColor: '8b4513' } },
-        { id: 'corona', nombre: 'Corona', categoria: 'sombrero', precio: 500, params: { hat: 'crown', hatColor: 'ffd700' } }
-    ],
-    zapatillas: [
-        { id: 'zapatillas_blancas', nombre: 'Zapatillas Blancas', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: 'ffffff' } },
-        { id: 'zapatillas_negras', nombre: 'Zapatillas Negras', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: '111111' } },
-        { id: 'zapatillas_rojas', nombre: 'Zapatillas Rojas', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: 'ff0000' } },
-        { id: 'zapatillas_azules', nombre: 'Zapatillas Azules', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: '0055ff' } },
-        { id: 'zapatillas_verdes', nombre: 'Zapatillas Verdes', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: '00aa00' } }
-    ],
-    insignia: [] // Las insignias se mantienen vacías por ahora para no romper el estilo
+    simbolo: [
+        { id: 'pi', nombre: 'Pi (π)', categoria: 'simbolo', precio: 500, pos: 'top-left' },
+        { id: 'integral', nombre: 'Integral (∫)', categoria: 'simbolo', precio: 500, pos: 'top-right' },
+        { id: 'raiz', nombre: 'Raíz (√)', categoria: 'simbolo', precio: 500, pos: 'bottom-left' },
+        { id: 'sigma', nombre: 'Sigma (Σ)', categoria: 'simbolo', precio: 500, pos: 'bottom-right' },
+        { id: 'infinito', nombre: 'Infinito (∞)', categoria: 'simbolo', precio: 500, pos: 'center-left' },
+        { id: 'delta', nombre: 'Delta (Δ)', categoria: 'simbolo', precio: 500, pos: 'center-right' },
+        { id: 'theta', nombre: 'Theta (θ)', categoria: 'simbolo', precio: 500, pos: 'top-left' },
+        { id: 'suma_frac', nombre: 'Fracción', categoria: 'simbolo', precio: 500, pos: 'top-right' }
+    ]
 };
 
-// Función global para obtener item por ID (usada por common.js)
 window.obtenerItemPorIdGlobal = function(id) {
     for (const cat in ITEMS) {
         const encontrado = ITEMS[cat].find(item => item.id === id);
@@ -45,23 +28,17 @@ window.obtenerItemPorIdGlobal = function(id) {
     return null;
 };
 
-// ---------- Variables globales ----------
-let categoriaActual = 'superior';
+let categoriaActual = 'avatar';
 let jugadorData = window.jugador;
 
-// ---------- Elementos DOM ----------
 const elCoinsTienda = document.getElementById('tienda-coins');
 const elAvatarPreview = document.getElementById('avatar-preview');
 const elItemsTienda = document.getElementById('items-tienda');
 const categoriaBtns = document.querySelectorAll('.categoria-btn');
 
-// ---------- Inicialización ----------
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.jugador) {
-        iniciarTienda();
-    } else {
-        document.addEventListener('jugador-cargado', iniciarTienda);
-    }
+    if (window.jugador) { iniciarTienda(); }
+    else { document.addEventListener('jugador-cargado', iniciarTienda); }
 });
 
 function iniciarTienda() {
@@ -76,25 +53,42 @@ function iniciarTienda() {
             mostrarItemsCategoria(categoriaActual);
         });
     });
-    mostrarItemsCategoria('superior');
+    mostrarItemsCategoria('avatar');
 }
 
 function mostrarItemsCategoria(categoria) {
     const items = ITEMS[categoria];
     if (!items) return;
     elItemsTienda.innerHTML = '';
+    
     items.forEach(item => {
-        const yaComprado = jugadorData.inventario.includes(item.id);
-        const equipado = jugadorData.equipo[categoria] === item.id;
+        let inventarioItem = false;
+        if (categoria === 'avatar') inventarioItem = jugadorData.inventario.includes(item.id);
+        if (categoria === 'simbolo') inventarioItem = jugadorData.inventario.includes(`simbolo_${item.id}`);
+
+        const equipado = categoria === 'avatar' ? (jugadorData.equipo.avatar === item.id) : (jugadorData.equipo.simbolos || []).some(s => s.id === item.id);
+
         const card = document.createElement('div');
         card.className = 'item-card';
         if (equipado) card.classList.add('equipado');
-        // AQUÍ SE CORRIGE EL ERROR "undefined": Se eliminó ${item.emoji}
+
+        let contenidoPreview = '';
+        if (categoria === 'avatar') {
+            // Usamos la misma URL de DiceBear con el estilo correspondiente para la vista previa
+            const estilo = AVATAR_ESTILOS[item.id].style;
+            contenidoPreview = `<div style="width:60px; height:60px; margin:0 auto; overflow:hidden; border-radius:50%; background:#e3f2fd;"><img src="https://api.dicebear.com/10.x/${estilo}/svg?seed=Preview" style="width:100%; height:100%; object-fit:cover;"></div>`;
+        } else {
+            // Si es símbolo, mostramos el SVG
+            const svg = SIMBOLOS_SVG[item.id];
+            contenidoPreview = `<div style="font-size:2.5rem; color:#3b4cca; display:flex; justify-content:center;">${svg}</div>`;
+        }
+
         card.innerHTML = `
+            ${contenidoPreview}
             <div class="item-nombre">${item.nombre}</div>
             <div class="item-precio">${item.precio} 🪙</div>
             <div class="item-acciones">
-                ${yaComprado ? 
+                ${inventarioItem ? 
                     (equipado ? '<span class="equipado-label">✅ Equipado</span>' : 
                     `<button class="btn-equipar" data-id="${item.id}" data-cat="${categoria}">Equipar</button>`) :
                     `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`
@@ -104,104 +98,88 @@ function mostrarItemsCategoria(categoria) {
         elItemsTienda.appendChild(card);
 
         const btnComprar = card.querySelector('.btn-comprar');
-        if (btnComprar) {
-            btnComprar.addEventListener('click', () => comprarItem(item.id, item.categoria, item.precio));
-        }
+        if (btnComprar) btnComprar.addEventListener('click', () => comprarItem(item.id, item.categoria, item.precio));
         const btnEquipar = card.querySelector('.btn-equipar');
-        if (btnEquipar) {
-            btnEquipar.addEventListener('click', () => equiparItem(item.id, item.categoria));
-        }
+        if (btnEquipar) btnEquipar.addEventListener('click', () => equiparItem(item.id, item.categoria));
     });
 }
 
 async function comprarItem(id, categoria, precio) {
-    if (jugadorData.monedas < precio) {
-        alert('No tienes suficientes monedas.');
-        return;
-    }
-    if (jugadorData.inventario.includes(id)) {
-        alert('Ya tienes este item.');
-        return;
-    }
+    if (jugadorData.monedas < precio) { alert('No tienes suficientes monedas.'); return; }
+    
+    // Para evitar duplicados en inventario
+    const itemIdCompra = categoria === 'simbolo' ? `simbolo_${id}` : id;
+    if (jugadorData.inventario.includes(itemIdCompra)) { alert('Ya tienes este item.'); return; }
+
     const item = ITEMS[categoria].find(i => i.id === id);
     if (!confirm(`¿Comprar ${item.nombre} por ${precio} monedas?`)) return;
 
     try {
         jugadorData.monedas -= precio;
-        jugadorData.inventario.push(id);
-        if (categoria === 'avatar') {
-            jugadorData.equipo.avatar = id;
-        }
+        jugadorData.inventario.push(itemIdCompra);
+        
         await db.collection('usuarios').doc(window.uid).update({
             monedas: jugadorData.monedas,
-            inventario: jugadorData.inventario,
-            equipo: jugadorData.equipo
+            inventario: jugadorData.inventario
         });
+        
         actualizarMonedas();
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
-        if (window.actualizarAvatar) window.actualizarAvatar();
         mostrarFeedback('¡Compra exitosa!', 'exito');
-    } catch (error) {
-        console.error('Error al comprar:', error);
-        alert('Error al comprar. Intenta de nuevo.');
-    }
+    } catch (error) { console.error('Error al comprar:', error); alert('Error al comprar.'); }
 }
 
 async function equiparItem(id, categoria) {
-    if (!jugadorData.inventario.includes(id)) {
-        alert('No tienes este item.');
-        return;
-    }
-    if (jugadorData.equipo[categoria] === id) return;
+    let itemIdEquipar = categoria === 'simbolo' ? `simbolo_${id}` : id;
+    if (!jugadorData.inventario.includes(itemIdEquipar)) { alert('No tienes este item.'); return; }
 
     try {
-        jugadorData.equipo[categoria] = id;
-        await db.collection('usuarios').doc(window.uid).update({
-            equipo: jugadorData.equipo
-        });
+        if (categoria === 'avatar') {
+            jugadorData.equipo.avatar = id;
+            await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': id });
+        } else {
+            // Lógica para equipar símbolos: se agregan al array "simbolos" con su posición
+            const item = ITEMS.simbolo.find(i => i.id === id);
+            if (!item) return;
+            
+            // Quitar duplicado si está equipado
+            jugadorData.equipo.simbolos = jugadorData.equipo.simbolos.filter(s => s.id !== id);
+            jugadorData.equipo.simbolos.push({ id: id, pos: item.pos });
+            
+            await db.collection('usuarios').doc(window.uid).update({ 'equipo.simbolos': jugadorData.equipo.simbolos });
+        }
+        
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
         if (window.actualizarAvatar) window.actualizarAvatar();
         mostrarFeedback('¡Item equipado!', 'exito');
-    } catch (error) {
-        console.error('Error al equipar:', error);
-        alert('Error al equipar. Intenta de nuevo.');
-    }
+    } catch (error) { console.error('Error al equipar:', error); alert('Error al equipar.'); }
 }
 
-// Actualizar vista previa usando los parámetros de DiceBear (sin emojis)
 function actualizarVistaPrevia() {
     if (!elAvatarPreview) return;
     const equipo = jugadorData.equipo;
+    const nombre = jugadorData.nombre;
 
-    // Construir URL con parámetros
-    const seed = encodeURIComponent(jugadorData.nombre || 'Aventurero');
-    let url = `https://api.dicebear.com/10.x/adventurer/svg?seed=${seed}`;
-    
-    // Combinar params del equipo
-    let params = {};
-    ['superior', 'inferior', 'sombrero', 'zapatillas'].forEach(cat => {
-        const itemId = equipo[cat];
-        const item = ITEMS[cat].find(i => i.id === itemId);
-        if (item && item.params) Object.assign(params, item.params);
+    let estilo = AVATAR_ESTILOS['avatar_base'];
+    if (equipo.avatar && AVATAR_ESTILOS[equipo.avatar]) estilo = AVATAR_ESTILOS[equipo.avatar];
+
+    const seed = encodeURIComponent(nombre);
+    let url = `https://api.dicebear.com/10.x/${estilo.style}/svg?seed=${seed}`;
+    url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
+
+    let simbolosHTML = '';
+    (equipo.simbolos || []).forEach(simbolo => {
+        const svg = SIMBOLOS_SVG[simbolo.id];
+        if (svg) simbolosHTML += `<div class="avatar-simbolo pos-${simbolo.pos}">${svg}</div>`;
     });
 
-    // Añadir parámetros base (piel y pelo)
-    params.skinColor = 'f1c27d';
-    params.hairColor = '2c1b18';
-    params.hair = 'short';
-
-    const queryString = Object.keys(params).map(key => `${key}=${params[key]}`).join('&');
-    if (queryString) url += `&${queryString}`;
-
-    // Generar HTML con el busto recortado
     elAvatarPreview.innerHTML = `
-        <div style="position:relative; width:120px; height:140px; overflow:hidden; border-radius: 50% 50% 0 0; background:#e3f2fd;">
+        <div style="position:relative; width:140px; height:160px; overflow:hidden; border-radius: 50% 50% 0 0; background:#e3f2fd;">
             <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
-            <div style="position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); font-size:0.9rem; background:rgba(255,255,255,0.8); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:#3b4cca;">
-                ${jugadorData.nombre}
-            </div>
+            ${simbolosHTML}
+            <div style="position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); font-size:0.9rem; background:rgba(255,255,255,0.8); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:#3b4cca;">${nombre}</div>
         </div>
     `;
 }
@@ -224,7 +202,6 @@ function mostrarFeedback(mensaje, tipo) {
     }
 }
 
-// Botones de juegos y logout
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-logout').addEventListener('click', async () => {
         if (confirm('¿Seguro que quieres cerrar sesión?')) {
@@ -234,11 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('btn-factorizados').addEventListener('click', () => {
-        window.location.href = 'factorizados.html';
-    });
-
-    document.getElementById('btn-incognita').addEventListener('click', () => {
-        window.location.href = 'incognita.html';
-    });
+    document.getElementById('btn-factorizados').addEventListener('click', () => { window.location.href = 'factorizados.html'; });
+    document.getElementById('btn-incognita').addEventListener('click', () => { window.location.href = 'incognita.html'; });
 });
