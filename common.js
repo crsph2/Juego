@@ -20,7 +20,7 @@ async function cargarJugador() {
             return;
         }
         window.jugador = snap.data();
-        // Inicializar campos si no existen
+        // Inicializar campos
         if (window.jugador.monedas === undefined) window.jugador.monedas = 0;
         if (!window.jugador.inventario) window.jugador.inventario = ['avatar_base'];
         if (!window.jugador.equipo) {
@@ -60,11 +60,11 @@ function actualizarUICompleta() {
     const elNombre = document.getElementById('player-name');
     if (elNombre) elNombre.textContent = window.jugador.nombre;
 
-    // Monedas globales
+    // Monedas
     const elMonedas = document.getElementById('player-coins');
     if (elMonedas) elMonedas.textContent = window.jugador.monedas || 0;
 
-    // Factorizados: nivel, XP y región
+    // Factorizados: nivel, XP, región
     const fac = window.jugador.factorizados || { nivel: 1, xp: 0, region: 'Aldea del Factor Común' };
     const elNivel = document.getElementById('player-level');
     if (elNivel) elNivel.textContent = fac.nivel || 1;
@@ -97,7 +97,6 @@ function actualizarAvatar() {
     // Función para obtener emoji de un item por ID
     function getEmoji(id, defaultEmoji) {
         if (!id) return defaultEmoji;
-        // Usamos la función global definida en lobby.js
         if (window.obtenerItemPorIdGlobal) {
             const item = window.obtenerItemPorIdGlobal(id);
             if (item) return item.emoji;
@@ -105,24 +104,28 @@ function actualizarAvatar() {
         return defaultEmoji;
     }
 
-    const avatarEmoji = getEmoji(equipo.avatar, '🧑');
     const sombreroEmoji = getEmoji(equipo.sombrero, ' ');
-    const superiorEmoji = getEmoji(equipo.superior, '👕');
-    const inferiorEmoji = getEmoji(equipo.inferior, '👖');
-    const zapatillasEmoji = getEmoji(equipo.zapatillas, '👟');
-    const insigniaEmoji = getEmoji(equipo.insignia, '🏅');
+    const superiorEmoji = getEmoji(equipo.superior, ' ');
+    const inferiorEmoji = getEmoji(equipo.inferior, ' ');
+    const zapatillasEmoji = getEmoji(equipo.zapatillas, ' ');
+    const insigniaEmoji = getEmoji(equipo.insignia, ' ');
 
-    // Construir el avatar como un muñeco con partes
+    // Generar URL de DiceBear con el nombre como seed y parámetros de personalización (pelo, color, etc.)
+    // Podemos añadir más parámetros según las compras (por ahora solo seed)
+    const seed = encodeURIComponent(nombre);
+    const dicebearUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`;
+
+    // Construir HTML del avatar
     avatarContainer.innerHTML = `
-        <div class="avatar-muneco">
-            <div class="avatar-pieza avatar-sombrero">${sombreroEmoji}</div>
-            <div class="avatar-pieza avatar-cabeza">${avatarEmoji}</div>
-            <div class="avatar-pieza avatar-superior">${superiorEmoji}</div>
-            <div class="avatar-pieza avatar-inferior">${inferiorEmoji}</div>
-            <div class="avatar-pieza avatar-zapatillas">${zapatillasEmoji}</div>
-            <div class="avatar-pieza avatar-insignia">${insigniaEmoji}</div>
-            <div class="avatar-nombre">${nombre}</div>
+        <div class="avatar-dicebear">
+            <img src="${dicebearUrl}" alt="Avatar" style="width:100%; height:100%; border-radius:50%;">
         </div>
+        ${sombreroEmoji ? `<div class="avatar-accesorio avatar-sombrero">${sombreroEmoji}</div>` : ''}
+        ${superiorEmoji ? `<div class="avatar-accesorio avatar-superior">${superiorEmoji}</div>` : ''}
+        ${inferiorEmoji ? `<div class="avatar-accesorio avatar-inferior">${inferiorEmoji}</div>` : ''}
+        ${zapatillasEmoji ? `<div class="avatar-accesorio avatar-zapatillas">${zapatillasEmoji}</div>` : ''}
+        ${insigniaEmoji ? `<div class="avatar-accesorio avatar-insignia">${insigniaEmoji}</div>` : ''}
+        <div class="avatar-nombre">${nombre}</div>
     `;
 }
 
