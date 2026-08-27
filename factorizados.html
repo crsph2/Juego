@@ -8,84 +8,18 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         /* ESTILOS FORZADOS PARA FACTORIZADOS - PALETA POKÉMON */
-        #pregunta-enunciado {
-            font-size: 2.4rem !important;
-            font-weight: 700 !important;
-            color: #1a1a1a !important;
-            background: #f7f9fc !important;
-            padding: 1.8rem 1rem !important;
-            border-radius: 16px !important;
-            border: 2px solid #d0dbe8 !important;
-            margin-bottom: 1.5rem !important;
-            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif !important;
-            line-height: 1.4 !important;
-            word-break: break-word !important;
-            text-align: center !important;
-            text-shadow: none !important;
-        }
+        #pregunta-enunciado { font-size: 2.4rem !important; font-weight: 700 !important; color: #1a1a1a !important; background: #f7f9fc !important; padding: 1.8rem 1rem !important; border-radius: 16px !important; border: 2px solid #d0dbe8 !important; margin-bottom: 1.5rem !important; font-family: 'Roboto', 'Segoe UI', Arial, sans-serif !important; line-height: 1.4 !important; word-break: break-word !important; text-align: center !important; text-shadow: none !important; }
 
-        #opciones-container {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            gap: 1rem !important;
-            margin: 1.2rem 0 !important;
-        }
+        #opciones-container { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 1rem !important; margin: 1.2rem 0 !important; }
 
-        .btn-opcion {
-            background: #ffffff !important;
-            border: 2px solid #d0dbe8 !important;
-            border-radius: 16px !important;
-            padding: 1.2rem 0.5rem !important;
-            font-size: 1.5rem !important;
-            font-weight: 600 !important;
-            color: #1a1a1a !important;
-            cursor: pointer !important;
-            transition: all 0.15s ease !important;
-            min-height: 90px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center !important;
-            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif !important;
-            word-break: break-word !important;
-            box-shadow: 0 4px 0 #d0dbe8 !important;
-        }
-        .btn-opcion:hover {
-            background: #f0f4fa !important;
-            border-color: #3b4cca !important;
-            transform: scale(1.02) !important;
-        }
-        .btn-opcion:active {
-            transform: scale(0.97) !important;
-        }
-        .btn-opcion.opcion-correcta {
-            border-color: #2e7d32 !important;
-            background: #e8f5e9 !important;
-            color: #1a1a1a !important;
-        }
-        .btn-opcion.opcion-incorrecta {
-            border-color: #c62828 !important;
-            background: #ffebee !important;
-            color: #1a1a1a !important;
-        }
-        .btn-opcion:disabled {
-            opacity: 0.6 !important;
-            cursor: not-allowed !important;
-        }
+        .btn-opcion { background: #ffffff !important; border: 2px solid #d0dbe8 !important; border-radius: 16px !important; padding: 1.2rem 0.5rem !important; font-size: 1.5rem !important; font-weight: 600 !important; color: #1a1a1a !important; cursor: pointer !important; transition: all 0.15s ease !important; min-height: 90px !important; display: flex !important; align-items: center !important; justify-content: center !important; text-align: center !important; font-family: 'Roboto', 'Segoe UI', Arial, sans-serif !important; word-break: break-word !important; box-shadow: 0 4px 0 #d0dbe8 !important; }
+        .btn-opcion:hover { background: #f0f4fa !important; border-color: #3b4cca !important; transform: scale(1.02) !important; }
+        .btn-opcion:active { transform: scale(0.97) !important; }
+        .btn-opcion.opcion-correcta { border-color: #2e7d32 !important; background: #e8f5e9 !important; color: #1a1a1a !important; }
+        .btn-opcion.opcion-incorrecta { border-color: #c62828 !important; background: #ffebee !important; color: #1a1a1a !important; }
+        .btn-opcion:disabled { opacity: 0.6 !important; cursor: not-allowed !important; }
 
-        @media (max-width: 400px) {
-            #opciones-container {
-                grid-template-columns: 1fr !important;
-            }
-            #pregunta-enunciado {
-                font-size: 1.8rem !important;
-                padding: 1.2rem 0.8rem !important;
-            }
-            .btn-opcion {
-                font-size: 1.2rem !important;
-                min-height: 70px !important;
-            }
-        }
+        @media (max-width: 400px) { #opciones-container { grid-template-columns: 1fr !important; } #pregunta-enunciado { font-size: 1.8rem !important; padding: 1.2rem 0.8rem !important; } .btn-opcion { font-size: 1.2rem !important; min-height: 70px !important; } }
     </style>
 </head>
 <body>
@@ -101,6 +35,7 @@
                     <span id="player-name" class="player-name">Aventurero</span>
                     <span class="player-level">Nivel <span id="player-level">1</span></span>
                     <span class="player-coins">🪙 <span id="player-coins">0</span></span>
+                    <button id="theme-toggle" class="theme-toggle" title="Cambiar modo claro/oscuro">🌙</button>
                 </div>
                 <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
                     <button id="btn-edit-name" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: #f2c94c; color: #1a1a1a;">✏️ Nombre</button>
@@ -115,7 +50,6 @@
                 <div class="region-info">
                     <span id="player-region">Aldea del Factor Común</span>
                 </div>
-                <!-- AVATAR -->
                 <div id="avatar-display" class="avatar-display"></div>
             </header>
 
