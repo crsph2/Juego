@@ -1,4 +1,4 @@
-// app.js - Lógica de autenticación (sin campo de nombre)
+// app.js - Lógica de autenticación con avatar DiceBear
 const form = document.getElementById('auth-form');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
@@ -15,18 +15,30 @@ function hideError() {
     errorDiv.classList.add('hidden');
 }
 
-// ---- Registro (asigna "Trotamundos" por defecto) ----
+// Generar seed aleatorio para avatar
+function generarAvatarSeed() {
+    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let seed = '';
+    for (let i = 0; i < 10; i++) {
+        seed += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+    }
+    return seed;
+}
+
+// ---- Registro ----
 async function registrarUsuario(email, password) {
     try {
         const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const uid = cred.user.uid;
-        // Se asigna "Trotamundos" como nombre por defecto y se inicializan todos los campos
+        const avatarSeed = generarAvatarSeed();
         await db.collection('usuarios').doc(uid).set({
             nombre: 'Trotamundos',
             fechaCreacion: new Date(),
             monedas: 0,
-            inventario: [],
+            avatarSeed: avatarSeed,
+            inventario: ['avatar_base'],
             equipo: {
+                avatar: 'avatar_base',
                 superior: null,
                 inferior: null,
                 sombrero: null,
@@ -68,7 +80,7 @@ async function registrarUsuario(email, password) {
     }
 }
 
-// ---- Inicio de sesión ----
+// ---- Inicio de sesión (sin cambios) ----
 async function iniciarSesion(email, password) {
     try {
         const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
@@ -96,7 +108,7 @@ async function iniciarSesion(email, password) {
     }
 }
 
-// ---- Event listeners ----
+// ---- Event listeners (sin cambios) ----
 btnRegister.addEventListener('click', () => {
     hideError();
     const email = emailInput.value.trim();
