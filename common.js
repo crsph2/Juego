@@ -95,18 +95,17 @@ function actualizarAvatar() {
     const nombre = window.jugador.nombre || 'Aventurero';
 
     // Mapeo de IDs a parámetros de DiceBear (estilo adventurer)
-    function getDiceParams(id, categoria) {
+    function getDiceParams(id) {
         if (!id) return {};
-        // Mapeo para cada categoría. Solo agregamos los que tienes en la tienda.
         switch (id) {
-            // Superiores (camisetas)
+            // Superiores
             case 'camiseta_roja': return { top: 'shirt', clothingColor: 'ff0000' };
             case 'camiseta_azul': return { top: 'shirt', clothingColor: '0055ff' };
             case 'camiseta_verde': return { top: 'shirt', clothingColor: '00aa00' };
             case 'camiseta_negra_estrella': return { top: 'shirt', clothingColor: '111111' };
             case 'camiseta_naranja': return { top: 'shirt', clothingColor: 'ff8800' };
             
-            // Inferiores (pantalones)
+            // Inferiores
             case 'pantalon_vaquero': return { pants: 'pants', pantsColor: '003366' };
             case 'pantalon_corto_beige': return { pants: 'shorts', pantsColor: 'd2b48c' };
             case 'pantalon_negro': return { pants: 'pants', pantsColor: '222222' };
@@ -132,21 +131,21 @@ function actualizarAvatar() {
     }
 
     // Construir la URL base
-    const seed = encodeURIComponent(nombre); // Usamos el nombre como semilla
+    const seed = encodeURIComponent(nombre); 
     let url = `https://api.dicebear.com/10.x/adventurer/svg?seed=${seed}`;
 
     // Aplicar parámetros del equipo
     let params = {
-        ...getDiceParams(equipo.superior, 'superior'),
-        ...getDiceParams(equipo.inferior, 'inferior'),
-        ...getDiceParams(equipo.sombrero, 'sombrero'),
-        ...getDiceParams(equipo.zapatillas, 'zapatillas')
+        ...getDiceParams(equipo.superior),
+        ...getDiceParams(equipo.inferior),
+        ...getDiceParams(equipo.sombrero),
+        ...getDiceParams(equipo.zapatillas)
     };
 
     // Agregar color de piel y pelo por defecto para una paleta armoniosa
-    params.skinColor = 'f1c27d'; // Tono de piel uniforme
-    params.hairColor = '2c1b18'; // Cabello oscuro
-    params.hair = 'short'; // Estilo de pelo simple para que combine con todo
+    params.skinColor = 'f1c27d'; 
+    params.hairColor = '2c1b18'; 
+    params.hair = 'short'; 
 
     // Unir parámetros a la URL
     const queryString = Object.keys(params).map(key => `${key}=${params[key]}`).join('&');
@@ -207,5 +206,33 @@ firebase.auth().onAuthStateChanged((user) => {
         window.location.href = 'index.html';
     }
 });
+
+// ============================================================
+// MODO OSCURO MANUAL (Guardado en localStorage)
+// ============================================================
+const themeBtn = document.getElementById('theme-toggle');
+
+function aplicarTema(tema) {
+    if (tema === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (themeBtn) themeBtn.textContent = '☀️'; // Sol para volver al claro
+    } else {
+        document.body.classList.remove('dark-mode');
+        if (themeBtn) themeBtn.textContent = '🌙'; // Luna para ir al oscuro
+    }
+    localStorage.setItem('mathquest_theme', tema);
+}
+
+// Al cargar la página, leer la preferencia guardada
+const temaGuardado = localStorage.getItem('mathquest_theme') || 'light';
+aplicarTema(temaGuardado);
+
+// Evento del botón (si existe en la página actual)
+if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+        const nuevoTema = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+        aplicarTema(nuevoTema);
+    });
+}
 
 document.addEventListener('DOMContentLoaded', cargarJugador);
