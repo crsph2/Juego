@@ -146,7 +146,6 @@ async function comprarItem(id, categoria, precio) {
         actualizarMonedas();
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
-        // Actualizar avatar en common.js (lobby y juegos)
         if (window.actualizarAvatar) window.actualizarAvatar();
         mostrarFeedback('¡Compra exitosa!', 'exito');
     } catch (error) {
@@ -180,22 +179,26 @@ async function equiparItem(id, categoria) {
 function actualizarVistaPrevia() {
     if (!elAvatarPreview) return;
     const equipo = jugadorData.equipo;
-    const avatarEmoji = '🧑';
+    const nombre = jugadorData.nombre;
+
     const superior = equipo.superior ? ITEMS.superior.find(i => i.id === equipo.superior) : null;
     const inferior = equipo.inferior ? ITEMS.inferior.find(i => i.id === equipo.inferior) : null;
     const sombrero = equipo.sombrero ? ITEMS.sombrero.find(i => i.id === equipo.sombrero) : null;
     const zapatillas = equipo.zapatillas ? ITEMS.zapatillas.find(i => i.id === equipo.zapatillas) : null;
     const insignia = equipo.insignia ? ITEMS.insignia.find(i => i.id === equipo.insignia) : null;
 
+    const seed = encodeURIComponent(nombre);
+    const dicebearUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`;
+
     elAvatarPreview.innerHTML = `
-        <div class="avatar-muneco-preview">
-            <div class="avatar-pieza avatar-sombrero">${sombrero ? sombrero.emoji : ' '}</div>
-            <div class="avatar-pieza avatar-cabeza">${avatarEmoji}</div>
-            <div class="avatar-pieza avatar-superior">${superior ? superior.emoji : '👕'}</div>
-            <div class="avatar-pieza avatar-inferior">${inferior ? inferior.emoji : '👖'}</div>
-            <div class="avatar-pieza avatar-zapatillas">${zapatillas ? zapatillas.emoji : '👟'}</div>
-            <div class="avatar-pieza avatar-insignia">${insignia ? insignia.emoji : '🏅'}</div>
-            <div class="avatar-nombre">${jugadorData.nombre}</div>
+        <div style="position:relative; display:inline-block; width:120px; height:120px;">
+            <img src="${dicebearUrl}" alt="Avatar" style="width:100%; height:100%; border-radius:50%;">
+            ${sombrero ? `<div style="position:absolute; top:-5px; left:50%; transform:translateX(-50%); font-size:2.5rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${sombrero.emoji}</div>` : ''}
+            ${superior ? `<div style="position:absolute; top:45px; left:50%; transform:translateX(-50%); font-size:2.2rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${superior.emoji}</div>` : ''}
+            ${inferior ? `<div style="position:absolute; top:85px; left:50%; transform:translateX(-50%); font-size:2rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${inferior.emoji}</div>` : ''}
+            ${zapatillas ? `<div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); font-size:1.8rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${zapatillas.emoji}</div>` : ''}
+            ${insignia ? `<div style="position:absolute; top:20px; right:-5px; font-size:1.6rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${insignia.emoji}</div>` : ''}
+            <div style="position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); font-size:0.9rem; background:rgba(255,255,255,0.8); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:#3b4cca;">${nombre}</div>
         </div>
     `;
 }
