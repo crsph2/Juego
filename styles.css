@@ -134,7 +134,7 @@ body.dark-mode .btn-icon { color: var(--btn-gold); }
 /* Símbolos matemáticos SVG */
 .avatar-simbolo {
     position: absolute;
-    color: var(--btn-secondary); /* Color principal de los símbolos */
+    color: var(--btn-secondary);
     width: 32px; height: 32px;
     z-index: 10;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
