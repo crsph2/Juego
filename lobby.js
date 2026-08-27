@@ -135,7 +135,6 @@ async function comprarItem(id, categoria, precio) {
     try {
         jugadorData.monedas -= precio;
         jugadorData.inventario.push(id);
-        // Si es avatar, equipar automáticamente
         if (categoria === 'avatar') {
             jugadorData.equipo.avatar = id;
         }
@@ -147,7 +146,7 @@ async function comprarItem(id, categoria, precio) {
         actualizarMonedas();
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
-        // Actualizar avatar en common.js
+        // Actualizar avatar en common.js (lobby y juegos)
         if (window.actualizarAvatar) window.actualizarAvatar();
         mostrarFeedback('¡Compra exitosa!', 'exito');
     } catch (error) {
@@ -182,25 +181,23 @@ function actualizarVistaPrevia() {
     if (!elAvatarPreview) return;
     const equipo = jugadorData.equipo;
     const avatarEmoji = '🧑';
-    const avatarNombre = jugadorData.inventario.includes('avatar_base') ? 'Avatar' : 'Sin avatar';
-
     const superior = equipo.superior ? ITEMS.superior.find(i => i.id === equipo.superior) : null;
     const inferior = equipo.inferior ? ITEMS.inferior.find(i => i.id === equipo.inferior) : null;
     const sombrero = equipo.sombrero ? ITEMS.sombrero.find(i => i.id === equipo.sombrero) : null;
     const zapatillas = equipo.zapatillas ? ITEMS.zapatillas.find(i => i.id === equipo.zapatillas) : null;
     const insignia = equipo.insignia ? ITEMS.insignia.find(i => i.id === equipo.insignia) : null;
 
-    let html = `<div class="avatar-muneco-preview">
-        <div class="avatar-cabeza">${avatarEmoji}</div>
-        <div class="avatar-sombrero">${sombrero ? sombrero.emoji : ' '}</div>
-        <div class="avatar-superior">${superior ? superior.emoji : '👕'}</div>
-        <div class="avatar-inferior">${inferior ? inferior.emoji : '👖'}</div>
-        <div class="avatar-zapatillas">${zapatillas ? zapatillas.emoji : '👟'}</div>
-        <div class="avatar-insignia">${insignia ? insignia.emoji : '🏅'}</div>
-        <div class="avatar-nombre">${jugadorData.nombre}</div>
-    </div>`;
-
-    elAvatarPreview.innerHTML = html;
+    elAvatarPreview.innerHTML = `
+        <div class="avatar-muneco-preview">
+            <div class="avatar-pieza avatar-sombrero">${sombrero ? sombrero.emoji : ' '}</div>
+            <div class="avatar-pieza avatar-cabeza">${avatarEmoji}</div>
+            <div class="avatar-pieza avatar-superior">${superior ? superior.emoji : '👕'}</div>
+            <div class="avatar-pieza avatar-inferior">${inferior ? inferior.emoji : '👖'}</div>
+            <div class="avatar-pieza avatar-zapatillas">${zapatillas ? zapatillas.emoji : '👟'}</div>
+            <div class="avatar-pieza avatar-insignia">${insignia ? insignia.emoji : '🏅'}</div>
+            <div class="avatar-nombre">${jugadorData.nombre}</div>
+        </div>
+    `;
 }
 
 function actualizarMonedas() {
@@ -221,7 +218,7 @@ function mostrarFeedback(mensaje, tipo) {
     }
 }
 
-// ---------- Botones de juegos y logout ----------
+// Botones de juegos y logout
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-logout').addEventListener('click', async () => {
         if (confirm('¿Seguro que quieres cerrar sesión?')) {
