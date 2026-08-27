@@ -2,32 +2,53 @@
 // incognita.js – Lógica del juego "¿Dónde está la incógnita?"
 // ============================================================
 
+const XP_POR_NIVEL = 100;
+
+const REGIONES = [
+    { minNivel: 1, nombre: "Aldea de las Ecuaciones" },
+    { minNivel: 2, nombre: "Pradera de los Coeficientes" },
+    { minNivel: 5, nombre: "Bosque de las Variables" },
+    { minNivel: 9, nombre: "Montaña de los Términos" },
+    { minNivel: 13, nombre: "Ciudadela de las Incógnitas" }
+];
+
+function regionParaNivel(nivel) {
+    let region = REGIONES[0].nombre;
+    for (const r of REGIONES) {
+        if (nivel >= r.minNivel) region = r.nombre;
+    }
+    return region;
+}
+
 let modoActual = 'alternativas';
 let racha = 0;
-let puntuacion = 0;
+let puntuacion = 0; // solo para mostrar, no se usa para nivel
 let feedbackTimeout = null;
 
 // Elementos del DOM
-let elNombre, elPuntuacion;
+let elNombre, elNivel, elMonedas, elXpBarra, elXpTexto, elRegion;
 let elPreguntaAlt, elOpcionesAlt, elFeedbackAlt, elRachaAlt;
 let elHistorialPasos, elFeedbackPractica, elNextPracticaBtn;
 let elNumeroPractica, elBtnAccion, elOperacionBtns;
 let elControlesPractica, elMensajeExito, elTextoSolucion;
 
-// ---------- Generación de ecuaciones ----------
+// ---------- Generación de ecuaciones (siempre con b != 0) ----------
 function generarEcuacionLineal() {
-    const a = Math.floor(Math.random() * 4) + 1;
-    const b = Math.floor(Math.random() * 10) - 5;
-    const x = Math.floor(Math.random() * 10) - 5;
-    const c = a * x + b;
+    let a, b, c, x;
+    do {
+        a = Math.floor(Math.random() * 4) + 1;
+        b = Math.floor(Math.random() * 10) - 5;
+    } while (b === 0);
+    x = Math.floor(Math.random() * 10) - 5;
+    c = a * x + b;
     return { a, b, c, x };
 }
 
-function formatearEcuacion(a, b, c) {
+function formatearEcuacion(a, b, c, letra = 'x') {
     let left = '';
-    if (a === 1) left = 'x';
-    else if (a === -1) left = '-x';
-    else left = a + 'x';
+    if (a === 1) left = letra;
+    else if (a === -1) left = '-' + letra;
+    else left = a + letra;
     if (b > 0) left += ' + ' + b;
     else if (b < 0) left += ' - ' + Math.abs(b);
     return left + ' = ' + c;
@@ -74,7 +95,7 @@ function generarPasos(a, b, c, x) {
         pasoActual = { a: nuevoA, b: pasoActual.b, c: nuevoC };
     }
 
-    pasos.push({ tipo: 'solucion', x, texto: 'x = ' + x });
+    pasos.push({ tipo: 'solucion', x, texto: formatearEcuacion(1, 0, x) });
     return pasos;
 }
 
@@ -154,10 +175,10 @@ function mostrarHistorial() {
         const div = document.createElement('div');
         div.className = 'ecuacion-linea paso-confirmado';
         if (linea.tipo === 'operacion') {
-            div.style.color = '#fbbf24';
+            div.style.color = '#f2c94c';
             div.style.fontWeight = 'bold';
         } else if (linea.tipo === 'solucion') {
-            div.style.color = '#22c55e';
+            div.style.color = '#2e7d32';
             div.style.fontWeight = 'bold';
         }
         div.textContent = linea.texto;
@@ -188,7 +209,6 @@ function actualizarBoton() {
     }
 }
 
-// ---------- Manejar el botón ----------
 function manejarBoton() {
     if (practicaState.operacionPendiente) {
         confirmarPaso();
@@ -197,7 +217,6 @@ function manejarBoton() {
     }
 }
 
-// ---------- Operar ----------
 function realizarOperacion() {
     const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
     if (!opSeleccionada) {
@@ -238,7 +257,6 @@ function realizarOperacion() {
     actualizarBoton();
 }
 
-// ---------- Confirmar paso ----------
 function confirmarPaso() {
     if (!practicaState.operacionPendiente) return;
 
@@ -262,7 +280,6 @@ function confirmarPaso() {
         return;
     }
 
-    // Paso correcto: avanzar
     practicaState.pasoActual++;
     practicaState.historialLineas.push({ texto: textoSimplificado, tipo: 'simplificacion' });
     practicaState.operacionPendiente = null;
@@ -270,10 +287,8 @@ function confirmarPaso() {
     mostrarHistorial();
     resetearControles();
 
-    // Verificar si el siguiente paso es la solución (se muestra automáticamente)
     if (practicaState.pasoActual + 1 < practicaState.pasos.length &&
         practicaState.pasos[practicaState.pasoActual + 1].tipo === 'solucion') {
-        // Mostrar solución automáticamente
         practicaState.pasoActual++;
         practicaState.historialLineas.push({
             texto: practicaState.pasos[practicaState.pasoActual].texto,
@@ -281,7 +296,6 @@ function confirmarPaso() {
         });
         mostrarHistorial();
 
-        // Ocultar controles y mostrar mensaje de éxito
         if (elControlesPractica) elControlesPractica.style.display = 'none';
         if (elMensajeExito) {
             elMensajeExito.style.display = 'block';
@@ -304,7 +318,6 @@ function confirmarPaso() {
         return;
     }
 
-    // Si no hay solución automática, continuar con el siguiente paso
     actualizarBoton();
     mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
 }
@@ -326,13 +339,18 @@ function mostrarFeedbackPractica(mensaje, tipo) {
     }, 2500);
 }
 
-// ---------- Modo Alternativas (sin cambios) ----------
+// ---------- Modo Alternativas (con niveles) ----------
 let preguntaActualAlt = null;
+let letraActual = 'x';
 
 function generarPreguntaAlternativas() {
     const eq = generarEcuacionLineal();
     const { a, b, c, x } = eq;
-    const enunciado = formatearEcuacion(a, b, c);
+    const letras = ['a', 'b', 'c', 'x', 'y', 'z'];
+    const letra = letras[Math.floor(Math.random() * letras.length)];
+    letraActual = letra;
+    const enunciado = `Encuentra la incógnita ${letra} para la siguiente ecuación:`;
+    const ecuacion = formatearEcuacion(a, b, c, letra);
     const correcta = x;
     const opciones = new Set();
     opciones.add(correcta);
@@ -345,7 +363,8 @@ function generarPreguntaAlternativas() {
         }
     }
     return {
-        enunciado: `Resuelve: ${enunciado}`,
+        enunciado: enunciado,
+        ecuacion: ecuacion,
         respuestaCorrecta: correcta,
         opciones: mezclarArray(Array.from(opciones))
     };
@@ -353,7 +372,9 @@ function generarPreguntaAlternativas() {
 
 function nuevaPreguntaAlternativas() {
     preguntaActualAlt = generarPreguntaAlternativas();
-    if (elPreguntaAlt) elPreguntaAlt.textContent = preguntaActualAlt.enunciado + ' → x = ?';
+    if (elPreguntaAlt) {
+        elPreguntaAlt.innerHTML = `${preguntaActualAlt.enunciado}<br><span style="font-weight:400; font-size:1.8rem;">${preguntaActualAlt.ecuacion}</span>`;
+    }
     if (elOpcionesAlt) {
         elOpcionesAlt.innerHTML = '';
         preguntaActualAlt.opciones.forEach((opcion) => {
@@ -375,12 +396,17 @@ function responderAlternativa(opcionElegida, btnElegido) {
     [...elOpcionesAlt.children].forEach(b => b.disabled = true);
     const esCorrecta = opcionElegida === preguntaActualAlt.respuestaCorrecta;
 
+    let xpGanada = 0;
+    let monedasGanadas = 0;
+
     if (esCorrecta) {
         racha++;
-        puntuacion += 10 + Math.min(racha, 5) * 2;
+        const bonusRacha = Math.min(racha, 5) * 2;
+        xpGanada = 10 + bonusRacha;
+        monedasGanadas = 5 + Math.floor(racha / 3);
         btnElegido.classList.add('opcion-correcta');
         if (elFeedbackAlt) {
-            elFeedbackAlt.textContent = '✅ ¡Correcto! x = ' + preguntaActualAlt.respuestaCorrecta;
+            elFeedbackAlt.textContent = `✅ ¡Correcto! ${letraActual} = ${preguntaActualAlt.respuestaCorrecta}`;
             elFeedbackAlt.className = 'feedback feedback-exito';
             elFeedbackAlt.classList.remove('hidden');
         }
@@ -388,33 +414,55 @@ function responderAlternativa(opcionElegida, btnElegido) {
         racha = 0;
         btnElegido.classList.add('opcion-incorrecta');
         if (elFeedbackAlt) {
-            elFeedbackAlt.textContent = `❌ Casi. La respuesta correcta era x = ${preguntaActualAlt.respuestaCorrecta}`;
+            elFeedbackAlt.textContent = `❌ Casi. La respuesta correcta era ${letraActual} = ${preguntaActualAlt.respuestaCorrecta}`;
             elFeedbackAlt.className = 'feedback feedback-error';
             elFeedbackAlt.classList.remove('hidden');
         }
     }
+
     if (elRachaAlt) elRachaAlt.textContent = racha;
-    if (elPuntuacion) elPuntuacion.textContent = puntuacion;
 
-    guardarProgreso(esCorrecta);
-    setTimeout(nuevaPreguntaAlternativas, 1600);
-}
+    // Actualizar progreso (nivel, XP, monedas, región)
+    if (window.jugador && window.uid) {
+        const j = window.jugador;
+        const nuevoXp = (j.xp || 0) + xpGanada;
+        const nuevoNivel = Math.floor(nuevoXp / XP_POR_NIVEL) + 1;
+        const subioNivel = nuevoNivel > (j.nivel || 1);
 
-async function guardarProgreso(acerto) {
-    if (!window.uid) return;
-    try {
-        const ref = db.collection('usuarios').doc(window.uid);
-        await ref.update({
-            [`juegos.incognita.puntuacion`]: puntuacion,
-            [`juegos.incognita.racha`]: racha,
-            [`juegos.incognita.ultimaJugada`]: new Date().toISOString()
+        j.xp = nuevoXp;
+        j.monedas = (j.monedas || 0) + monedasGanadas;
+        j.nivel = nuevoNivel;
+        j.regionActual = regionParaNivel(nuevoNivel);
+        j.estadisticas = j.estadisticas || {};
+        j.estadisticas.correctas = (j.estadisticas.correctas || 0) + (esCorrecta ? 1 : 0);
+        j.estadisticas.incorrectas = (j.estadisticas.incorrectas || 0) + (esCorrecta ? 0 : 1);
+
+        // Guardar en Firestore
+        db.collection('usuarios').doc(window.uid).update({
+            xp: j.xp,
+            monedas: j.monedas,
+            nivel: j.nivel,
+            regionActual: j.regionActual,
+            estadisticas: j.estadisticas,
+            historial: firebase.firestore.FieldValue.arrayUnion({
+                pregunta: preguntaActualAlt.enunciado + ' ' + preguntaActualAlt.ecuacion,
+                correcta: esCorrecta,
+                fecha: new Date().toISOString()
+            })
+        }).catch(error => {
+            console.error('Error al guardar progreso:', error);
+            if (elFeedbackAlt) {
+                elFeedbackAlt.textContent += ' (Error al guardar el progreso)';
+            }
         });
-        await ref.update({
-            xpTotal: firebase.firestore.FieldValue.increment(acerto ? 5 : 0)
-        });
-    } catch (error) {
-        console.error('Error al guardar:', error);
+
+        actualizarUI();
+        if (subioNivel && elFeedbackAlt) {
+            elFeedbackAlt.textContent += ` ¡Subiste a nivel ${j.nivel}!`;
+        }
     }
+
+    setTimeout(nuevaPreguntaAlternativas, 1600);
 }
 
 function mezclarArray(arr) {
@@ -445,10 +493,28 @@ function cambiarModo(modo) {
     }
 }
 
-// ---------- Inicialización ----------
+// ---------- Inicialización y UI ----------
+function actualizarUI() {
+    if (!window.jugador) return;
+    const j = window.jugador;
+    if (elNombre) elNombre.textContent = j.nombre || "Aventurero";
+    if (elNivel) elNivel.textContent = j.nivel || 1;
+    if (elMonedas) elMonedas.textContent = j.monedas || 0;
+    if (elRegion) elRegion.textContent = j.regionActual || "Aldea de las Ecuaciones";
+    if (elXpBarra && elXpTexto) {
+        const xpEnNivel = (j.xp || 0) % XP_POR_NIVEL;
+        elXpBarra.style.width = `${xpEnNivel}%`;
+        elXpTexto.textContent = `${xpEnNivel} / ${XP_POR_NIVEL} XP`;
+    }
+}
+
 function iniciarJuego() {
     elNombre = document.getElementById('player-name');
-    elPuntuacion = document.getElementById('player-score');
+    elNivel = document.getElementById('player-level');
+    elMonedas = document.getElementById('player-coins');
+    elXpBarra = document.getElementById('xp-bar-fill');
+    elXpTexto = document.getElementById('xp-text');
+    elRegion = document.getElementById('player-region');
     elPreguntaAlt = document.getElementById('pregunta-enunciado-alt');
     elOpcionesAlt = document.getElementById('opciones-container-alt');
     elFeedbackAlt = document.getElementById('feedback-message-alt');
@@ -483,10 +549,9 @@ function iniciarJuego() {
     });
 
     if (window.jugador) {
-        elNombre.textContent = window.jugador.nombre || 'Jugador';
-        puntuacion = window.jugador.juegos?.incognita?.puntuacion || 0;
-        racha = window.jugador.juegos?.incognita?.racha || 0;
-        if (elPuntuacion) elPuntuacion.textContent = puntuacion;
+        actualizarUI();
+        // Inicializar racha y puntuación desde el jugador (si existe)
+        racha = window.jugador.rachaIncognita || 0;
         if (elRachaAlt) elRachaAlt.textContent = racha;
     }
 
@@ -510,7 +575,6 @@ function iniciarJuego() {
     cambiarModo('alternativas');
 }
 
-// ---------- Esperar a common.js ----------
 function esperarJugador() {
     if (window.jugador) {
         iniciarJuego();
