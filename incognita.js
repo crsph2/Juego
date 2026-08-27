@@ -6,10 +6,10 @@ const XP_POR_NIVEL = 100;
 
 const REGIONES = [
     { minNivel: 1, nombre: "Aldea de las Ecuaciones" },
-    { minNivel: 2, nombre: "Pradera de los Coeficientes" },
-    { minNivel: 5, nombre: "Bosque de las Variables" },
-    { minNivel: 9, nombre: "Montaña de los Términos" },
-    { minNivel: 13, nombre: "Ciudadela de las Incógnitas" }
+    { minNivel: 2, nombre: "Aldea de las Ecuaciones" },
+    { minNivel: 5, nombre: "Aldea de las Ecuaciones" },
+    { minNivel: 9, nombre: "Aldea de las Ecuaciones" },
+    { minNivel: 13, nombre: "Aldea de las Ecuaciones" }
 ];
 
 function regionParaNivel(nivel) {
