@@ -3,7 +3,7 @@
 // ---------- Datos de la tienda ----------
 const ITEMS = {
     avatar: [
-        { id: 'piel_amarilla', nombre: 'Piel Amarilla (Avatar base)', emoji: '🧑', categoria: 'avatar', precio: 100 }
+        { id: 'avatar_base', nombre: 'Avatar', emoji: '🧑', categoria: 'avatar', precio: 0 }
     ],
     superior: [
         { id: 'camiseta_roja', nombre: 'Camiseta Roja', emoji: '👕', categoria: 'superior', precio: 500 },
@@ -34,12 +34,21 @@ const ITEMS = {
         { id: 'zapatillas_verdes', nombre: 'Zapatillas Verdes', emoji: '👟', categoria: 'zapatillas', precio: 500 }
     ],
     insignia: [
-        { id: 'insignia_pi', nombre: 'Pi (π)', emoji: 'π', categoria: 'insignia', precio: 500 },
-        { id: 'insignia_integral', nombre: 'Integral (∫)', emoji: '∫', categoria: 'insignia', precio: 500 },
-        { id: 'insignia_raiz', nombre: 'Raíz Cuadrada (√)', emoji: '√', categoria: 'insignia', precio: 500 },
-        { id: 'insignia_suma', nombre: 'Sumatoria (Σ)', emoji: 'Σ', categoria: 'insignia', precio: 500 },
-        { id: 'insignia_infinito', nombre: 'Infinito (∞)', emoji: '∞', categoria: 'insignia', precio: 500 }
+        { id: 'insignia_pi', nombre: 'Pi (π)', emoji: '🏅π', categoria: 'insignia', precio: 500 },
+        { id: 'insignia_integral', nombre: 'Integral (∫)', emoji: '🏅∫', categoria: 'insignia', precio: 500 },
+        { id: 'insignia_raiz', nombre: 'Raíz Cuadrada (√)', emoji: '🏅√', categoria: 'insignia', precio: 500 },
+        { id: 'insignia_suma', nombre: 'Sumatoria (Σ)', emoji: '🏅Σ', categoria: 'insignia', precio: 500 },
+        { id: 'insignia_infinito', nombre: 'Infinito (∞)', emoji: '🏅∞', categoria: 'insignia', precio: 500 }
     ]
+};
+
+// Función global para obtener item por ID (usada por common.js)
+window.obtenerItemPorIdGlobal = function(id) {
+    for (const cat in ITEMS) {
+        const encontrado = ITEMS[cat].find(item => item.id === id);
+        if (encontrado) return encontrado;
+    }
+    return null;
 };
 
 // ---------- Variables globales ----------
@@ -54,7 +63,6 @@ const categoriaBtns = document.querySelectorAll('.categoria-btn');
 
 // ---------- Inicialización ----------
 document.addEventListener('DOMContentLoaded', () => {
-    // Esperar a que common.js cargue el jugador
     if (window.jugador) {
         iniciarTienda();
     } else {
@@ -66,7 +74,6 @@ function iniciarTienda() {
     jugadorData = window.jugador;
     actualizarVistaPrevia();
     actualizarMonedas();
-    // Configurar pestañas
     categoriaBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             categoriaBtns.forEach(b => b.classList.remove('active'));
@@ -75,11 +82,9 @@ function iniciarTienda() {
             mostrarItemsCategoria(categoriaActual);
         });
     });
-    // Mostrar primera categoría
     mostrarItemsCategoria('superior');
 }
 
-// ---------- Mostrar items de una categoría ----------
 function mostrarItemsCategoria(categoria) {
     const items = ITEMS[categoria];
     if (!items) return;
@@ -104,7 +109,6 @@ function mostrarItemsCategoria(categoria) {
         `;
         elItemsTienda.appendChild(card);
 
-        // Event listeners
         const btnComprar = card.querySelector('.btn-comprar');
         if (btnComprar) {
             btnComprar.addEventListener('click', () => comprarItem(item.id, item.categoria, item.precio));
@@ -116,7 +120,6 @@ function mostrarItemsCategoria(categoria) {
     });
 }
 
-// ---------- Comprar item ----------
 async function comprarItem(id, categoria, precio) {
     if (jugadorData.monedas < precio) {
         alert('No tienes suficientes monedas.');
@@ -126,30 +129,26 @@ async function comprarItem(id, categoria, precio) {
         alert('Ya tienes este item.');
         return;
     }
-    // Confirmar compra
     const item = ITEMS[categoria].find(i => i.id === id);
     if (!confirm(`¿Comprar ${item.nombre} por ${precio} monedas?`)) return;
 
     try {
-        // Restar monedas
         jugadorData.monedas -= precio;
         jugadorData.inventario.push(id);
-        
-        // Si es el avatar, equiparlo automáticamente
+        // Si es avatar, equipar automáticamente
         if (categoria === 'avatar') {
-            jugadorData.equipo[categoria] = id;
+            jugadorData.equipo.avatar = id;
         }
-        
-        // Guardar en Firestore
         await db.collection('usuarios').doc(window.uid).update({
             monedas: jugadorData.monedas,
             inventario: jugadorData.inventario,
             equipo: jugadorData.equipo
         });
-        // Actualizar UI
         actualizarMonedas();
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
+        // Actualizar avatar en common.js
+        if (window.actualizarAvatar) window.actualizarAvatar();
         mostrarFeedback('¡Compra exitosa!', 'exito');
     } catch (error) {
         console.error('Error al comprar:', error);
@@ -157,13 +156,11 @@ async function comprarItem(id, categoria, precio) {
     }
 }
 
-// ---------- Equipar item ----------
 async function equiparItem(id, categoria) {
     if (!jugadorData.inventario.includes(id)) {
         alert('No tienes este item.');
         return;
     }
-    // Si ya está equipado, no hacer nada
     if (jugadorData.equipo[categoria] === id) return;
 
     try {
@@ -171,9 +168,9 @@ async function equiparItem(id, categoria) {
         await db.collection('usuarios').doc(window.uid).update({
             equipo: jugadorData.equipo
         });
-        // Actualizar UI
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
+        if (window.actualizarAvatar) window.actualizarAvatar();
         mostrarFeedback('¡Item equipado!', 'exito');
     } catch (error) {
         console.error('Error al equipar:', error);
@@ -181,14 +178,11 @@ async function equiparItem(id, categoria) {
     }
 }
 
-// ---------- Actualizar vista previa del avatar ----------
 function actualizarVistaPrevia() {
     if (!elAvatarPreview) return;
     const equipo = jugadorData.equipo;
-    // Obtener emojis de cada categoría
-    const avatarItem = ITEMS.avatar.find(i => i.id === 'piel_amarilla');
-    const avatarEmoji = avatarItem ? avatarItem.emoji : '🧑';
-    const avatarNombre = jugadorData.inventario.includes('piel_amarilla') ? 'Piel Amarilla' : 'Sin avatar';
+    const avatarEmoji = '🧑';
+    const avatarNombre = jugadorData.inventario.includes('avatar_base') ? 'Avatar' : 'Sin avatar';
 
     const superior = equipo.superior ? ITEMS.superior.find(i => i.id === equipo.superior) : null;
     const inferior = equipo.inferior ? ITEMS.inferior.find(i => i.id === equipo.inferior) : null;
@@ -196,35 +190,25 @@ function actualizarVistaPrevia() {
     const zapatillas = equipo.zapatillas ? ITEMS.zapatillas.find(i => i.id === equipo.zapatillas) : null;
     const insignia = equipo.insignia ? ITEMS.insignia.find(i => i.id === equipo.insignia) : null;
 
-    let html = `<div class="avatar-base">${avatarEmoji}</div>`;
-    if (sombrero) html += `<div class="avatar-sombrero">${sombrero.emoji}</div>`;
-    if (superior) html += `<div class="avatar-superior">${superior.emoji}</div>`;
-    if (inferior) html += `<div class="avatar-inferior">${inferior.emoji}</div>`;
-    if (zapatillas) html += `<div class="avatar-zapatillas">${zapatillas.emoji}</div>`;
-    if (insignia) html += `<div class="avatar-insignia">${insignia.emoji}</div>`;
-
-    // Lista de equipados
-    html += `<div class="avatar-lista">
-        <p><strong>Avatar:</strong> ${avatarNombre}</p>
-        <p><strong>Superior:</strong> ${superior ? superior.nombre : 'Ninguno'}</p>
-        <p><strong>Inferior:</strong> ${inferior ? inferior.nombre : 'Ninguno'}</p>
-        <p><strong>Sombrero:</strong> ${sombrero ? sombrero.nombre : 'Ninguno'}</p>
-        <p><strong>Zapatillas:</strong> ${zapatillas ? zapatillas.nombre : 'Ninguno'}</p>
-        <p><strong>Insignia:</strong> ${insignia ? insignia.nombre : 'Ninguno'}</p>
+    let html = `<div class="avatar-muneco-preview">
+        <div class="avatar-cabeza">${avatarEmoji}</div>
+        <div class="avatar-sombrero">${sombrero ? sombrero.emoji : ' '}</div>
+        <div class="avatar-superior">${superior ? superior.emoji : '👕'}</div>
+        <div class="avatar-inferior">${inferior ? inferior.emoji : '👖'}</div>
+        <div class="avatar-zapatillas">${zapatillas ? zapatillas.emoji : '👟'}</div>
+        <div class="avatar-insignia">${insignia ? insignia.emoji : '🏅'}</div>
+        <div class="avatar-nombre">${jugadorData.nombre}</div>
     </div>`;
 
     elAvatarPreview.innerHTML = html;
 }
 
-// ---------- Actualizar monedas en tienda ----------
 function actualizarMonedas() {
     if (elCoinsTienda) elCoinsTienda.textContent = jugadorData.monedas || 0;
-    // También actualizar el contador global del lobby
     const elMonedasGlobal = document.getElementById('player-coins');
     if (elMonedasGlobal) elMonedasGlobal.textContent = jugadorData.monedas || 0;
 }
 
-// ---------- Feedback ----------
 function mostrarFeedback(mensaje, tipo) {
     const feedback = document.getElementById('feedback-message');
     if (feedback) {
@@ -237,9 +221,8 @@ function mostrarFeedback(mensaje, tipo) {
     }
 }
 
-// ---------- Botones de juegos ----------
+// ---------- Botones de juegos y logout ----------
 document.addEventListener('DOMContentLoaded', () => {
-    // Cerrar sesión
     document.getElementById('btn-logout').addEventListener('click', async () => {
         if (confirm('¿Seguro que quieres cerrar sesión?')) {
             await firebase.auth().signOut();
