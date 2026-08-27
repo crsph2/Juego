@@ -1,15 +1,10 @@
-// common.js - Funciones compartidas
+// common.js - Funciones compartidas para todas las páginas
 
 window.uid = null;
 window.jugador = null;
 
 function getUid() {
     return sessionStorage.getItem('mathquest_uid');
-}
-
-function getAvatarUrl(seed, style = 'adventurer') {
-    // Usamos DiceBear con estilo adventurer, bottts, pixel-art, etc.
-    return `https://api.dicebear.com/9.x/${style}/svg?seed=${seed}&backgroundColor=ffd700&radius=50`;
 }
 
 async function cargarJugador() {
@@ -25,22 +20,26 @@ async function cargarJugador() {
             return;
         }
         window.jugador = snap.data();
-        // Inicializar campos si faltan
+        // Inicializar campos si no existen
         if (window.jugador.monedas === undefined) window.jugador.monedas = 0;
         if (!window.jugador.inventario) window.jugador.inventario = ['avatar_base'];
-        if (!window.jugador.avatarSeed) {
-            // Si no tiene seed, generar uno (migración)
-            window.jugador.avatarSeed = generarSeed();
-            await db.collection('usuarios').doc(window.uid).update({ avatarSeed: window.jugador.avatarSeed });
-        }
         if (!window.jugador.equipo) {
-            window.jugador.equipo = { avatar: 'avatar_base', superior: null, inferior: null, sombrero: null, zapatillas: null, insignia: null };
+            window.jugador.equipo = {
+                avatar: 'avatar_base',
+                superior: null,
+                inferior: null,
+                sombrero: null,
+                zapatillas: null,
+                insignia: null
+            };
+        } else if (!window.jugador.equipo.avatar) {
+            window.jugador.equipo.avatar = 'avatar_base';
         }
         if (!window.jugador.factorizados) {
-            window.jugador.factorizados = { nivel: 1, xp: 0, region: 'Aldea del Factor Común' };
+            window.jugador.factorizados = { nivel: 1, xp: 0, region: 'Aldea del Factor Común', racha: 0 };
         }
         if (!window.jugador.incognita) {
-            window.jugador.incognita = { nivel: 1, xp: 0, region: 'Aldea de las Ecuaciones' };
+            window.jugador.incognita = { nivel: 1, xp: 0, region: 'Aldea de las Ecuaciones', racha: 0 };
         }
         if (!window.jugador.nombre) window.jugador.nombre = 'Trotamundos';
 
@@ -54,10 +53,6 @@ async function cargarJugador() {
     }
 }
 
-function generarSeed() {
-    return Math.random().toString(36).substring(2, 10);
-}
-
 function actualizarUICompleta() {
     if (!window.jugador) return;
 
@@ -65,11 +60,11 @@ function actualizarUICompleta() {
     const elNombre = document.getElementById('player-name');
     if (elNombre) elNombre.textContent = window.jugador.nombre;
 
-    // Monedas
+    // Monedas globales
     const elMonedas = document.getElementById('player-coins');
     if (elMonedas) elMonedas.textContent = window.jugador.monedas || 0;
 
-    // Factorizados
+    // Factorizados: nivel, XP y región
     const fac = window.jugador.factorizados || { nivel: 1, xp: 0, region: 'Aldea del Factor Común' };
     const elNivel = document.getElementById('player-level');
     if (elNivel) elNivel.textContent = fac.nivel || 1;
@@ -88,16 +83,47 @@ function actualizarUICompleta() {
         elRegion.textContent = fac.region || 'Aldea del Factor Común';
     }
 
-    // Avatar
+    // Actualizar avatar
     actualizarAvatar();
 }
 
 function actualizarAvatar() {
     const avatarContainer = document.getElementById('avatar-display');
     if (!avatarContainer) return;
-    const seed = window.jugador.avatarSeed || 'default';
-    const avatarUrl = getAvatarUrl(seed);
-    avatarContainer.innerHTML = `<img src="${avatarUrl}" alt="Avatar" class="avatar-img" />`;
+
+    const equipo = window.jugador.equipo || {};
+    const nombre = window.jugador.nombre || 'Aventurero';
+
+    // Función para obtener emoji de un item por ID
+    function getEmoji(id, defaultEmoji) {
+        if (!id) return defaultEmoji;
+        // Usamos la función global definida en lobby.js
+        if (window.obtenerItemPorIdGlobal) {
+            const item = window.obtenerItemPorIdGlobal(id);
+            if (item) return item.emoji;
+        }
+        return defaultEmoji;
+    }
+
+    const avatarEmoji = getEmoji(equipo.avatar, '🧑');
+    const sombreroEmoji = getEmoji(equipo.sombrero, ' ');
+    const superiorEmoji = getEmoji(equipo.superior, '👕');
+    const inferiorEmoji = getEmoji(equipo.inferior, '👖');
+    const zapatillasEmoji = getEmoji(equipo.zapatillas, '👟');
+    const insigniaEmoji = getEmoji(equipo.insignia, '🏅');
+
+    // Construir el avatar como un muñeco con partes
+    avatarContainer.innerHTML = `
+        <div class="avatar-muneco">
+            <div class="avatar-pieza avatar-sombrero">${sombreroEmoji}</div>
+            <div class="avatar-pieza avatar-cabeza">${avatarEmoji}</div>
+            <div class="avatar-pieza avatar-superior">${superiorEmoji}</div>
+            <div class="avatar-pieza avatar-inferior">${inferiorEmoji}</div>
+            <div class="avatar-pieza avatar-zapatillas">${zapatillasEmoji}</div>
+            <div class="avatar-pieza avatar-insignia">${insigniaEmoji}</div>
+            <div class="avatar-nombre">${nombre}</div>
+        </div>
+    `;
 }
 
 function configurarEdicionNombre() {
