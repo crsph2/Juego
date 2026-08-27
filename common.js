@@ -1,10 +1,15 @@
-// common.js - Funciones compartidas para todas las páginas
+// common.js - Funciones compartidas
 
 window.uid = null;
 window.jugador = null;
 
 function getUid() {
     return sessionStorage.getItem('mathquest_uid');
+}
+
+function getAvatarUrl(seed, style = 'adventurer') {
+    // Usamos DiceBear con estilo adventurer, bottts, pixel-art, etc.
+    return `https://api.dicebear.com/9.x/${style}/svg?seed=${seed}&backgroundColor=ffd700&radius=50`;
 }
 
 async function cargarJugador() {
@@ -20,19 +25,17 @@ async function cargarJugador() {
             return;
         }
         window.jugador = snap.data();
-        // Inicializar campos globales si no existen
+        // Inicializar campos si faltan
         if (window.jugador.monedas === undefined) window.jugador.monedas = 0;
-        if (!window.jugador.inventario) window.jugador.inventario = [];
-        if (!window.jugador.equipo) {
-            window.jugador.equipo = {
-                superior: null,
-                inferior: null,
-                sombrero: null,
-                zapatillas: null,
-                insignia: null
-            };
+        if (!window.jugador.inventario) window.jugador.inventario = ['avatar_base'];
+        if (!window.jugador.avatarSeed) {
+            // Si no tiene seed, generar uno (migración)
+            window.jugador.avatarSeed = generarSeed();
+            await db.collection('usuarios').doc(window.uid).update({ avatarSeed: window.jugador.avatarSeed });
         }
-        // Asegurar que tengan subobjetos de juegos (para evitar errores)
+        if (!window.jugador.equipo) {
+            window.jugador.equipo = { avatar: 'avatar_base', superior: null, inferior: null, sombrero: null, zapatillas: null, insignia: null };
+        }
         if (!window.jugador.factorizados) {
             window.jugador.factorizados = { nivel: 1, xp: 0, region: 'Aldea del Factor Común' };
         }
@@ -43,13 +46,16 @@ async function cargarJugador() {
 
         actualizarUICompleta();
         configurarEdicionNombre();
-        // Disparar evento personalizado
         document.dispatchEvent(new CustomEvent('jugador-cargado', { detail: window.jugador }));
     } catch (error) {
         console.error('Error al cargar jugador:', error);
         const elNombre = document.getElementById('player-name');
         if (elNombre) elNombre.textContent = 'Error al cargar';
     }
+}
+
+function generarSeed() {
+    return Math.random().toString(36).substring(2, 10);
 }
 
 function actualizarUICompleta() {
@@ -59,11 +65,11 @@ function actualizarUICompleta() {
     const elNombre = document.getElementById('player-name');
     if (elNombre) elNombre.textContent = window.jugador.nombre;
 
-    // Monedas globales
+    // Monedas
     const elMonedas = document.getElementById('player-coins');
     if (elMonedas) elMonedas.textContent = window.jugador.monedas || 0;
 
-    // Factorizados: nivel, XP y región (usamos el subobjeto)
+    // Factorizados
     const fac = window.jugador.factorizados || { nivel: 1, xp: 0, region: 'Aldea del Factor Común' };
     const elNivel = document.getElementById('player-level');
     if (elNivel) elNivel.textContent = fac.nivel || 1;
@@ -81,6 +87,17 @@ function actualizarUICompleta() {
     if (elRegion) {
         elRegion.textContent = fac.region || 'Aldea del Factor Común';
     }
+
+    // Avatar
+    actualizarAvatar();
+}
+
+function actualizarAvatar() {
+    const avatarContainer = document.getElementById('avatar-display');
+    if (!avatarContainer) return;
+    const seed = window.jugador.avatarSeed || 'default';
+    const avatarUrl = getAvatarUrl(seed);
+    avatarContainer.innerHTML = `<img src="${avatarUrl}" alt="Avatar" class="avatar-img" />`;
 }
 
 function configurarEdicionNombre() {
@@ -121,7 +138,7 @@ function mostrarFeedback(mensaje, tipo) {
     }
 }
 
-// Redirigir si no hay usuario (solo en páginas protegidas)
+// Redirigir si no hay usuario
 firebase.auth().onAuthStateChanged((user) => {
     const paginasPublicas = ['index.html', 'register.html'];
     const path = window.location.pathname.split('/').pop();
