@@ -134,10 +134,17 @@ async function comprarItem(id, categoria, precio) {
         // Restar monedas
         jugadorData.monedas -= precio;
         jugadorData.inventario.push(id);
+        
+        // Si es el avatar, equiparlo automáticamente
+        if (categoria === 'avatar') {
+            jugadorData.equipo[categoria] = id;
+        }
+        
         // Guardar en Firestore
         await db.collection('usuarios').doc(window.uid).update({
             monedas: jugadorData.monedas,
-            inventario: jugadorData.inventario
+            inventario: jugadorData.inventario,
+            equipo: jugadorData.equipo
         });
         // Actualizar UI
         actualizarMonedas();
