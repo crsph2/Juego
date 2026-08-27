@@ -302,7 +302,7 @@ function iniciarJuego() {
   actualizarUI();
   nuevaPregunta();
 
-  // Botón guardar (sin cambios)
+  // Botón guardar
   const btnGuardar = document.getElementById('btn-save');
   if (btnGuardar) {
     btnGuardar.addEventListener('click', () => {
@@ -331,11 +331,10 @@ function iniciarJuego() {
 function actualizarUI() {
   if (!window.jugador) return;
   const j = window.jugador;
-  // Leer datos de factorizados
-  const fac = j.factorizados || { nivel: 1, monedas: 0, xp: 0, region: "Aldea del Factor Común" };
+  const fac = j.factorizados || { nivel: 1, xp: 0, region: "Aldea del Factor Común" };
   if (elNombre) elNombre.textContent = j.nombre || "Aventurero";
   if (elNivel) elNivel.textContent = fac.nivel || 1;
-  if (elMonedas) elMonedas.textContent = fac.monedas || 0;
+  if (elMonedas) elMonedas.textContent = j.monedas || 0;
   if (elRegion) elRegion.textContent = fac.region || "Aldea del Factor Común";
   if (elXpBarra && elXpTexto) {
     const xpEnNivel = (fac.xp || 0) % XP_POR_NIVEL;
@@ -408,20 +407,19 @@ async function responder(opcionElegida, btnElegido) {
 
   if (window.jugador && window.uid) {
     const j = window.jugador;
-    // Inicializar subobjeto factorizados
-    if (!j.factorizados) {
-      j.factorizados = { xp: 0, nivel: 1, monedas: 0, region: "Aldea del Factor Común" };
-    }
+    if (!j.factorizados) j.factorizados = { xp: 0, nivel: 1, region: "Aldea del Factor Común" };
     const fac = j.factorizados;
     const nuevoXp = (fac.xp || 0) + xpGanada;
     const nuevoNivel = Math.floor(nuevoXp / XP_POR_NIVEL) + 1;
     const subioNivel = nuevoNivel > (fac.nivel || 1);
 
     fac.xp = nuevoXp;
-    fac.monedas = (fac.monedas || 0) + monedasGanadas;
     fac.nivel = nuevoNivel;
     fac.region = regionParaNivel(nuevoNivel);
     fac.racha = racha;
+
+    // Monedas globales
+    j.monedas = (j.monedas || 0) + monedasGanadas;
 
     if (!j.estadisticas) j.estadisticas = {};
     j.estadisticas.factorizados_correctas = (j.estadisticas.factorizados_correctas || 0) + (esCorrecta ? 1 : 0);
@@ -429,9 +427,9 @@ async function responder(opcionElegida, btnElegido) {
 
     try {
       await db.collection('usuarios').doc(window.uid).update({
+        monedas: j.monedas,
         'factorizados.xp': fac.xp,
         'factorizados.nivel': fac.nivel,
-        'factorizados.monedas': fac.monedas,
         'factorizados.region': fac.region,
         'factorizados.racha': racha,
         'estadisticas.factorizados_correctas': j.estadisticas.factorizados_correctas,
@@ -462,12 +460,11 @@ async function responder(opcionElegida, btnElegido) {
 // ---------- Reiniciar nivel ----------
 async function reiniciarNivel() {
   if (!window.uid) return;
-  if (!confirm('¿Seguro que quieres reiniciar tu nivel en Factorizados? Se perderá todo el progreso.')) return;
+  if (!confirm('¿Seguro que quieres reiniciar tu nivel en Factorizados? Se perderá el progreso de XP y nivel, pero tus monedas se mantienen.')) return;
   try {
     await db.collection('usuarios').doc(window.uid).update({
       'factorizados.nivel': 1,
       'factorizados.xp': 0,
-      'factorizados.monedas': 0,
       'factorizados.racha': 0,
       'factorizados.region': "Aldea del Factor Común"
     });
@@ -475,7 +472,6 @@ async function reiniciarNivel() {
       if (!window.jugador.factorizados) window.jugador.factorizados = {};
       window.jugador.factorizados.nivel = 1;
       window.jugador.factorizados.xp = 0;
-      window.jugador.factorizados.monedas = 0;
       window.jugador.factorizados.racha = 0;
       racha = 0;
       if (elRacha) elRacha.textContent = '0';
