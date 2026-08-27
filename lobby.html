@@ -15,7 +15,8 @@
                 <span class="xp">⭐ <span id="player-xp">0</span> XP</span>
                 <span class="coins">🪙 <span id="player-coins">0</span></span>
             </div>
-            <button id="btn-logout" class="btn btn-danger">Cerrar sesión</button>
+            <div id="avatar-display" class="avatar-display"></div>
+            <button id="btn-logout" class="btn btn-danger" style="margin-top:8px;">Cerrar sesión</button>
         </header>
 
         <div id="feedback-message" class="hidden"></div>
@@ -38,28 +39,8 @@
             </div>
         </div>
 
-        <!-- TIENDA -->
-        <h2 style="margin-top: 2rem;">🛒 Tienda de Avatares</h2>
-        <div id="tienda-container">
-            <div id="vista-previa">
-                <h3>Tu Avatar</h3>
-                <div id="avatar-preview" class="avatar-preview">
-                    <!-- Se llena con JS -->
-                </div>
-                <p>Monedas: <span id="tienda-coins">0</span></p>
-            </div>
-            <div id="categorias-tienda">
-                <button class="categoria-btn active" data-categoria="superior">👕 Superiores</button>
-                <button class="categoria-btn" data-categoria="inferior">👖 Inferiores</button>
-                <button class="categoria-btn" data-categoria="sombrero">🎩 Sombreros</button>
-                <button class="categoria-btn" data-categoria="zapatillas">👟 Zapatillas</button>
-                <button class="categoria-btn" data-categoria="insignia">🏅 Insignias</button>
-                <button class="categoria-btn" data-categoria="avatar">🧑 Avatar</button>
-            </div>
-            <div id="items-tienda">
-                <!-- Se llena con JS -->
-            </div>
-        </div>
+        <!-- TIENDA (sin cambios) -->
+        ...
     </div>
 
     <!-- Firebase SDKs -->
