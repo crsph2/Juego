@@ -915,3 +915,115 @@ input::placeholder {
 @media (max-width: 360px) {
     .game-title { font-size: 1.5rem; }
 }
+
+/* ============================================================
+   MODO OSCURO (activado por sistema o manualmente)
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #121212;
+        background-image: linear-gradient(145deg, #1e1e2f 0%, #121212 100%);
+        color: #e0e0e0;
+    }
+
+    .login-card, .game-card, .lobby-card, .card, #tienda-container {
+        background: #1e1e2f;
+        border-color: #333;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    }
+
+    .player-header, .question-text, .practica-container, .practica-controles {
+        background: #2a2a3d;
+        border-color: #444;
+        color: #eee;
+    }
+
+    .btn-opcion {
+        background: #2a2a3d;
+        border-color: #555;
+        color: #eee;
+        box-shadow: 0 4px 0 #444;
+    }
+
+    .btn-opcion:hover {
+        background: #3a3a4d;
+    }
+
+    .btn-primary, .btn-secondary {
+        border-color: transparent;
+    }
+
+    .xp-bar {
+        background: #333;
+    }
+
+    .avatar-nombre {
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+    }
+
+    input {
+        background: #2a2a3d;
+        color: #fff;
+        border-color: #555;
+    }
+}
+
+/* ============================================================
+   AVATAR - ESTILO BUSTO (recorte de medio cuerpo)
+   ============================================================ */
+.avatar-display {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 6px 0;
+    padding: 0; /* Quitamos el padding extra */
+    min-height: 140px;
+    background: transparent; /* El fondo lo pone la imagen */
+}
+
+.avatar-dicebear {
+    width: 140px; /* Aumentamos tamaño para el busto */
+    height: 160px; /* Un poco más alto para recortar */
+    overflow: hidden;
+    border-radius: 50% 50% 0 0; /* Recorta la parte inferior en semicírculo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #e3f2fd; /* Color de fondo temporal */
+    position: relative;
+}
+
+.avatar-dicebear svg {
+    width: 140px;
+    height: 140px;
+    margin-top: -40px; /* Subimos la imagen para que se vea la cara y el torso */
+}
+
+/* Modo oscuro para el fondo del avatar */
+@media (prefers-color-scheme: dark) {
+    .avatar-dicebear {
+        background: #2a2a3d;
+    }
+}
+
+/* Quitamos los estilos de emojis superpuestos */
+.avatar-accesorio, .avatar-sombrero, .avatar-superior, .avatar-inferior, .avatar-zapatillas, .avatar-insignia {
+    display: none;
+}
+
+/* Estilo del nombre más limpio */
+.avatar-nombre {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.9rem;
+    color: #3b4cca;
+    font-weight: 700;
+    background: rgba(255,255,255,0.8);
+    padding: 0 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
