@@ -3,8 +3,6 @@
 // ============================================================
 
 const XP_POR_NIVEL = 100;
-
-// Siempre "Aldea de las Ecuaciones" para este juego
 const REGION_INCOGNITA = "Aldea de las Ecuaciones";
 
 let modoActual = 'alternativas';
@@ -153,7 +151,6 @@ function iniciarPractica() {
     mostrarHistorial();
     resetearControles();
     actualizarBoton();
-    // Asegurar que los controles estén visibles al inicio
     mostrarControles(true);
 }
 
@@ -164,7 +161,7 @@ function mostrarHistorial() {
         const div = document.createElement('div');
         div.className = 'ecuacion-linea paso-confirmado';
         if (linea.tipo === 'operacion') {
-            div.style.color = '#1565c0';  // azul oscuro con buen contraste
+            div.style.color = '#1565c0';
             div.style.fontWeight = 'bold';
         } else if (linea.tipo === 'solucion') {
             div.style.color = '#2e7d32';
@@ -185,7 +182,6 @@ function actualizarBoton() {
     if (practicaState.operacionPendiente) {
         elBtnAccion.textContent = 'Confirmar paso';
         elBtnAccion.disabled = false;
-        // Ocultar controles de operaciones y número
         mostrarControles(false);
     } else {
         const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
@@ -193,7 +189,6 @@ function actualizarBoton() {
         const haySeleccion = opSeleccionada && !isNaN(num) && num > 0;
         elBtnAccion.textContent = 'Operar';
         elBtnAccion.disabled = !haySeleccion;
-        // Mostrar controles
         mostrarControles(true);
     }
 }
@@ -300,7 +295,6 @@ function confirmarPaso() {
             }
         }
         if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
-        // Ocultar controles completamente
         mostrarControles(false);
         elBtnAccion.disabled = true;
         if (elFeedbackPractica) {
@@ -335,7 +329,7 @@ function mostrarFeedbackPractica(mensaje, tipo) {
     }, 2500);
 }
 
-// ---------- Modo Alternativas (con niveles independientes) ----------
+// ---------- Modo Alternativas ----------
 let preguntaActualAlt = null;
 let letraActual = 'x';
 
@@ -369,7 +363,6 @@ function generarPreguntaAlternativas() {
 function nuevaPreguntaAlternativas() {
     preguntaActualAlt = generarPreguntaAlternativas();
     if (elPreguntaAlt) {
-        // Ajustar tamaños: enunciado más pequeño, ecuación más grande
         elPreguntaAlt.innerHTML = `
             <div style="font-size:1.4rem; font-weight:500; color:#2d2d2d; margin-bottom:0.5rem;">
                 ${preguntaActualAlt.enunciado}
@@ -429,32 +422,30 @@ function responderAlternativa(opcionElegida, btnElegido) {
     // Actualizar progreso INDEPENDIENTE para Incógnita
     if (window.jugador && window.uid) {
         const j = window.jugador;
-        // Inicializar subobjeto incognita si no existe
-        if (!j.incognita) {
-            j.incognita = { xp: 0, nivel: 1, monedas: 0, region: REGION_INCOGNITA };
-        }
+        if (!j.incognita) j.incognita = { xp: 0, nivel: 1, region: REGION_INCOGNITA };
         const inc = j.incognita;
         const nuevoXp = (inc.xp || 0) + xpGanada;
         const nuevoNivel = Math.floor(nuevoXp / XP_POR_NIVEL) + 1;
         const subioNivel = nuevoNivel > (inc.nivel || 1);
 
         inc.xp = nuevoXp;
-        inc.monedas = (inc.monedas || 0) + monedasGanadas;
         inc.nivel = nuevoNivel;
-        inc.region = REGION_INCOGNITA;  // siempre fija
-        // Guardar racha también
+        inc.region = REGION_INCOGNITA;
         inc.racha = racha;
 
-        // Actualizar estadísticas (opcional)
+        // Monedas GLOBALES
+        j.monedas = (j.monedas || 0) + monedasGanadas;
+
+        // Estadísticas
         if (!j.estadisticas) j.estadisticas = {};
         j.estadisticas.incognita_correctas = (j.estadisticas.incognita_correctas || 0) + (esCorrecta ? 1 : 0);
         j.estadisticas.incognita_incorrectas = (j.estadisticas.incognita_incorrectas || 0) + (esCorrecta ? 0 : 1);
 
         // Guardar en Firestore
         db.collection('usuarios').doc(window.uid).update({
+            monedas: j.monedas,
             'incognita.xp': inc.xp,
             'incognita.nivel': inc.nivel,
-            'incognita.monedas': inc.monedas,
             'incognita.region': inc.region,
             'incognita.racha': racha,
             'estadisticas.incognita_correctas': j.estadisticas.incognita_correctas,
@@ -513,11 +504,10 @@ function cambiarModo(modo) {
 function actualizarUI() {
     if (!window.jugador) return;
     const j = window.jugador;
-    // Leer datos de incognita
-    const inc = j.incognita || { nivel: 1, monedas: 0, xp: 0, region: REGION_INCOGNITA };
+    const inc = j.incognita || { nivel: 1, xp: 0, region: REGION_INCOGNITA };
     if (elNombre) elNombre.textContent = j.nombre || "Aventurero";
     if (elNivel) elNivel.textContent = inc.nivel || 1;
-    if (elMonedas) elMonedas.textContent = inc.monedas || 0;
+    if (elMonedas) elMonedas.textContent = j.monedas || 0;
     if (elRegion) elRegion.textContent = REGION_INCOGNITA;
     if (elXpBarra && elXpTexto) {
         const xpEnNivel = (inc.xp || 0) % XP_POR_NIVEL;
@@ -526,23 +516,20 @@ function actualizarUI() {
     }
 }
 
-// ---------- Reiniciar nivel ----------
+// ---------- Reiniciar nivel (solo el de incógnita, monedas intactas) ----------
 async function reiniciarNivel() {
     if (!window.uid) return;
-    if (!confirm('¿Seguro que quieres reiniciar tu nivel en este juego? Se perderá todo el progreso.')) return;
+    if (!confirm('¿Seguro que quieres reiniciar tu nivel en este juego? Se perderá el progreso de XP y nivel, pero tus monedas se mantienen.')) return;
     try {
         await db.collection('usuarios').doc(window.uid).update({
             'incognita.nivel': 1,
             'incognita.xp': 0,
-            'incognita.monedas': 0,
             'incognita.racha': 0
         });
-        // Actualizar local
         if (window.jugador) {
             if (!window.jugador.incognita) window.jugador.incognita = {};
             window.jugador.incognita.nivel = 1;
             window.jugador.incognita.xp = 0;
-            window.jugador.incognita.monedas = 0;
             window.jugador.incognita.racha = 0;
             racha = 0;
             if (elRachaAlt) elRachaAlt.textContent = '0';
@@ -567,7 +554,7 @@ function mostrarFeedback(mensaje, tipo) {
     }
 }
 
-// ---------- Cargar datos iniciales ----------
+// ---------- Iniciar juego ----------
 function iniciarJuego() {
     elNombre = document.getElementById('player-name');
     elNivel = document.getElementById('player-level');
@@ -610,14 +597,12 @@ function iniciarJuego() {
     });
 
     if (window.jugador) {
-        // Cargar racha desde el objeto incognita
         const inc = window.jugador.incognita || {};
         racha = inc.racha || 0;
         if (elRachaAlt) elRachaAlt.textContent = racha;
         actualizarUI();
     }
 
-    // Botones de modo
     document.getElementById('mode-alternativas').addEventListener('click', () => cambiarModo('alternativas'));
     document.getElementById('mode-practica').addEventListener('click', () => cambiarModo('practica'));
 
@@ -635,7 +620,6 @@ function iniciarJuego() {
         }
     });
 
-    // Botón reiniciar nivel
     if (elBtnReiniciar) {
         elBtnReiniciar.addEventListener('click', reiniciarNivel);
     }
