@@ -3,43 +3,37 @@
 // ---------- Datos de la tienda ----------
 const ITEMS = {
     avatar: [
-        { id: 'avatar_base', nombre: 'Avatar', emoji: '🧑', categoria: 'avatar', precio: 0 }
+        { id: 'avatar_base', nombre: 'Aventurero', categoria: 'avatar', precio: 0, params: {} }
     ],
     superior: [
-        { id: 'camiseta_roja', nombre: 'Camiseta Roja', emoji: '👕', categoria: 'superior', precio: 500 },
-        { id: 'camiseta_azul', nombre: 'Camiseta Azul', emoji: '👕', categoria: 'superior', precio: 500 },
-        { id: 'camiseta_verde', nombre: 'Camiseta Verde', emoji: '👕', categoria: 'superior', precio: 500 },
-        { id: 'camiseta_negra_estrella', nombre: 'Camiseta Negra con Estrella', emoji: '⭐', categoria: 'superior', precio: 500 },
-        { id: 'camiseta_naranja', nombre: 'Camiseta Naranja', emoji: '👕', categoria: 'superior', precio: 500 }
+        { id: 'camiseta_roja', nombre: 'Camiseta Roja', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: 'ff0000' } },
+        { id: 'camiseta_azul', nombre: 'Camiseta Azul', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: '0055ff' } },
+        { id: 'camiseta_verde', nombre: 'Camiseta Verde', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: '00aa00' } },
+        { id: 'camiseta_negra_estrella', nombre: 'Camiseta Negra', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: '111111' } },
+        { id: 'camiseta_naranja', nombre: 'Camiseta Naranja', categoria: 'superior', precio: 500, params: { top: 'shirt', clothingColor: 'ff8800' } }
     ],
     inferior: [
-        { id: 'pantalon_vaquero', nombre: 'Pantalón Vaquero', emoji: '👖', categoria: 'inferior', precio: 500 },
-        { id: 'pantalon_corto_beige', nombre: 'Pantalón Corto Beige', emoji: '🩳', categoria: 'inferior', precio: 500 },
-        { id: 'pantalon_negro', nombre: 'Pantalón Negro', emoji: '👖', categoria: 'inferior', precio: 500 },
-        { id: 'pantalon_azul_marino', nombre: 'Pantalón Azul Marino', emoji: '👖', categoria: 'inferior', precio: 500 },
-        { id: 'pantalon_gris', nombre: 'Pantalón Gris', emoji: '👖', categoria: 'inferior', precio: 500 }
+        { id: 'pantalon_vaquero', nombre: 'Pantalón Vaquero', categoria: 'inferior', precio: 500, params: { pants: 'pants', pantsColor: '003366' } },
+        { id: 'pantalon_corto_beige', nombre: 'Pantalón Corto Beige', categoria: 'inferior', precio: 500, params: { pants: 'shorts', pantsColor: 'd2b48c' } },
+        { id: 'pantalon_negro', nombre: 'Pantalón Negro', categoria: 'inferior', precio: 500, params: { pants: 'pants', pantsColor: '222222' } },
+        { id: 'pantalon_azul_marino', nombre: 'Pantalón Azul Marino', categoria: 'inferior', precio: 500, params: { pants: 'pants', pantsColor: '000080' } },
+        { id: 'pantalon_gris', nombre: 'Pantalón Gris', categoria: 'inferior', precio: 500, params: { pants: 'pants', pantsColor: '808080' } }
     ],
     sombrero: [
-        { id: 'gorra_roja', nombre: 'Gorra Roja', emoji: '🧢', categoria: 'sombrero', precio: 500 },
-        { id: 'sombrero_copa', nombre: 'Sombrero de Copa', emoji: '🎩', categoria: 'sombrero', precio: 500 },
-        { id: 'boina', nombre: 'Boina', emoji: '🎓', categoria: 'sombrero', precio: 500 },
-        { id: 'sombrero_vaquero', nombre: 'Sombrero Vaquero', emoji: '🤠', categoria: 'sombrero', precio: 500 },
-        { id: 'corona', nombre: 'Corona', emoji: '👑', categoria: 'sombrero', precio: 500 }
+        { id: 'gorra_roja', nombre: 'Gorra Roja', categoria: 'sombrero', precio: 500, params: { hat: 'cap', hatColor: 'ff0000' } },
+        { id: 'sombrero_copa', nombre: 'Sombrero de Copa', categoria: 'sombrero', precio: 500, params: { hat: 'tophat', hatColor: '111111' } },
+        { id: 'boina', nombre: 'Boina', categoria: 'sombrero', precio: 500, params: { hat: 'beanie', hatColor: '333333' } },
+        { id: 'sombrero_vaquero', nombre: 'Sombrero Vaquero', categoria: 'sombrero', precio: 500, params: { hat: 'cowboy', hatColor: '8b4513' } },
+        { id: 'corona', nombre: 'Corona', categoria: 'sombrero', precio: 500, params: { hat: 'crown', hatColor: 'ffd700' } }
     ],
     zapatillas: [
-        { id: 'zapatillas_blancas', nombre: 'Zapatillas Blancas', emoji: '👟', categoria: 'zapatillas', precio: 500 },
-        { id: 'zapatillas_negras', nombre: 'Zapatillas Negras', emoji: '👟', categoria: 'zapatillas', precio: 500 },
-        { id: 'zapatillas_rojas', nombre: 'Zapatillas Rojas', emoji: '👟', categoria: 'zapatillas', precio: 500 },
-        { id: 'zapatillas_azules', nombre: 'Zapatillas Azules', emoji: '👟', categoria: 'zapatillas', precio: 500 },
-        { id: 'zapatillas_verdes', nombre: 'Zapatillas Verdes', emoji: '👟', categoria: 'zapatillas', precio: 500 }
+        { id: 'zapatillas_blancas', nombre: 'Zapatillas Blancas', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: 'ffffff' } },
+        { id: 'zapatillas_negras', nombre: 'Zapatillas Negras', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: '111111' } },
+        { id: 'zapatillas_rojas', nombre: 'Zapatillas Rojas', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: 'ff0000' } },
+        { id: 'zapatillas_azules', nombre: 'Zapatillas Azules', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: '0055ff' } },
+        { id: 'zapatillas_verdes', nombre: 'Zapatillas Verdes', categoria: 'zapatillas', precio: 500, params: { shoes: 'sneakers', shoesColor: '00aa00' } }
     ],
-    insignia: [
-        { id: 'insignia_pi', nombre: 'Pi (π)', emoji: '🏅π', categoria: 'insignia', precio: 500 },
-        { id: 'insignia_integral', nombre: 'Integral (∫)', emoji: '🏅∫', categoria: 'insignia', precio: 500 },
-        { id: 'insignia_raiz', nombre: 'Raíz Cuadrada (√)', emoji: '🏅√', categoria: 'insignia', precio: 500 },
-        { id: 'insignia_suma', nombre: 'Sumatoria (Σ)', emoji: '🏅Σ', categoria: 'insignia', precio: 500 },
-        { id: 'insignia_infinito', nombre: 'Infinito (∞)', emoji: '🏅∞', categoria: 'insignia', precio: 500 }
-    ]
+    insignia: [] // Las insignias no tienen parámetro directo en DiceBear, puedes usar un colgante en el pecho si quieres, pero por ahora se omite para mantener la coherencia visual.
 };
 
 // Función global para obtener item por ID (usada por common.js)
@@ -179,26 +173,34 @@ async function equiparItem(id, categoria) {
 function actualizarVistaPrevia() {
     if (!elAvatarPreview) return;
     const equipo = jugadorData.equipo;
-    const nombre = jugadorData.nombre;
 
-    const superior = equipo.superior ? ITEMS.superior.find(i => i.id === equipo.superior) : null;
-    const inferior = equipo.inferior ? ITEMS.inferior.find(i => i.id === equipo.inferior) : null;
-    const sombrero = equipo.sombrero ? ITEMS.sombrero.find(i => i.id === equipo.sombrero) : null;
-    const zapatillas = equipo.zapatillas ? ITEMS.zapatillas.find(i => i.id === equipo.zapatillas) : null;
-    const insignia = equipo.insignia ? ITEMS.insignia.find(i => i.id === equipo.insignia) : null;
+    // Construir URL con parámetros
+    const seed = encodeURIComponent(jugadorData.nombre || 'Aventurero');
+    let url = `https://api.dicebear.com/10.x/adventurer/svg?seed=${seed}`;
+    
+    // Combinar params del equipo
+    let params = {};
+    ['superior', 'inferior', 'sombrero', 'zapatillas'].forEach(cat => {
+        const itemId = equipo[cat];
+        const item = ITEMS[cat].find(i => i.id === itemId);
+        if (item && item.params) Object.assign(params, item.params);
+    });
 
-    const seed = encodeURIComponent(nombre);
-    const dicebearUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`;
+    // Añadir parámetros base (piel y pelo)
+    params.skinColor = 'f1c27d';
+    params.hairColor = '2c1b18';
+    params.hair = 'short';
 
+    const queryString = Object.keys(params).map(key => `${key}=${params[key]}`).join('&');
+    if (queryString) url += `&${queryString}`;
+
+    // Generar HTML
     elAvatarPreview.innerHTML = `
-        <div style="position:relative; display:inline-block; width:120px; height:120px;">
-            <img src="${dicebearUrl}" alt="Avatar" style="width:100%; height:100%; border-radius:50%;">
-            ${sombrero ? `<div style="position:absolute; top:-5px; left:50%; transform:translateX(-50%); font-size:2.5rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${sombrero.emoji}</div>` : ''}
-            ${superior ? `<div style="position:absolute; top:45px; left:50%; transform:translateX(-50%); font-size:2.2rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${superior.emoji}</div>` : ''}
-            ${inferior ? `<div style="position:absolute; top:85px; left:50%; transform:translateX(-50%); font-size:2rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${inferior.emoji}</div>` : ''}
-            ${zapatillas ? `<div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); font-size:1.8rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${zapatillas.emoji}</div>` : ''}
-            ${insignia ? `<div style="position:absolute; top:20px; right:-5px; font-size:1.6rem; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${insignia.emoji}</div>` : ''}
-            <div style="position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); font-size:0.9rem; background:rgba(255,255,255,0.8); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:#3b4cca;">${nombre}</div>
+        <div style="position:relative; width:120px; height:140px; overflow:hidden; border-radius: 50% 50% 0 0; background:#e3f2fd;">
+            <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
+            <div style="position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); font-size:0.9rem; background:rgba(255,255,255,0.8); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:#3b4cca;">
+                ${jugadorData.nombre}
+            </div>
         </div>
     `;
 }
