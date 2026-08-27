@@ -194,10 +194,12 @@ function actualizarBoton() {
 }
 
 function mostrarControles(visible) {
+    // Ocultamos/mostramos los botones de operación y el campo numérico
     const operaciones = document.querySelector('.operacion-botones');
     const numeroDiv = document.querySelector('.numero-input');
     if (operaciones) operaciones.style.display = visible ? 'flex' : 'none';
     if (numeroDiv) numeroDiv.style.display = visible ? 'flex' : 'none';
+    // El botón de acción siempre es visible, solo cambia su texto/estado
 }
 
 function manejarBoton() {
@@ -400,7 +402,7 @@ function responderAlternativa(opcionElegida, btnElegido) {
         racha++;
         const bonusRacha = Math.min(racha, 5) * 2;
         xpGanada = 10 + bonusRacha;
-        monedasGanadas = 50000000 + Math.floor(racha / 3);
+        monedasGanadas = 5 + Math.floor(racha / 3);  // <-- CORREGIDO
         btnElegido.classList.add('opcion-correcta');
         if (elFeedbackAlt) {
             elFeedbackAlt.textContent = `✅ ¡Correcto! ${letraActual} = ${preguntaActualAlt.respuestaCorrecta}`;
