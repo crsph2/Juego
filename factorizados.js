@@ -2,7 +2,6 @@
 // factorizados.js – Lógica del juego "Factorizados"
 // ============================================================
 
-// ---------- Configuración ----------
 const XP_POR_NIVEL = 100;
 
 const REGIONES = [
@@ -284,10 +283,10 @@ let racha = 0;
 // Elementos del DOM
 let elNombre, elNivel, elMonedas, elXpBarra, elXpTexto, elRegion;
 let elPregunta, elOpciones, elFeedback, elRacha;
+let elBtnReiniciar;
 
 // ---------- Inicialización ----------
 function iniciarJuego() {
-  // Obtener referencias
   elNombre = document.getElementById('player-name');
   elNivel = document.getElementById('player-level');
   elMonedas = document.getElementById('player-coins');
@@ -298,11 +297,12 @@ function iniciarJuego() {
   elOpciones = document.getElementById('opciones-container');
   elFeedback = document.getElementById('feedback-message');
   elRacha = document.getElementById('racha-actual');
+  elBtnReiniciar = document.getElementById('btn-reiniciar');
 
   actualizarUI();
   nuevaPregunta();
 
-  // Botón guardar
+  // Botón guardar (sin cambios)
   const btnGuardar = document.getElementById('btn-save');
   if (btnGuardar) {
     btnGuardar.addEventListener('click', () => {
@@ -321,25 +321,32 @@ function iniciarJuego() {
       }
     });
   }
+
+  // Botón reiniciar nivel
+  if (elBtnReiniciar) {
+    elBtnReiniciar.addEventListener('click', reiniciarNivel);
+  }
 }
 
 function actualizarUI() {
   if (!window.jugador) return;
   const j = window.jugador;
+  // Leer datos de factorizados
+  const fac = j.factorizados || { nivel: 1, monedas: 0, xp: 0, region: "Aldea del Factor Común" };
   if (elNombre) elNombre.textContent = j.nombre || "Aventurero";
-  if (elNivel) elNivel.textContent = j.nivel || 1;
-  if (elMonedas) elMonedas.textContent = j.monedas || 0;
-  if (elRegion) elRegion.textContent = j.regionActual || "Aldea del Factor Común";
+  if (elNivel) elNivel.textContent = fac.nivel || 1;
+  if (elMonedas) elMonedas.textContent = fac.monedas || 0;
+  if (elRegion) elRegion.textContent = fac.region || "Aldea del Factor Común";
   if (elXpBarra && elXpTexto) {
-    const xpEnNivel = (j.xp || 0) % XP_POR_NIVEL;
+    const xpEnNivel = (fac.xp || 0) % XP_POR_NIVEL;
     elXpBarra.style.width = `${xpEnNivel}%`;
     elXpTexto.textContent = `${xpEnNivel} / ${XP_POR_NIVEL} XP`;
   }
   if (elRacha) {
     elRacha.textContent = racha;
-    if (racha >= 5) elRacha.style.color = '#ffd700';
-    else if (racha >= 3) elRacha.style.color = '#4CAF50';
-    else elRacha.style.color = '#ffffff';
+    if (racha >= 5) elRacha.style.color = '#d32f2f';
+    else if (racha >= 3) elRacha.style.color = '#2e7d32';
+    else elRacha.style.color = '#1a1a1a';
   }
 }
 
@@ -355,7 +362,7 @@ function mostrarFeedback(mensaje, tipo) {
 
 function nuevaPregunta() {
   if (elFeedback) elFeedback.classList.add('hidden');
-  const nivelActual = window.jugador ? window.jugador.nivel : 1;
+  const nivelActual = window.jugador && window.jugador.factorizados ? window.jugador.factorizados.nivel : 1;
   const dificultad = obtenerDificultad(nivelActual);
   preguntaActual = generarPregunta(dificultad);
   if (elPregunta) elPregunta.textContent = preguntaActual.enunciado + ' = ?';
@@ -401,26 +408,36 @@ async function responder(opcionElegida, btnElegido) {
 
   if (window.jugador && window.uid) {
     const j = window.jugador;
-    const nuevoXp = (j.xp || 0) + xpGanada;
+    // Inicializar subobjeto factorizados
+    if (!j.factorizados) {
+      j.factorizados = { xp: 0, nivel: 1, monedas: 0, region: "Aldea del Factor Común" };
+    }
+    const fac = j.factorizados;
+    const nuevoXp = (fac.xp || 0) + xpGanada;
     const nuevoNivel = Math.floor(nuevoXp / XP_POR_NIVEL) + 1;
-    const subioNivel = nuevoNivel > (j.nivel || 1);
+    const subioNivel = nuevoNivel > (fac.nivel || 1);
 
-    j.xp = nuevoXp;
-    j.monedas = (j.monedas || 0) + monedasGanadas;
-    j.nivel = nuevoNivel;
-    j.regionActual = regionParaNivel(nuevoNivel);
-    j.estadisticas = j.estadisticas || {};
-    j.estadisticas.correctas = (j.estadisticas.correctas || 0) + (esCorrecta ? 1 : 0);
-    j.estadisticas.incorrectas = (j.estadisticas.incorrectas || 0) + (esCorrecta ? 0 : 1);
+    fac.xp = nuevoXp;
+    fac.monedas = (fac.monedas || 0) + monedasGanadas;
+    fac.nivel = nuevoNivel;
+    fac.region = regionParaNivel(nuevoNivel);
+    fac.racha = racha;
+
+    if (!j.estadisticas) j.estadisticas = {};
+    j.estadisticas.factorizados_correctas = (j.estadisticas.factorizados_correctas || 0) + (esCorrecta ? 1 : 0);
+    j.estadisticas.factorizados_incorrectas = (j.estadisticas.factorizados_incorrectas || 0) + (esCorrecta ? 0 : 1);
 
     try {
       await db.collection('usuarios').doc(window.uid).update({
-        xp: j.xp,
-        monedas: j.monedas,
-        nivel: j.nivel,
-        regionActual: j.regionActual,
-        estadisticas: j.estadisticas,
+        'factorizados.xp': fac.xp,
+        'factorizados.nivel': fac.nivel,
+        'factorizados.monedas': fac.monedas,
+        'factorizados.region': fac.region,
+        'factorizados.racha': racha,
+        'estadisticas.factorizados_correctas': j.estadisticas.factorizados_correctas,
+        'estadisticas.factorizados_incorrectas': j.estadisticas.factorizados_incorrectas,
         historial: firebase.firestore.FieldValue.arrayUnion({
+          juego: 'factorizados',
           pregunta: preguntaActual.enunciado,
           correcta: esCorrecta,
           fecha: new Date().toISOString()
@@ -435,11 +452,40 @@ async function responder(opcionElegida, btnElegido) {
 
     actualizarUI();
     if (subioNivel && elFeedback) {
-      elFeedback.textContent += ` ¡Subiste a nivel ${j.nivel}!`;
+      elFeedback.textContent += ` ¡Subiste a nivel ${fac.nivel}!`;
     }
   }
 
   setTimeout(nuevaPregunta, 1600);
+}
+
+// ---------- Reiniciar nivel ----------
+async function reiniciarNivel() {
+  if (!window.uid) return;
+  if (!confirm('¿Seguro que quieres reiniciar tu nivel en Factorizados? Se perderá todo el progreso.')) return;
+  try {
+    await db.collection('usuarios').doc(window.uid).update({
+      'factorizados.nivel': 1,
+      'factorizados.xp': 0,
+      'factorizados.monedas': 0,
+      'factorizados.racha': 0,
+      'factorizados.region': "Aldea del Factor Común"
+    });
+    if (window.jugador) {
+      if (!window.jugador.factorizados) window.jugador.factorizados = {};
+      window.jugador.factorizados.nivel = 1;
+      window.jugador.factorizados.xp = 0;
+      window.jugador.factorizados.monedas = 0;
+      window.jugador.factorizados.racha = 0;
+      racha = 0;
+      if (elRacha) elRacha.textContent = '0';
+    }
+    actualizarUI();
+    mostrarFeedback('¡Nivel reiniciado!', 'exito');
+  } catch (error) {
+    console.error('Error al reiniciar nivel:', error);
+    alert('No se pudo reiniciar el nivel. Intenta de nuevo.');
+  }
 }
 
 // ---------- Escuchar evento de jugador cargado ----------
@@ -447,7 +493,6 @@ document.addEventListener('jugador-cargado', () => {
   iniciarJuego();
 });
 
-// También ejecutar si ya estaba cargado (por si el evento ya ocurrió)
 document.addEventListener('DOMContentLoaded', () => {
   if (window.jugador) {
     iniciarJuego();
