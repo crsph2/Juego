@@ -693,3 +693,19 @@ input::placeholder {
 @media (max-width: 360px) {
     .game-title { font-size: 1.5rem; }
 }
+
+/* Avatar DiceBear */
+.avatar-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+}
+.avatar-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid #3b4cca;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background: #f0f4fa;
+}
