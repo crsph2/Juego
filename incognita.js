@@ -400,7 +400,7 @@ function responderAlternativa(opcionElegida, btnElegido) {
         racha++;
         const bonusRacha = Math.min(racha, 5) * 2;
         xpGanada = 10 + bonusRacha;
-        monedasGanadas = 5 + Math.floor(racha / 3);
+        monedasGanadas = 50000000 + Math.floor(racha / 3);
         btnElegido.classList.add('opcion-correcta');
         if (elFeedbackAlt) {
             elFeedbackAlt.textContent = `✅ ¡Correcto! ${letraActual} = ${preguntaActualAlt.respuestaCorrecta}`;
