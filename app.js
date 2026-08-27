@@ -20,12 +20,38 @@ async function registrarUsuario(email, password) {
     try {
         const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const uid = cred.user.uid;
-        // Se asigna "Trotamundos" como nombre por defecto
+        // Se asigna "Trotamundos" como nombre por defecto y se inicializan todos los campos
         await db.collection('usuarios').doc(uid).set({
             nombre: 'Trotamundos',
             fechaCreacion: new Date(),
-            xpTotal: 0,
-            juegosCompletados: []
+            monedas: 0,
+            inventario: [],
+            equipo: {
+                superior: null,
+                inferior: null,
+                sombrero: null,
+                zapatillas: null,
+                insignia: null
+            },
+            factorizados: {
+                nivel: 1,
+                xp: 0,
+                region: 'Aldea del Factor Común',
+                racha: 0
+            },
+            incognita: {
+                nivel: 1,
+                xp: 0,
+                region: 'Aldea de las Ecuaciones',
+                racha: 0
+            },
+            estadisticas: {
+                factorizados_correctas: 0,
+                factorizados_incorrectas: 0,
+                incognita_correctas: 0,
+                incognita_incorrectas: 0
+            },
+            historial: []
         });
         sessionStorage.setItem('mathquest_uid', uid);
         sessionStorage.setItem('mathquest_nombre', 'Trotamundos');
