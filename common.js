@@ -94,37 +94,69 @@ function actualizarAvatar() {
     const equipo = window.jugador.equipo || {};
     const nombre = window.jugador.nombre || 'Aventurero';
 
-    // Función para obtener emoji de un item por ID
-    function getEmoji(id, defaultEmoji) {
-        if (!id) return defaultEmoji;
-        if (window.obtenerItemPorIdGlobal) {
-            const item = window.obtenerItemPorIdGlobal(id);
-            if (item) return item.emoji;
+    // Mapeo de IDs a parámetros de DiceBear (estilo adventurer)
+    function getDiceParams(id, categoria) {
+        if (!id) return {};
+        // Mapeo para cada categoría. Solo agregamos los que tienes en la tienda.
+        switch (id) {
+            // Superiores (camisetas)
+            case 'camiseta_roja': return { top: 'shirt', clothingColor: 'ff0000' };
+            case 'camiseta_azul': return { top: 'shirt', clothingColor: '0055ff' };
+            case 'camiseta_verde': return { top: 'shirt', clothingColor: '00aa00' };
+            case 'camiseta_negra_estrella': return { top: 'shirt', clothingColor: '111111' };
+            case 'camiseta_naranja': return { top: 'shirt', clothingColor: 'ff8800' };
+            
+            // Inferiores (pantalones)
+            case 'pantalon_vaquero': return { pants: 'pants', pantsColor: '003366' };
+            case 'pantalon_corto_beige': return { pants: 'shorts', pantsColor: 'd2b48c' };
+            case 'pantalon_negro': return { pants: 'pants', pantsColor: '222222' };
+            case 'pantalon_azul_marino': return { pants: 'pants', pantsColor: '000080' };
+            case 'pantalon_gris': return { pants: 'pants', pantsColor: '808080' };
+
+            // Sombreros
+            case 'gorra_roja': return { hat: 'cap', hatColor: 'ff0000' };
+            case 'sombrero_copa': return { hat: 'tophat', hatColor: '111111' };
+            case 'boina': return { hat: 'beanie', hatColor: '333333' };
+            case 'sombrero_vaquero': return { hat: 'cowboy', hatColor: '8b4513' };
+            case 'corona': return { hat: 'crown', hatColor: 'ffd700' };
+
+            // Zapatillas
+            case 'zapatillas_blancas': return { shoes: 'sneakers', shoesColor: 'ffffff' };
+            case 'zapatillas_negras': return { shoes: 'sneakers', shoesColor: '111111' };
+            case 'zapatillas_rojas': return { shoes: 'sneakers', shoesColor: 'ff0000' };
+            case 'zapatillas_azules': return { shoes: 'sneakers', shoesColor: '0055ff' };
+            case 'zapatillas_verdes': return { shoes: 'sneakers', shoesColor: '00aa00' };
+            
+            default: return {};
         }
-        return defaultEmoji;
     }
 
-    const sombreroEmoji = getEmoji(equipo.sombrero, ' ');
-    const superiorEmoji = getEmoji(equipo.superior, ' ');
-    const inferiorEmoji = getEmoji(equipo.inferior, ' ');
-    const zapatillasEmoji = getEmoji(equipo.zapatillas, ' ');
-    const insigniaEmoji = getEmoji(equipo.insignia, ' ');
+    // Construir la URL base
+    const seed = encodeURIComponent(nombre); // Usamos el nombre como semilla
+    let url = `https://api.dicebear.com/10.x/adventurer/svg?seed=${seed}`;
 
-    // Generar URL de DiceBear con el nombre como seed y parámetros de personalización (pelo, color, etc.)
-    // Podemos añadir más parámetros según las compras (por ahora solo seed)
-    const seed = encodeURIComponent(nombre);
-    const dicebearUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4`;
+    // Aplicar parámetros del equipo
+    let params = {
+        ...getDiceParams(equipo.superior, 'superior'),
+        ...getDiceParams(equipo.inferior, 'inferior'),
+        ...getDiceParams(equipo.sombrero, 'sombrero'),
+        ...getDiceParams(equipo.zapatillas, 'zapatillas')
+    };
 
-    // Construir HTML del avatar
+    // Agregar color de piel y pelo por defecto para una paleta armoniosa
+    params.skinColor = 'f1c27d'; // Tono de piel uniforme
+    params.hairColor = '2c1b18'; // Cabello oscuro
+    params.hair = 'short'; // Estilo de pelo simple para que combine con todo
+
+    // Unir parámetros a la URL
+    const queryString = Object.keys(params).map(key => `${key}=${params[key]}`).join('&');
+    if (queryString) url += `&${queryString}`;
+
+    // Generar HTML del avatar (busto encerrado en el contenedor CSS)
     avatarContainer.innerHTML = `
         <div class="avatar-dicebear">
-            <img src="${dicebearUrl}" alt="Avatar" style="width:100%; height:100%; border-radius:50%;">
+            <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
         </div>
-        ${sombreroEmoji ? `<div class="avatar-accesorio avatar-sombrero">${sombreroEmoji}</div>` : ''}
-        ${superiorEmoji ? `<div class="avatar-accesorio avatar-superior">${superiorEmoji}</div>` : ''}
-        ${inferiorEmoji ? `<div class="avatar-accesorio avatar-inferior">${inferiorEmoji}</div>` : ''}
-        ${zapatillasEmoji ? `<div class="avatar-accesorio avatar-zapatillas">${zapatillasEmoji}</div>` : ''}
-        ${insigniaEmoji ? `<div class="avatar-accesorio avatar-insignia">${insigniaEmoji}</div>` : ''}
         <div class="avatar-nombre">${nombre}</div>
     `;
 }
