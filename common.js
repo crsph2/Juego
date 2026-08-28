@@ -52,7 +52,7 @@ function actualizarUICompleta() {
     actualizarAvatar();
 }
 
-// Símbolos Matemáticos SVG (Rigurosos)
+// Símbolos Matemáticos SVG (Precisos)
 const SIMBOLOS_SVG = {
     'pi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 L4 8 A4 4 0 0 1 8 4 L20 4"/><path d="M8 12 L16 12"/></svg>',
     'integral': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-3 0-3 4-3 8s0 8 3 8"/><path d="M17 4c3 0 3 4 3 8s0 8-3 8"/></svg>',
@@ -90,6 +90,7 @@ function actualizarAvatar() {
         url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
     }
 
+    // Símbolos en una fila inferior (sin superposición)
     let simbolosHTML = '';
     (equipo.simbolos || []).forEach(simbolo => {
         const item = SIMBOLOS_SVG[simbolo.id];
@@ -139,7 +140,7 @@ function mostrarFeedback(mensaje, tipo) {
         if (tipo === 'exito') feedback.classList.add('feedback-exito');
         else if (tipo === 'error') feedback.classList.add('feedback-error');
         feedback.classList.remove('hidden');
-        setTimeout(() => feedback.classList.add('hidden'), 3000);
+        setTimeout(() => feedback.classList.add('hidden'), 3000); // Se mantiene en 3s para acciones globales del lobby
     }
 }
 
