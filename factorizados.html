@@ -7,19 +7,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* ESTILOS FORZADOS PARA FACTORIZADOS - PALETA POKÉMON */
-        #pregunta-enunciado { font-size: 2.4rem !important; font-weight: 700 !important; color: #1a1a1a !important; background: #f7f9fc !important; padding: 1.8rem 1rem !important; border-radius: 16px !important; border: 2px solid #d0dbe8 !important; margin-bottom: 1.5rem !important; font-family: 'Roboto', 'Segoe UI', Arial, sans-serif !important; line-height: 1.4 !important; word-break: break-word !important; text-align: center !important; text-shadow: none !important; }
-
-        #opciones-container { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 1rem !important; margin: 1.2rem 0 !important; }
-
-        .btn-opcion { background: #ffffff !important; border: 2px solid #d0dbe8 !important; border-radius: 16px !important; padding: 1.2rem 0.5rem !important; font-size: 1.5rem !important; font-weight: 600 !important; color: #1a1a1a !important; cursor: pointer !important; transition: all 0.15s ease !important; min-height: 90px !important; display: flex !important; align-items: center !important; justify-content: center !important; text-align: center !important; font-family: 'Roboto', 'Segoe UI', Arial, sans-serif !important; word-break: break-word !important; box-shadow: 0 4px 0 #d0dbe8 !important; }
-        .btn-opcion:hover { background: #f0f4fa !important; border-color: #3b4cca !important; transform: scale(1.02) !important; }
-        .btn-opcion:active { transform: scale(0.97) !important; }
+        #pregunta-enunciado, #opciones-container, .btn-opcion {
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif !important;
+        }
+        #pregunta-enunciado {
+            font-size: 2.4rem !important; font-weight: 700 !important; color: var(--text-main) !important;
+            background: var(--card-bg) !important; padding: 1.8rem 1rem !important; border-radius: 16px !important;
+            border: 2px solid var(--card-border) !important; margin-bottom: 1.5rem !important; line-height: 1.4 !important;
+            word-break: break-word !important; text-align: center !important; text-shadow: none !important;
+        }
+        .btn-opcion {
+            background: var(--card-bg) !important; border: 2px solid var(--card-border) !important;
+            border-radius: 16px !important; padding: 1.2rem 0.5rem !important; font-size: 1.5rem !important;
+            font-weight: 600 !important; color: var(--text-main) !important; cursor: pointer !important;
+            transition: all 0.15s ease !important; min-height: 90px !important; box-shadow: 0 4px 0 var(--card-border) !important;
+        }
+        .btn-opcion:hover { background: var(--header-bg) !important; border-color: var(--btn-secondary) !important; }
         .btn-opcion.opcion-correcta { border-color: #2e7d32 !important; background: #e8f5e9 !important; color: #1a1a1a !important; }
+        body.dark-mode .btn-opcion.opcion-correcta { background: #1f3a24 !important; color: #fff !important; }
         .btn-opcion.opcion-incorrecta { border-color: #c62828 !important; background: #ffebee !important; color: #1a1a1a !important; }
-        .btn-opcion:disabled { opacity: 0.6 !important; cursor: not-allowed !important; }
-
-        @media (max-width: 400px) { #opciones-container { grid-template-columns: 1fr !important; } #pregunta-enunciado { font-size: 1.8rem !important; padding: 1.2rem 0.8rem !important; } .btn-opcion { font-size: 1.2rem !important; min-height: 70px !important; } }
+        body.dark-mode .btn-opcion.opcion-incorrecta { background: #3a1a1a !important; color: #fff !important; }
     </style>
 </head>
 <body>
