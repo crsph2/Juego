@@ -96,19 +96,45 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
 .xp-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.85rem; font-weight: 700; color: var(--text-main); text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
 .region-info { color: var(--btn-secondary); font-size: 0.9rem; margin-top: 2px; font-weight: 500; }
 
-.avatar-display { position: relative; display: flex; justify-content: center; align-items: center; margin: 6px 0; padding: 0; min-height: 160px; background: transparent; }
-.avatar-dicebear { position: relative; width: 140px; height: 160px; overflow: hidden; border-radius: 50% 50% 0 0; display: flex; justify-content: center; align-items: center; background: var(--avatar-bg); }
-.avatar-dicebear img { margin-top: -25px; }
-.avatar-nombre { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 0.9rem; color: var(--text-main); font-weight: 700; background: var(--card-bg); padding: 0 8px; border-radius: 10px; white-space: nowrap; }
+/* ============================================================
+   AVATAR Y SÍMBOLOS EN FILA (SIN SUPERPOSICIÓN)
+   ============================================================ */
+.avatar-display { position: relative; display: flex; flex-direction: column; align-items: center; margin: 6px 0; padding: 0; min-height: 190px; background: transparent; }
 
-.avatar-simbolo { position: absolute; color: var(--btn-secondary); width: 32px; height: 32px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); pointer-events: none; }
-.pos-top-left { top: 15px; left: 15px; }
-.pos-top-right { top: 15px; right: 15px; }
-.pos-bottom-left { bottom: 20px; left: 20px; }
-.pos-bottom-right { bottom: 20px; right: 20px; }
-.pos-center-left { top: 50%; left: 5px; transform: translateY(-50%); }
-.pos-center-right { top: 50%; right: 5px; transform: translateY(-50%); }
+/* Contenedor del avatar (140x160) */
+.avatar-dicebear {
+    position: relative; width: 140px; height: 160px; overflow: hidden;
+    border-radius: 50% 50% 0 0; display: flex; justify-content: center; align-items: center;
+    background: var(--avatar-bg); 
+}
+.avatar-dicebear img { width: 100%; height: 100%; object-fit: cover; margin-top: -25px; }
 
+/* Nueva fila de símbolos debajo del avatar */
+.avatar-simbolos-fila {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: -15px; /* Se superpone ligeramente al borde inferior del círculo */
+    z-index: 5;
+    position: relative;
+    background: transparent;
+    max-width: 140px;
+    flex-wrap: wrap;
+}
+
+.avatar-simbolo {
+    width: 24px;
+    height: 24px;
+    color: var(--btn-secondary);
+}
+
+.avatar-nombre {
+    margin-top: 5px;
+    font-size: 0.9rem; color: var(--text-main); font-weight: 700;
+    background: var(--card-bg); padding: 0 8px; border-radius: 10px; white-space: nowrap;
+}
+
+/* Preguntas y Opciones */
 .question-text { font-size: 2.4rem; font-weight: 700; color: var(--text-main); background: var(--card-bg); padding: 1.6rem 1rem; border-radius: 16px; border: 2px solid var(--card-border); margin-bottom: 1.2rem; line-height: 1.3; word-break: break-word; }
 .options-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.2rem 0; }
 .btn-opcion { background: var(--card-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 1.2rem 0.5rem; font-size: 1.5rem; font-weight: 600; color: var(--text-main); cursor: pointer; transition: all 0.15s ease; min-height: 90px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 0 var(--card-border); }
@@ -124,32 +150,24 @@ body.dark-mode .btn-opcion.opcion-incorrecta { background: #3a1a1a; border-color
 body.dark-mode .feedback-exito { background: #1f3a24; color: #fff; border-color: #4caf50; }
 body.dark-mode .feedback-error { background: #3a1a1a; color: #fff; border-color: #ef5350; }
 
+/* Práctica Paso a Paso */
 .practica-container { margin-top: 0.8rem; }
 .ecuacion-display { background: var(--card-bg); border-radius: 16px; padding: 1rem; margin-bottom: 1rem; border: 2px solid var(--card-border); }
 .ecuacion-linea { font-size: 2.0rem; color: var(--text-main); display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.2rem 0; }
-/* Estilos con variables para modo oscuro */
 .ecuacion-linea.linea-paso { color: var(--btn-secondary); font-weight: bold; }
 .ecuacion-linea.linea-solucion { color: #2e7d32; font-weight: bold; }
 body.dark-mode .ecuacion-linea.linea-solucion { color: #66bb6a; }
-
 .practica-controles { margin: 1rem 0; padding: 0.8rem; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--card-border); }
 .operacion-botones { display: flex; gap: 0.8rem; justify-content: center; margin: 0.5rem 0; }
 .operacion-btn { min-width: 64px; font-size: 1.6rem; background: var(--card-bg); border: 2px solid var(--card-border); color: var(--text-main); padding: 0.6rem 1rem; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
 .operacion-btn.seleccionado { border-color: var(--btn-primary); background: var(--btn-primary); color: #fff; }
 
-/* MODO SELECTOR EN INCÓGNITA (Más grandes y resaltados) */
+/* Modo Selector */
 .mode-selector { display: flex; gap: 0.8rem; justify-content: center; margin: 1rem 0; }
-.mode-selector button {
-    padding: 0.9rem 1.8rem; border-radius: 14px; border: 2px solid var(--card-border);
-    background: var(--card-bg); color: var(--text-main); cursor: pointer; transition: all 0.2s;
-    font-weight: 800; font-size: 1.2rem;
-}
-.mode-selector button.active {
-    background: var(--btn-secondary); border-color: var(--btn-secondary); color: #fff;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-}
+.mode-selector button { padding: 0.9rem 1.8rem; border-radius: 14px; border: 2px solid var(--card-border); background: var(--card-bg); color: var(--text-main); cursor: pointer; transition: all 0.2s; font-weight: 800; font-size: 1.2rem; }
+.mode-selector button.active { background: var(--btn-secondary); border-color: var(--btn-secondary); color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
 
-/* LOBBY Y TIENDA */
+/* Lobby y Tienda */
 .game-cards { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1.5rem; }
 .card { background: var(--card-bg); border-radius: 20px; padding: 1.2rem; border: 2px solid var(--card-border); transition: all 0.2s ease; text-align: left; display: flex; flex-direction: column; }
 .card:hover { border-color: var(--btn-secondary); box-shadow: 0 4px 12px rgba(59, 76, 202, 0.10); }
