@@ -97,7 +97,7 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
 .region-info { color: var(--btn-secondary); font-size: 0.9rem; margin-top: 2px; font-weight: 500; }
 
 /* ============================================================
-   AVATAR Y SÍMBOLOS DENTRO DEL CÍRCULO
+   AVATAR Y SÍMBOLOS DENTRO DEL CÍRCULO (tamaño aumentado)
    ============================================================ */
 .avatar-display {
     display: flex;
@@ -105,14 +105,14 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
     align-items: center;
     margin: 6px 0;
     padding: 0;
-    min-height: 190px;
+    min-height: 200px;
     background: transparent;
 }
 
 .avatar-circulo {
     position: relative;
-    width: 140px;
-    height: 140px;
+    width: 160px;
+    height: 160px;
     border-radius: 50%;
     overflow: hidden;
     background: var(--avatar-bg);
@@ -129,10 +129,10 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
 
 .avatar-simbolo-abs {
     position: absolute;
-    font-size: 1.3rem;
+    font-size: 1.6rem;
     color: var(--btn-secondary);
     font-weight: bold;
-    text-shadow: 0 0 4px rgba(255,255,255,0.8);
+    text-shadow: 0 0 6px rgba(255,255,255,0.9);
     pointer-events: none;
     z-index: 2;
     line-height: 1;
@@ -147,6 +147,15 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
     padding: 0 8px;
     border-radius: 10px;
     white-space: nowrap;
+}
+
+/* ============================================================
+   OPCIONES MÁS GRANDES PARA MODO ALTERNATIVAS
+   ============================================================ */
+.btn-opcion {
+    font-size: 2rem !important;
+    min-height: 120px !important;
+    padding: 1.2rem 0.8rem !important;
 }
 
 /* Preguntas y Opciones */
@@ -212,7 +221,7 @@ body.dark-mode .item-card.equipado { border-color: #4caf50; background: #1f3a24;
 .theme-toggle { background: transparent; border: 2px solid var(--btn-secondary); color: var(--btn-secondary); border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s; }
 body.dark-mode .theme-toggle { background: var(--btn-secondary); color: #fff; border-color: #fff; }
 
-@media (max-width: 400px) { .options-container { grid-template-columns: 1fr; } .question-text { font-size: 1.6rem; } .btn-opcion { font-size: 1.1rem; min-height: 64px; } }
+@media (max-width: 400px) { .options-container { grid-template-columns: 1fr; } .question-text { font-size: 1.6rem; } .btn-opcion { font-size: 1.6rem !important; min-height: 90px !important; } }
 
 /* Estilos para la colección de avatares en la tienda */
 .item-avatar-coleccion {
