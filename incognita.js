@@ -473,4 +473,31 @@ function iniciarJuego() {
     cambiarModo('alternativas');
 }
 
+async function reiniciarNivel() {
+    if (!window.uid) return;
+    if (!confirm('¿Seguro que quieres reiniciar tu nivel en Incógnita? Se perderá el progreso de XP y nivel, pero tus monedas se mantienen.')) return;
+    
+    await db.collection('usuarios').doc(window.uid).update({ 
+        'incognita.nivel': 1, 
+        'incognita.xp': 0, 
+        'incognita.racha': 0, 
+        'incognita.region': "Aldea de las Ecuaciones" 
+    });
+    
+    if (window.jugador) { 
+        window.jugador.incognita = { nivel: 1, xp: 0, racha: 0, region: "Aldea de las Ecuaciones" }; 
+        racha = 0; 
+        if (elRachaAlt) elRachaAlt.textContent = '0';
+    }
+    
+    // Actualiza la barra de nivel y el nombre de la región en pantalla
+    actualizarUI();
+    
+    // Regenera una pregunta nueva con la dificultad inicial
+    if (modoActual === 'alternativas') nuevaPreguntaAlternativas();
+    else iniciarPractica();
+
+    mostrarFeedback('¡Nivel reiniciado!', 'exito');
+}
+
 document.addEventListener('DOMContentLoaded', () => { if (window.jugador) iniciarJuego(); else esperarJugador(); });
