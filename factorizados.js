@@ -88,7 +88,6 @@ function generarPregunta(dificultad) {
   return { enunciado, respuestaCorrecta, respuestaNormalizada, opciones };
 }
 
-// ---------- GENERACIÓN DE DISTRACTORES (Corregida) ----------
 function generarOpcionesFactorizacion(correcta, cantidad, nivel) {
   const opciones = new Set();
   let intentos = 0;
@@ -107,7 +106,6 @@ function generarOpcionesFactorizacion(correcta, cantidad, nivel) {
       const match = correcta.match(/\(x \+ (\d+)\)\(x - (\d+)\)/);
       if (match) {
         const a = parseInt(match[1]); const b = parseInt(match[2]);
-        // ELIMINADO (x - a)(x + b) para no generar dos correctas
         const variantes = [ `(x - ${a})(x - ${b})`, `(x + ${a})(x + ${b})`, `(x + ${a+1})(x - ${b})` ];
         candidata = variantes[numeroAleatorio(0, variantes.length-1)];
       }
@@ -129,11 +127,10 @@ function generarOpcionesFactorizacion(correcta, cantidad, nivel) {
       const match = correcta.match(/\(x ([+-]) (\d+)\)\(x² ([+-]) (\d+)x \+ (\d+)\)/);
       if (match) {
         const signo1 = match[1]; const num1 = parseInt(match[2]); const signo2 = match[3]; const num2 = parseInt(match[4]); const num3 = parseInt(match[5]);
-        // Se cambian los números para que no se pueda deducir por la raíz o el signo
         const variantes = [
-          `(x ${signo1 === '+' ? '-' : '+'} ${num1})(x² ${signo2} ${num2}x + ${num3})`, // Signo incorrecto
-          `(x ${signo1} ${num1+1})(x² ${signo2} ${num2}x + ${num3})`, // Número incorrecto en primer binomio
-          `(x ${signo1} ${num1})(x² ${signo2} ${num2}x + ${num3+1})`  // Constante incorrecta en el trinomio
+          `(x ${signo1 === '+' ? '-' : '+'} ${num1})(x² ${signo2} ${num2}x + ${num3})`,
+          `(x ${signo1} ${num1+1})(x² ${signo2} ${num2}x + ${num3})`,
+          `(x ${signo1} ${num1})(x² ${signo2} ${num2}x + ${num3+1})`
         ];
         candidata = variantes[numeroAleatorio(0, variantes.length-1)];
       }
@@ -184,10 +181,9 @@ function mostrarFeedback(mensaje, tipo) {
   elFeedback.textContent = mensaje; elFeedback.className = 'feedback';
   if (tipo === 'exito') elFeedback.classList.add('feedback-exito');
   else if (tipo === 'error') elFeedback.classList.add('feedback-error');
-  elFeedback.classList.remove('hidden'); setTimeout(() => elFeedback.classList.add('hidden'), 2500);
+  elFeedback.classList.remove('hidden'); setTimeout(() => elFeedback.classList.add('hidden'), 1500); // 1.5 segundos
 }
 
-// NUEVO ENUNCIADO SIN "= ?"
 function nuevaPregunta() {
   if (elFeedback) elFeedback.classList.add('hidden');
   const nivelActual = window.jugador && window.jugador.factorizados ? window.jugador.factorizados.nivel : 1;
@@ -211,7 +207,7 @@ async function responder(opcionElegida, btnElegido) {
   const esCorrecta = normalizarFactorizacion(opcionElegida) === preguntaActual.respuestaNormalizada;
   let xpGanada = 0; let monedasGanadas = 0;
 
-  if (esCorrecta) { racha++; const bonusRacha = Math.min(racha, 5) * 2; xpGanada = 10 + bonusRacha; monedasGanadas = 5 + Math.floor(racha / 3); btnElegido.classList.add('opcion-correcta'); if (elFeedback) { elFeedback.textContent = '¡Correcto, héroe! Sigue así.'; elFeedback.className = 'feedback feedback-exito'; elFeedback.classList.remove('hidden'); } }
+  if (esCorrecta) { racha++; const bonusRacha = Math.min(racha, 5) * 2; xpGanada = 10 + bonusRacha; monedasGanadas = 5 + Math.floor(racha / 3); btnElegido.classList.add('opcion-correcta'); if (elFeedback) { elFeedback.textContent = '¡Correcto!, sigue así 😊'; elFeedback.className = 'feedback feedback-exito'; elFeedback.classList.remove('hidden'); } }
   else { racha = 0; btnElegido.classList.add('opcion-incorrecta'); if (elFeedback) { elFeedback.textContent = `Casi. La respuesta correcta era ${preguntaActual.respuestaCorrecta}.`; elFeedback.className = 'feedback feedback-error'; elFeedback.classList.remove('hidden'); } }
 
   if (window.jugador && window.uid) {
