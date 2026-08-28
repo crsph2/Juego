@@ -259,3 +259,16 @@ body.dark-mode .theme-toggle { background: var(--btn-secondary); color: #fff; bo
     object-fit: cover;
     margin-top: -10px;
 }
+.avatar-simbolo-abs {
+    position: absolute;
+    font-size: 1.5rem; /* Un poco más pequeño para que no choquen */
+    color: var(--btn-secondary);
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.8); /* Fondo semitransparente */
+    padding: 2px 6px;
+    border-radius: 10px;
+    text-shadow: none;
+    pointer-events: none;
+    z-index: 2;
+    line-height: 1;
+}
