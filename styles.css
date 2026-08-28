@@ -1,5 +1,4 @@
 :root {
-    /* Colores Modo Claro */
     --bg-color: #e3f2fd;
     --bg-gradient: linear-gradient(145deg, #e3f2fd 0%, #ffffff 100%);
     --text-main: #1a1a1a;
@@ -19,7 +18,6 @@
 }
 
 body.dark-mode {
-    /* Colores Modo Oscuro (Accesibles) */
     --bg-color: #121212;
     --bg-gradient: linear-gradient(145deg, #1e1e2f 0%, #121212 100%);
     --text-main: #e0e0e0;
@@ -64,10 +62,9 @@ body {
 .lobby-card { max-width: 500px; }
 
 /* Tipografía y Textos */
-h2 { color: var(--btn-secondary); }
-h3 { color: var(--btn-primary); }
-p { color: var(--text-secondary); }
+h2, h3, p { color: var(--text-main); }
 .game-title { color: var(--btn-primary); }
+.back-button { color: var(--btn-secondary); text-decoration: none; font-weight: 600; }
 
 /* Inputs */
 input[type="email"], input[type="password"], input[type="text"], input[type="number"] {
@@ -88,21 +85,12 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
 .btn-secondary { background: var(--btn-secondary); color: var(--btn-secondary-text); }
 .btn-danger { background: #c62828; color: #ffffff; }
 .btn-gold { background: var(--btn-gold); color: var(--btn-gold-text); }
-body.dark-mode .btn-icon { color: var(--btn-gold); }
 
-.btn-icon {
-    background: transparent; border: none; font-size: 1.6rem; line-height: 1;
-    padding: 0.3rem; cursor: pointer; transition: all 0.2s ease; min-height: 48px; min-width: 48px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 50%; border: 1px solid transparent;
-}
+.btn-icon { background: transparent; border: none; font-size: 1.6rem; line-height: 1; padding: 0.3rem; cursor: pointer; transition: all 0.2s ease; min-height: 48px; min-width: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid transparent; color: var(--btn-gold); }
 .btn-icon:hover { transform: scale(1.1); border-color: var(--btn-gold); }
 
 /* Cabecera del Jugador */
-.player-header {
-    margin-bottom: 1.2rem; background: var(--header-bg); border-radius: 16px;
-    padding: 0.6rem 0.8rem; border: 1px solid var(--card-border);
-}
+.player-header { margin-bottom: 1.2rem; background: var(--header-bg); border-radius: 16px; padding: 0.6rem 0.8rem; border: 1px solid var(--card-border); }
 .player-info { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 1.1rem; padding: 0.2rem 0; }
 .player-name { color: var(--btn-primary); font-weight: 800; font-size: 1.4rem; }
 .player-level { color: var(--btn-secondary); font-weight: 600; font-size: 0.95rem; }
@@ -113,34 +101,12 @@ body.dark-mode .btn-icon { color: var(--btn-gold); }
 .xp-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.85rem; font-weight: 700; color: var(--text-main); text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
 .region-info { color: var(--btn-secondary); font-size: 0.9rem; margin-top: 2px; font-weight: 500; }
 
-/* ============================================================
-   AVATAR CON BUSTO Y SÍMBOLOS MATEMÁTICOS SVG (DENTRO DEL CÍRCULO)
-   ============================================================ */
-.avatar-display {
-    position: relative; display: flex; justify-content: center; align-items: center;
-    margin: 6px 0; padding: 0; min-height: 160px; background: transparent;
-}
+/* Avatar */
+.avatar-display { position: relative; display: flex; justify-content: center; align-items: center; margin: 6px 0; padding: 0; min-height: 160px; background: transparent; }
+.avatar-dicebear { position: relative; width: 150px; height: 170px; overflow: hidden; border-radius: 50% 50% 0 0; display: flex; justify-content: center; align-items: center; background: var(--avatar-bg); }
+.avatar-dicebear svg { width: 150px; height: 150px; margin-top: -40px; }
 
-.avatar-dicebear {
-    position: relative; width: 150px; height: 170px; overflow: hidden;
-    border-radius: 50% 50% 0 0; display: flex; justify-content: center; align-items: center;
-    background: var(--avatar-bg); 
-}
-
-.avatar-dicebear svg {
-    width: 150px; height: 150px; margin-top: -40px;
-}
-
-/* Símbolos matemáticos SVG */
-.avatar-simbolo {
-    position: absolute;
-    color: var(--btn-secondary);
-    width: 32px; height: 32px;
-    z-index: 10;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-    pointer-events: none;
-}
-/* Posiciones dentro del círculo */
+.avatar-simbolo { position: absolute; color: var(--btn-secondary); width: 32px; height: 32px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); pointer-events: none; }
 .pos-top-left { top: 15px; left: 15px; }
 .pos-top-right { top: 15px; right: 15px; }
 .pos-bottom-left { bottom: 20px; left: 20px; }
@@ -148,15 +114,9 @@ body.dark-mode .btn-icon { color: var(--btn-gold); }
 .pos-center-left { top: 50%; left: 5px; transform: translateY(-50%); }
 .pos-center-right { top: 50%; right: 5px; transform: translateY(-50%); }
 
-.avatar-nombre {
-    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-    font-size: 0.9rem; color: var(--text-main); font-weight: 700;
-    background: var(--card-bg); padding: 0 8px; border-radius: 10px; white-space: nowrap;
-}
+.avatar-nombre { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 0.9rem; color: var(--text-main); font-weight: 700; background: var(--card-bg); padding: 0 8px; border-radius: 10px; white-space: nowrap; }
 
-/* ============================================================
-   PREGUNTAS Y OPCIONES
-   ============================================================ */
+/* Preguntas */
 .question-text { font-size: 2.4rem; font-weight: 700; color: var(--text-main); background: var(--card-bg); padding: 1.6rem 1rem; border-radius: 16px; border: 2px solid var(--card-border); margin-bottom: 1.2rem; line-height: 1.3; word-break: break-word; }
 .options-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.2rem 0; }
 .btn-opcion { background: var(--card-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 1.2rem 0.5rem; font-size: 1.5rem; font-weight: 600; color: var(--text-main); cursor: pointer; transition: all 0.15s ease; min-height: 90px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 0 var(--card-border); }
@@ -172,9 +132,7 @@ body.dark-mode .btn-opcion.opcion-incorrecta { background: #3a1a1a; border-color
 body.dark-mode .feedback-exito { background: #1f3a24; color: #fff; border-color: #4caf50; }
 body.dark-mode .feedback-error { background: #3a1a1a; color: #fff; border-color: #ef5350; }
 
-/* ============================================================
-   MODO PRÁCTICA
-   ============================================================ */
+/* Practica */
 .practica-container { margin-top: 0.8rem; }
 .ecuacion-display { background: var(--card-bg); border-radius: 16px; padding: 1rem; margin-bottom: 1rem; border: 2px solid var(--card-border); }
 .ecuacion-linea { font-size: 2.0rem; color: var(--text-main); display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.2rem 0; }
@@ -186,9 +144,7 @@ body.dark-mode .ecuacion-linea.solucion { color: #66bb6a; }
 .operacion-btn { min-width: 64px; font-size: 1.6rem; background: var(--card-bg); border: 2px solid var(--card-border); color: var(--text-main); padding: 0.6rem 1rem; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
 .operacion-btn.seleccionado { border-color: var(--btn-primary); background: var(--btn-primary); color: #fff; }
 
-/* ============================================================
-   TIENDA REDISEÑADA
-   ============================================================ */
+/* Tienda */
 #tienda-container { margin-top: 1.5rem; background: var(--card-bg); border-radius: 20px; padding: 1rem; border: 2px solid var(--card-border); }
 #vista-previa { display: flex; flex-direction: column; align-items: center; margin-bottom: 1rem; }
 #avatar-preview { background: var(--avatar-bg); border-radius: 16px; padding: 0.5rem; min-height: 180px; width: 100%; display: flex; justify-content: center; align-items: center; border: 1px solid var(--card-border); position: relative; }
@@ -205,7 +161,6 @@ body.dark-mode .item-card.equipado { border-color: #4caf50; background: #1f3a24;
 .btn-comprar, .btn-equipar { padding: 0.3rem 0.8rem; border: none; border-radius: 8px; background: var(--btn-secondary); color: #fff; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
 .equipado-label { color: #2e7d32; font-weight: 700; }
 
-/* Toggle Modo Oscuro */
 .theme-toggle { background: transparent; border: 2px solid var(--btn-secondary); color: var(--btn-secondary); border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s; }
 body.dark-mode .theme-toggle { background: var(--btn-secondary); color: #fff; border-color: #fff; }
 
