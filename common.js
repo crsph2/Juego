@@ -52,7 +52,7 @@ function actualizarUICompleta() {
     actualizarAvatar();
 }
 
-// Símbolos Matemáticos SVG (Paths precisos y corregidos)
+// Símbolos Matemáticos SVG (Precisos)
 const SIMBOLOS_SVG = {
     'pi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 L4 8 A4 4 0 0 1 8 4 L20 4"/><path d="M8 12 L16 12"/></svg>',
     'integral': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-3 0-3 4-3 8s0 8 3 8"/><path d="M17 4c3 0 3 4 3 8s0 8-3 8"/></svg>',
@@ -64,7 +64,7 @@ const SIMBOLOS_SVG = {
     'suma_frac': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4L10 20"/><path d="M12 8h4M8 16h4"/></svg>'
 };
 
-// Estilos de avatares (Se usan como referencia para saber que tipo es)
+// Estilos de avatares
 const AVATAR_ESTILOS = {
     'avatar_base': { style: 'adventurer', label: 'Clásico' },
     'avatar_robot': { style: 'bottts', label: 'Robot' },
@@ -80,32 +80,30 @@ function actualizarAvatar() {
     const nombre = window.jugador.nombre || 'Aventurero';
     const avatarId = equipo.avatar || 'avatar_base';
 
-    // Detectar el estilo por el ID único comprado
     let estilo = AVATAR_ESTILOS['avatar_base'];
     if (avatarId.includes('robot')) estilo = AVATAR_ESTILOS['avatar_robot'];
     else if (avatarId.includes('personas')) estilo = AVATAR_ESTILOS['avatar_personas'];
     else if (avatarId.includes('notionists')) estilo = AVATAR_ESTILOS['avatar_notionists'];
 
-    // Usamos el ID único como semilla para que cada compra sea diferente
     let url = `https://api.dicebear.com/10.x/${estilo.style}/svg?seed=${avatarId}`;
-
     if (estilo.style === 'adventurer' || estilo.style === 'personas') {
         url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
     }
 
+    // Símbolos en una fila inferior (sin superposición)
     let simbolosHTML = '';
     (equipo.simbolos || []).forEach(simbolo => {
         const item = SIMBOLOS_SVG[simbolo.id];
-        const pos = simbolo.pos || 'top-left';
         if (item) {
-            simbolosHTML += `<div class="avatar-simbolo pos-${pos}">${item}</div>`;
+            simbolosHTML += `<div class="avatar-simbolo">${item}</div>`;
         }
     });
 
-    // ESTRUCTURA IDÉNTICA A LA TIENDA
     avatarContainer.innerHTML = `
-        <div class="avatar-dicebear" style="width:140px; height:160px; overflow:hidden; border-radius: 50% 50% 0 0; background:var(--avatar-bg); position:relative;">
+        <div class="avatar-dicebear">
             <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
+        </div>
+        <div class="avatar-simbolos-fila">
             ${simbolosHTML}
         </div>
         <div class="avatar-nombre">${nombre}</div>
@@ -142,7 +140,7 @@ function mostrarFeedback(mensaje, tipo) {
         if (tipo === 'exito') feedback.classList.add('feedback-exito');
         else if (tipo === 'error') feedback.classList.add('feedback-error');
         feedback.classList.remove('hidden');
-        setTimeout(() => feedback.classList.add('hidden'), 3000);
+        setTimeout(() => feedback.classList.add('hidden'), 3000); // Se mantiene en 3s para acciones globales del lobby
     }
 }
 
