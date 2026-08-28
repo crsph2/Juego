@@ -72,7 +72,7 @@ const AVATAR_ESTILOS = {
     'avatar_notionists': { style: 'notionists', label: 'Minimalista' }
 };
 
-// Renderiza el avatar con símbolos dentro del círculo (versión mejorada)
+// Reemplaza la función renderizarAvatar completa por esta:
 function renderizarAvatar(container, jugador) {
     if (!container || !jugador) return;
     const equipo = jugador.equipo || {};
@@ -89,23 +89,24 @@ function renderizarAvatar(container, jugador) {
         url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
     }
 
-    // Construir HTML de símbolos con posiciones más centradas
+    // Construir HTML de símbolos con posiciones DENTRO del círculo (Radio 80px)
     let simbolosHTML = '';
     (equipo.simbolos || []).forEach(simbolo => {
         const char = SIMBOLOS_MATH[simbolo.id];
         if (!char) return;
         const pos = simbolo.pos || 'center-left';
         let styleAttr = '';
-        // Ajustamos valores para que queden dentro del círculo de 160px
+        
+        // Ajustamos los valores para que cumplan con la ecuación del círculo (x-80)^2 + (y-80)^2 <= 80^2
         switch (pos) {
-            case 'top-left': styleAttr = 'top:5px; left:5px;'; break;
-            case 'top-center': styleAttr = 'top:5px; left:50%; transform:translateX(-50%);'; break;
-            case 'top-right': styleAttr = 'top:5px; right:5px;'; break;
-            case 'center-left': styleAttr = 'top:50%; left:5px; transform:translateY(-50%);'; break;
-            case 'center-right': styleAttr = 'top:50%; right:5px; transform:translateY(-50%);'; break;
-            case 'bottom-left': styleAttr = 'bottom:5px; left:5px;'; break;
-            case 'bottom-center': styleAttr = 'bottom:5px; left:50%; transform:translateX(-50%);'; break;
-            case 'bottom-right': styleAttr = 'bottom:5px; right:5px;'; break;
+            case 'top-left': styleAttr = 'top:25px; left:25px;'; break;
+            case 'top-center': styleAttr = 'top:15px; left:50%; transform:translateX(-50%);'; break;
+            case 'top-right': styleAttr = 'top:25px; right:25px;'; break;
+            case 'center-left': styleAttr = 'top:50%; left:20px; transform:translateY(-50%);'; break;
+            case 'center-right': styleAttr = 'top:50%; right:20px; transform:translateY(-50%);'; break;
+            case 'bottom-left': styleAttr = 'bottom:25px; left:25px;'; break;
+            case 'bottom-center': styleAttr = 'bottom:15px; left:50%; transform:translateX(-50%);'; break;
+            case 'bottom-right': styleAttr = 'bottom:25px; right:25px;'; break;
             default: styleAttr = 'top:50%; left:50%; transform:translate(-50%,-50%);';
         }
         simbolosHTML += `<span class="avatar-simbolo-abs" style="${styleAttr}">${char}</span>`;
