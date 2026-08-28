@@ -16,13 +16,12 @@ let elNumeroPractica, elBtnAccion, elOperacionBtns;
 let elControlesPractica, elMensajeExito, elTextoSolucion;
 let elBtnReiniciar;
 
-// ---------- Generación de ecuaciones (Sin a=1, ni c=0, ni b=0) ----------
 function generarEcuacionLineal() {
     let a, b, c, x;
     do {
-        a = Math.floor(Math.random() * 4) + 2; // a de 2 a 5
-        b = Math.floor(Math.random() * 10) - 5; // b de -5 a 4
-        x = Math.floor(Math.random() * 10) - 5; // x de -5 a 4
+        a = Math.floor(Math.random() * 4) + 2;
+        b = Math.floor(Math.random() * 10) - 5;
+        x = Math.floor(Math.random() * 10) - 5;
         c = a * x + b;
     } while (b === 0 || c === 0);
     return { a, b, c, x };
@@ -37,11 +36,9 @@ function formatearEcuacion(a, b, c, letra = 'x') {
     return left + ' = ' + c;
 }
 
-// ---------- Generación de pasos correctos (Práctica) ----------
 function generarPasos(a, b, c, x) {
     const pasos = [];
     pasos.push({ tipo: 'original', texto: formatearEcuacion(a, b, c), a, b, c });
-
     let pasoActual = { a, b, c };
 
     if (b !== 0) {
@@ -66,13 +63,8 @@ function generarPasos(a, b, c, x) {
     return pasos;
 }
 
-// ---------- Estado de práctica ----------
 let practicaState = {
-    pasos: [],
-    pasoActual: 0,
-    historialLineas: [],
-    operacionPendiente: null,
-    eq: null
+    pasos: [], pasoActual: 0, historialLineas: [], operacionPendiente: null, eq: null
 };
 
 function aplicarOperacion(ecuacion, op, num) {
@@ -133,11 +125,8 @@ function mostrarHistorial() {
     practicaState.historialLineas.forEach(linea => {
         const div = document.createElement('div');
         div.className = 'ecuacion-linea';
-        if (linea.tipo === 'operacion') { 
-            div.classList.add('linea-paso');
-        } else if (linea.tipo === 'solucion') { 
-            div.classList.add('linea-solucion');
-        }
+        if (linea.tipo === 'operacion') { div.classList.add('linea-paso'); }
+        else if (linea.tipo === 'solucion') { div.classList.add('linea-solucion'); }
         div.textContent = linea.texto;
         elHistorialPasos.appendChild(div);
     });
@@ -151,14 +140,14 @@ function resetearControles() {
 
 function actualizarBoton() {
     if (practicaState.operacionPendiente) {
-        elBtnAccion.textContent = 'Operar'; // Texto solicitado
+        elBtnAccion.textContent = 'Operar';
         elBtnAccion.disabled = false;
         mostrarControles(false);
     } else {
         const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
         const num = parseInt(elNumeroPractica.value);
         const haySeleccion = opSeleccionada && !isNaN(num) && num > 0;
-        elBtnAccion.textContent = 'Aplicar'; // Texto solicitado
+        elBtnAccion.textContent = 'Aplicar';
         elBtnAccion.disabled = !haySeleccion;
         mostrarControles(true);
     }
@@ -228,7 +217,7 @@ function confirmarPaso() {
         practicaState.historialLineas.push({ texto: practicaState.pasos[practicaState.pasoActual].texto, tipo: 'solucion' });
         mostrarHistorial();
 
-        // OTORGAR RECOMPENSAS (Monedas y XP igual que alternativas)
+        // OTORGAR RECOMPENSAS
         racha++;
         const bonusRacha = Math.min(racha, 5) * 2;
         const xpGanada = 10 + bonusRacha;
@@ -240,19 +229,13 @@ function confirmarPaso() {
             const inc = j.incognita;
             const nuevoXp = (inc.xp || 0) + xpGanada;
             const nuevoNivel = Math.floor(nuevoXp / XP_POR_NIVEL) + 1;
-
-            inc.xp = nuevoXp;
-            inc.nivel = nuevoNivel;
-            inc.region = REGION_INCOGNITA;
-            inc.racha = racha;
+            inc.xp = nuevoXp; inc.nivel = nuevoNivel; inc.region = REGION_INCOGNITA; inc.racha = racha;
             j.monedas = (j.monedas || 0) + monedasGanadas;
-
             db.collection('usuarios').doc(window.uid).update({
                 monedas: j.monedas,
                 'incognita.xp': inc.xp, 'incognita.nivel': inc.nivel, 'incognita.region': inc.region, 'incognita.racha': racha,
                 historial: firebase.firestore.FieldValue.arrayUnion({ juego: 'incognita', pregunta: practicaState.eq ? `x = ${practicaState.eq.x}` : 'Practica', correcta: true, fecha: new Date().toISOString() })
             }).catch(error => console.error('Error al guardar progreso:', error));
-            
             actualizarUI();
         }
 
@@ -264,7 +247,7 @@ function confirmarPaso() {
     }
 
     actualizarBoton();
-    mostrarFeedbackPractica('✅ ¡Bien hecho!', 'exito');
+    mostrarFeedbackPractica('✅ ¡Bien hecho! 😊', 'exito');
 }
 
 function mostrarFeedbackPractica(mensaje, tipo) {
@@ -275,7 +258,7 @@ function mostrarFeedbackPractica(mensaje, tipo) {
     if (tipo === 'exito') elFeedbackPractica.classList.add('feedback-exito');
     else if (tipo === 'error') elFeedbackPractica.classList.add('feedback-error');
     elFeedbackPractica.classList.remove('hidden');
-    feedbackTimeout = setTimeout(() => { elFeedbackPractica.classList.add('hidden'); feedbackTimeout = null; }, 2500);
+    feedbackTimeout = setTimeout(() => { elFeedbackPractica.classList.add('hidden'); feedbackTimeout = null; }, 1500); // 1.5 segundos
 }
 
 // ---------- Modo Alternativas ----------
@@ -338,7 +321,7 @@ function responderAlternativa(opcionElegida, btnElegido) {
         const bonusRacha = Math.min(racha, 5) * 2;
         xpGanada = 10 + bonusRacha; monedasGanadas = 5 + Math.floor(racha / 3);
         btnElegido.classList.add('opcion-correcta');
-        if (elFeedbackAlt) { elFeedbackAlt.textContent = `✅ ¡Correcto! ${letraActual} = ${preguntaActualAlt.respuestaCorrecta}`; elFeedbackAlt.className = 'feedback feedback-exito'; elFeedbackAlt.classList.remove('hidden'); }
+        if (elFeedbackAlt) { elFeedbackAlt.textContent = '✅ ¡Correcto!, sigue así 😊'; elFeedbackAlt.className = 'feedback feedback-exito'; elFeedbackAlt.classList.remove('hidden'); }
     } else {
         racha = 0;
         btnElegido.classList.add('opcion-incorrecta');
@@ -369,7 +352,6 @@ function responderAlternativa(opcionElegida, btnElegido) {
 
 function mezclarArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 
-// ---------- Cambio de modo ----------
 function cambiarModo(modo) {
     modoActual = modo;
     const modoAlt = document.getElementById('modo-alternativas');
@@ -384,7 +366,6 @@ function cambiarModo(modo) {
     else iniciarPractica();
 }
 
-// ---------- Inicialización ----------
 function actualizarUI() {
     if (!window.jugador) return;
     const j = window.jugador;
