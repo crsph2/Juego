@@ -1,6 +1,5 @@
 // lobby.js - Lógica del lobby y tienda
 
-// Nuevos precios económicos y lógica de avatares únicos
 const ITEMS = {
     avatar: [
         { id: 'avatar_base', nombre: 'Clásico', categoria: 'avatar', precio: 0, style: 'adventurer' },
@@ -63,10 +62,20 @@ function mostrarItemsCategoria(categoria) {
     
     items.forEach(item => {
         let inventarioItem = false;
-        if (categoria === 'avatar') inventarioItem = jugadorData.inventario.includes(item.id);
-        if (categoria === 'simbolo') inventarioItem = jugadorData.inventario.includes(`simbolo_${item.id}`);
+        let equipado = false;
 
-        const equipado = categoria === 'avatar' ? (jugadorData.equipo.avatar === item.id) : (jugadorData.equipo.simbolos || []).some(s => s.id === item.id);
+        // NUEVA LÓGICA PARA COMPRAR VARIOS AVATARES DEL MISMO TIPO
+        if (categoria === 'avatar') {
+            // Buscamos si el inventario contiene un ID que empiece por el tipo (ej. avatar_robot_12345)
+            const inventarioTipo = jugadorData.inventario.filter(id => id.startsWith(item.id));
+            inventarioItem = inventarioTipo.length > 0;
+            // Está equipado si el avatar actual empieza por el tipo
+            equipado = jugadorData.equipo.avatar && jugadorData.equipo.avatar.startsWith(item.id);
+        } 
+        else if (categoria === 'simbolo') {
+            inventarioItem = jugadorData.inventario.includes(`simbolo_${item.id}`);
+            equipado = (jugadorData.equipo.simbolos || []).some(s => s.id === item.id);
+        }
 
         const card = document.createElement('div');
         card.className = 'item-card';
@@ -81,18 +90,28 @@ function mostrarItemsCategoria(categoria) {
             contenidoPreview = `<div style="font-size:2.5rem; color:var(--btn-secondary); display:flex; justify-content:center;">${svg}</div>`;
         }
 
-        // Lógica para permitir quitar símbolos
+        // Construcción de acciones (Comprar / Comprar otro / Equipar / Quitar)
         let accionesHTML = '';
-        if (inventarioItem) {
-            if (equipado) {
-                accionesHTML = categoria === 'simbolo' 
-                    ? `<button class="btn-quitar" data-id="${item.id}" data-cat="${categoria}">Quitar</button>`
-                    : `<span class="equipado-label">✅ Equipado</span>`;
+        if (categoria === 'avatar') {
+            if (inventarioItem) {
+                if (equipado) {
+                    accionesHTML = `<span class="equipado-label">✅ Equipado</span><br><button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar otro</button>`;
+                } else {
+                    accionesHTML = `<button class="btn-equipar" data-id="${item.id}" data-cat="${categoria}">Equipar</button><br><button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar otro</button>`;
+                }
             } else {
-                accionesHTML = `<button class="btn-equipar" data-id="${item.id}" data-cat="${categoria}">Equipar</button>`;
+                accionesHTML = `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`;
             }
         } else {
-            accionesHTML = `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`;
+            if (inventarioItem) {
+                if (equipado) {
+                    accionesHTML = `<button class="btn-quitar" data-id="${item.id}" data-cat="${categoria}">Quitar</button>`;
+                } else {
+                    accionesHTML = `<button class="btn-equipar" data-id="${item.id}" data-cat="${categoria}">Equipar</button>`;
+                }
+            } else {
+                accionesHTML = `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`;
+            }
         }
 
         card.innerHTML = `
@@ -115,7 +134,7 @@ function mostrarItemsCategoria(categoria) {
 async function comprarItem(id, categoria, precio) {
     if (jugadorData.monedas < precio) { alert('No tienes suficientes monedas.'); return; }
     
-    // Generar ID ÚNICO para avatares (para poder comprar varios modelos aleatorios)
+    // Generar ID ÚNICO para cada avatar comprado
     const itemIdCompra = categoria === 'simbolo' ? `simbolo_${id}` : `${id}_${Date.now()}`;
     if (jugadorData.inventario.includes(itemIdCompra)) { alert('Ya tienes este item.'); return; }
 
@@ -136,13 +155,14 @@ async function comprarItem(id, categoria, precio) {
 }
 
 async function equiparItem(id, categoria) {
-    let itemIdEquipar = categoria === 'simbolo' ? `simbolo_${id}` : id;
-    if (!jugadorData.inventario.includes(itemIdEquipar)) { alert('No tienes este item.'); return; }
-
     try {
         if (categoria === 'avatar') {
-            jugadorData.equipo.avatar = itemIdEquipar;
-            await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': itemIdEquipar });
+            // Buscar un avatar no equipado de ese tipo
+            const inventarioTipo = jugadorData.inventario.filter(item => item.startsWith(id));
+            const avatarEquipar = inventarioTipo.find(item => item !== jugadorData.equipo.avatar) || inventarioTipo[0];
+            
+            jugadorData.equipo.avatar = avatarEquipar;
+            await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': avatarEquipar });
         } else {
             const item = ITEMS.simbolo.find(i => i.id === id);
             if (!item) return;
@@ -158,7 +178,6 @@ async function equiparItem(id, categoria) {
     } catch (error) { console.error('Error al equipar:', error); alert('Error al equipar.'); }
 }
 
-// Nueva función para quitar símbolos
 async function quitarItem(id, categoria) {
     if (categoria === 'simbolo') {
         jugadorData.equipo.simbolos = jugadorData.equipo.simbolos.filter(s => s.id !== id);
@@ -181,22 +200,23 @@ function actualizarVistaPrevia() {
     else if (equipo.avatar.includes('personas')) estilo = AVATAR_ESTILOS['avatar_personas'];
     else if (equipo.avatar.includes('notionists')) estilo = AVATAR_ESTILOS['avatar_notionists'];
 
-    // Usamos el ID único como semilla
     let url = `https://api.dicebear.com/10.x/${estilo.style}/svg?seed=${equipo.avatar}`;
     url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
 
     let simbolosHTML = '';
     (equipo.simbolos || []).forEach(simbolo => {
         const svg = SIMBOLOS_SVG[simbolo.id];
-        if (svg) simbolosHTML += `<div class="avatar-simbolo pos-${simbolo.pos}">${svg}</div>`;
+        if (svg) simbolosHTML += `<div class="avatar-simbolo">${svg}</div>`;
     });
 
     elAvatarPreview.innerHTML = `
         <div style="position:relative; width:140px; height:160px; overflow:hidden; border-radius: 50% 50% 0 0; background:var(--avatar-bg);">
             <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
-            ${simbolosHTML}
-            <div style="position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); font-size:0.9rem; background:var(--card-bg); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:var(--text-main);">${nombre}</div>
         </div>
+        <div class="avatar-simbolos-fila">
+            ${simbolosHTML}
+        </div>
+        <div style="margin-top:5px; font-size:0.9rem; background:var(--card-bg); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:var(--text-main);">${nombre}</div>
     `;
 }
 
