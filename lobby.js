@@ -61,16 +61,16 @@ function mostrarItemsCategoria(categoria) {
     elItemsTienda.innerHTML = '';
     
     items.forEach(item => {
+        // Lógica para avatares
+        let inventarioAvatares = [];
         let inventarioItem = false;
         let equipado = false;
 
-        // NUEVA LÓGICA PARA COMPRAR VARIOS AVATARES DEL MISMO TIPO
         if (categoria === 'avatar') {
-            // Buscamos si el inventario contiene un ID que empiece por el tipo (ej. avatar_robot_12345)
-            const inventarioTipo = jugadorData.inventario.filter(id => id.startsWith(item.id));
-            inventarioItem = inventarioTipo.length > 0;
-            // Está equipado si el avatar actual empieza por el tipo
-            equipado = jugadorData.equipo.avatar && jugadorData.equipo.avatar.startsWith(item.id);
+            // Buscar todos los avatares de este tipo en el inventario
+            inventarioAvatares = jugadorData.inventario.filter(id => id.startsWith(item.id));
+            inventarioItem = inventarioAvatares.length > 0;
+            equipado = inventarioAvatares.includes(jugadorData.equipo.avatar);
         } 
         else if (categoria === 'simbolo') {
             inventarioItem = jugadorData.inventario.includes(`simbolo_${item.id}`);
@@ -82,27 +82,40 @@ function mostrarItemsCategoria(categoria) {
         if (equipado) card.classList.add('equipado');
 
         let contenidoPreview = '';
+        let accionesHTML = '';
+
         if (categoria === 'avatar') {
             const estilo = item.style;
+            // Vista previa genérica
             contenidoPreview = `<div style="width:60px; height:60px; margin:0 auto; overflow:hidden; border-radius:50%; background:#e3f2fd;"><img src="https://api.dicebear.com/10.x/${estilo}/svg?seed=Preview" style="width:100%; height:100%; object-fit:cover;"></div>`;
-        } else {
-            const svg = SIMBOLOS_SVG[item.id];
-            contenidoPreview = `<div style="font-size:2.5rem; color:var(--btn-secondary); display:flex; justify-content:center;">${svg}</div>`;
-        }
 
-        // Construcción de acciones (Comprar / Comprar otro / Equipar / Quitar)
-        let accionesHTML = '';
-        if (categoria === 'avatar') {
+            // Si tiene avatares comprados, mostrar una cuadrícula con ellos
+            if (inventarioAvatares.length > 0) {
+                let miniaturasHTML = '<div class="item-avatar-coleccion">';
+                inventarioAvatares.forEach(avatarId => {
+                    const isEquipado = jugadorData.equipo.avatar === avatarId;
+                    const claseEquipado = isEquipado ? 'avatar-miniatura equipado' : 'avatar-miniatura';
+                    miniaturasHTML += `
+                        <div class="${claseEquipado}" onclick="equiparAvatarEspecifico('${avatarId}')" title="Equipar">
+                            <img src="https://api.dicebear.com/10.x/${estilo}/svg?seed=${avatarId}" alt="Avatar">
+                        </div>
+                    `;
+                });
+                miniaturasHTML += '</div>';
+                accionesHTML += miniaturasHTML;
+            }
+
+            // Botones de acción
             if (inventarioItem) {
-                if (equipado) {
-                    accionesHTML = `<span class="equipado-label">✅ Equipado</span><br><button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar otro</button>`;
-                } else {
-                    accionesHTML = `<button class="btn-equipar" data-id="${item.id}" data-cat="${categoria}">Equipar</button><br><button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar otro</button>`;
-                }
+                accionesHTML += `<br><button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar otro</button>`;
             } else {
-                accionesHTML = `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`;
+                accionesHTML += `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`;
             }
         } else {
+            // Lógica para símbolos (sin cambios)
+            const svg = SIMBOLOS_SVG[item.id];
+            contenidoPreview = `<div style="font-size:2.5rem; color:var(--btn-secondary); display:flex; justify-content:center;">${svg}</div>`;
+            
             if (inventarioItem) {
                 if (equipado) {
                     accionesHTML = `<button class="btn-quitar" data-id="${item.id}" data-cat="${categoria}">Quitar</button>`;
@@ -122,6 +135,7 @@ function mostrarItemsCategoria(categoria) {
         `;
         elItemsTienda.appendChild(card);
 
+        // Event listeners
         const btnComprar = card.querySelector('.btn-comprar');
         if (btnComprar) btnComprar.addEventListener('click', () => comprarItem(item.id, item.categoria, item.precio));
         const btnEquipar = card.querySelector('.btn-equipar');
@@ -131,11 +145,28 @@ function mostrarItemsCategoria(categoria) {
     });
 }
 
+// Función global para equipar un avatar específico desde la cuadrícula
+window.equiparAvatarEspecifico = async function(avatarId) {
+    if (!window.jugador || !window.uid) return;
+    try {
+        jugadorData.equipo.avatar = avatarId;
+        await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': avatarId });
+        
+        mostrarItemsCategoria('avatar');
+        actualizarVistaPrevia();
+        if (window.actualizarAvatar) window.actualizarAvatar();
+        mostrarFeedback('¡Avatar equipado!', 'exito');
+    } catch (error) {
+        console.error('Error al equipar avatar:', error);
+        alert('Error al equipar avatar.');
+    }
+};
+
 async function comprarItem(id, categoria, precio) {
     if (jugadorData.monedas < precio) { alert('No tienes suficientes monedas.'); return; }
     
     // Generar ID ÚNICO para cada avatar comprado
-    const itemIdCompra = categoria === 'simbolo' ? `simbolo_${id}` : `${id}_${Date.now()}`;
+    const itemIdCompra = categoria === 'simbolo' ? `simbolo_${id}` : `${id}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     if (jugadorData.inventario.includes(itemIdCompra)) { alert('Ya tienes este item.'); return; }
 
     const item = ITEMS[categoria].find(i => i.id === id);
@@ -157,9 +188,9 @@ async function comprarItem(id, categoria, precio) {
 async function equiparItem(id, categoria) {
     try {
         if (categoria === 'avatar') {
-            // Buscar un avatar no equipado de ese tipo
-            const inventarioTipo = jugadorData.inventario.filter(item => item.startsWith(id));
-            const avatarEquipar = inventarioTipo.find(item => item !== jugadorData.equipo.avatar) || inventarioTipo[0];
+            // Equipar el primer avatar no equipado de ese tipo
+            const inventarioAvatares = jugadorData.inventario.filter(item => item.startsWith(id));
+            const avatarEquipar = inventarioAvatares.find(item => item !== jugadorData.equipo.avatar) || inventarioAvatares[0];
             
             jugadorData.equipo.avatar = avatarEquipar;
             await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': avatarEquipar });
