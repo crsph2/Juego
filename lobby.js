@@ -1,21 +1,22 @@
 // lobby.js - Lógica del lobby y tienda
 
+// Nuevos precios ajustados
 const ITEMS = {
     avatar: [
-        { id: 'avatar_base', nombre: 'Clásico', categoria: 'avatar', precio: 0, style: 'adventurer' },
-        { id: 'avatar_robot', nombre: 'Robot', categoria: 'avatar', precio: 800, style: 'bottts' },
-        { id: 'avatar_personas', nombre: 'Caricatura', categoria: 'avatar', precio: 800, style: 'personas' },
-        { id: 'avatar_notionists', nombre: 'Minimalista', categoria: 'avatar', precio: 800, style: 'notionists' }
+        { id: 'avatar_base', nombre: 'Clásico', categoria: 'avatar', precio: 100, style: 'adventurer' },
+        { id: 'avatar_robot', nombre: 'Robot', categoria: 'avatar', precio: 200, style: 'bottts' },
+        { id: 'avatar_personas', nombre: 'Caricatura', categoria: 'avatar', precio: 200, style: 'personas' },
+        { id: 'avatar_notionists', nombre: 'Minimalista', categoria: 'avatar', precio: 200, style: 'notionists' }
     ],
     simbolo: [
-        { id: 'pi', nombre: 'Pi (π)', categoria: 'simbolo', precio: 250, pos: 'top-left' },
-        { id: 'integral', nombre: 'Integral (∫)', categoria: 'simbolo', precio: 250, pos: 'top-right' },
-        { id: 'raiz', nombre: 'Raíz (√)', categoria: 'simbolo', precio: 250, pos: 'bottom-left' },
-        { id: 'sigma', nombre: 'Sigma (Σ)', categoria: 'simbolo', precio: 250, pos: 'bottom-right' },
-        { id: 'infinito', nombre: 'Infinito (∞)', categoria: 'simbolo', precio: 250, pos: 'center-left' },
-        { id: 'delta', nombre: 'Delta (Δ)', categoria: 'simbolo', precio: 250, pos: 'center-right' },
-        { id: 'theta', nombre: 'Theta (θ)', categoria: 'simbolo', precio: 250, pos: 'top-left' },
-        { id: 'suma_frac', nombre: 'Fracción', categoria: 'simbolo', precio: 250, pos: 'top-right' }
+        { id: 'pi', nombre: 'Pi (π)', categoria: 'simbolo', precio: 1000, pos: 'top-left' },
+        { id: 'integral', nombre: 'Integral (∫)', categoria: 'simbolo', precio: 1000, pos: 'top-right' },
+        { id: 'raiz', nombre: 'Raíz (√)', categoria: 'simbolo', precio: 1000, pos: 'bottom-left' },
+        { id: 'sigma', nombre: 'Sigma (Σ)', categoria: 'simbolo', precio: 1000, pos: 'bottom-right' },
+        { id: 'infinito', nombre: 'Infinito (∞)', categoria: 'simbolo', precio: 1000, pos: 'center-left' },
+        { id: 'delta', nombre: 'Delta (Δ)', categoria: 'simbolo', precio: 1000, pos: 'center-right' },
+        { id: 'theta', nombre: 'Theta (θ)', categoria: 'simbolo', precio: 1000, pos: 'top-left' },
+        { id: 'suma_frac', nombre: 'Fracción', categoria: 'simbolo', precio: 1000, pos: 'top-right' }
     ]
 };
 
@@ -61,16 +62,13 @@ function mostrarItemsCategoria(categoria) {
     elItemsTienda.innerHTML = '';
     
     items.forEach(item => {
-        // Lógica para avatares
-        let inventarioAvatares = [];
         let inventarioItem = false;
         let equipado = false;
 
         if (categoria === 'avatar') {
-            // Buscar todos los avatares de este tipo en el inventario
-            inventarioAvatares = jugadorData.inventario.filter(id => id.startsWith(item.id));
-            inventarioItem = inventarioAvatares.length > 0;
-            equipado = inventarioAvatares.includes(jugadorData.equipo.avatar);
+            // Verificar si existe algún ID en el inventario que comience con el tipo
+            inventarioItem = jugadorData.inventario.some(id => id.startsWith(item.id));
+            equipado = jugadorData.equipo.avatar && jugadorData.equipo.avatar.startsWith(item.id);
         } 
         else if (categoria === 'simbolo') {
             inventarioItem = jugadorData.inventario.includes(`simbolo_${item.id}`);
@@ -82,40 +80,26 @@ function mostrarItemsCategoria(categoria) {
         if (equipado) card.classList.add('equipado');
 
         let contenidoPreview = '';
-        let accionesHTML = '';
-
         if (categoria === 'avatar') {
             const estilo = item.style;
-            // Vista previa genérica
             contenidoPreview = `<div style="width:60px; height:60px; margin:0 auto; overflow:hidden; border-radius:50%; background:#e3f2fd;"><img src="https://api.dicebear.com/10.x/${estilo}/svg?seed=Preview" style="width:100%; height:100%; object-fit:cover;"></div>`;
-
-            // Si tiene avatares comprados, mostrar una cuadrícula con ellos
-            if (inventarioAvatares.length > 0) {
-                let miniaturasHTML = '<div class="item-avatar-coleccion">';
-                inventarioAvatares.forEach(avatarId => {
-                    const isEquipado = jugadorData.equipo.avatar === avatarId;
-                    const claseEquipado = isEquipado ? 'avatar-miniatura equipado' : 'avatar-miniatura';
-                    miniaturasHTML += `
-                        <div class="${claseEquipado}" onclick="equiparAvatarEspecifico('${avatarId}')" title="Equipar">
-                            <img src="https://api.dicebear.com/10.x/${estilo}/svg?seed=${avatarId}" alt="Avatar">
-                        </div>
-                    `;
-                });
-                miniaturasHTML += '</div>';
-                accionesHTML += miniaturasHTML;
-            }
-
-            // Botones de acción
-            if (inventarioItem) {
-                accionesHTML += `<br><button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar otro</button>`;
-            } else {
-                accionesHTML += `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`;
-            }
         } else {
-            // Lógica para símbolos (sin cambios)
             const svg = SIMBOLOS_SVG[item.id];
             contenidoPreview = `<div style="font-size:2.5rem; color:var(--btn-secondary); display:flex; justify-content:center;">${svg}</div>`;
-            
+        }
+
+        let accionesHTML = '';
+        if (categoria === 'avatar') {
+            if (inventarioItem) {
+                if (equipado) {
+                    accionesHTML = `<span class="equipado-label">✅ Equipado</span><br><button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar otro</button>`;
+                } else {
+                    accionesHTML = `<button class="btn-equipar" data-id="${item.id}" data-cat="${categoria}">Equipar</button><br><button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar otro</button>`;
+                }
+            } else {
+                accionesHTML = `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`;
+            }
+        } else {
             if (inventarioItem) {
                 if (equipado) {
                     accionesHTML = `<button class="btn-quitar" data-id="${item.id}" data-cat="${categoria}">Quitar</button>`;
@@ -135,7 +119,6 @@ function mostrarItemsCategoria(categoria) {
         `;
         elItemsTienda.appendChild(card);
 
-        // Event listeners
         const btnComprar = card.querySelector('.btn-comprar');
         if (btnComprar) btnComprar.addEventListener('click', () => comprarItem(item.id, item.categoria, item.precio));
         const btnEquipar = card.querySelector('.btn-equipar');
@@ -145,28 +128,10 @@ function mostrarItemsCategoria(categoria) {
     });
 }
 
-// Función global para equipar un avatar específico desde la cuadrícula
-window.equiparAvatarEspecifico = async function(avatarId) {
-    if (!window.jugador || !window.uid) return;
-    try {
-        jugadorData.equipo.avatar = avatarId;
-        await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': avatarId });
-        
-        mostrarItemsCategoria('avatar');
-        actualizarVistaPrevia();
-        if (window.actualizarAvatar) window.actualizarAvatar();
-        mostrarFeedback('¡Avatar equipado!', 'exito');
-    } catch (error) {
-        console.error('Error al equipar avatar:', error);
-        alert('Error al equipar avatar.');
-    }
-};
-
 async function comprarItem(id, categoria, precio) {
     if (jugadorData.monedas < precio) { alert('No tienes suficientes monedas.'); return; }
     
-    // Generar ID ÚNICO para cada avatar comprado
-    const itemIdCompra = categoria === 'simbolo' ? `simbolo_${id}` : `${id}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const itemIdCompra = categoria === 'simbolo' ? `simbolo_${id}` : `${id}_${Date.now()}`;
     if (jugadorData.inventario.includes(itemIdCompra)) { alert('Ya tienes este item.'); return; }
 
     const item = ITEMS[categoria].find(i => i.id === id);
@@ -188,9 +153,11 @@ async function comprarItem(id, categoria, precio) {
 async function equiparItem(id, categoria) {
     try {
         if (categoria === 'avatar') {
-            // Equipar el primer avatar no equipado de ese tipo
-            const inventarioAvatares = jugadorData.inventario.filter(item => item.startsWith(id));
-            const avatarEquipar = inventarioAvatares.find(item => item !== jugadorData.equipo.avatar) || inventarioAvatares[0];
+            // Obtener todos los avatares de ese tipo en el inventario
+            const inventarioTipo = jugadorData.inventario.filter(item => item.startsWith(id));
+            
+            // Elegir el primero que NO esté equipado actualmente, o el primero si solo hay uno
+            const avatarEquipar = inventarioTipo.find(item => item !== jugadorData.equipo.avatar) || inventarioTipo[0];
             
             jugadorData.equipo.avatar = avatarEquipar;
             await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': avatarEquipar });
@@ -207,6 +174,30 @@ async function equiparItem(id, categoria) {
         if (window.actualizarAvatar) window.actualizarAvatar();
         mostrarFeedback('¡Item equipado!', 'exito');
     } catch (error) { console.error('Error al equipar:', error); alert('Error al equipar.'); }
+}
+
+// Función para rotar entre avatares comprados del mismo tipo
+async function rotarAvatar(direccion) {
+    const avatarActual = jugadorData.equipo.avatar;
+    let tipoActual = 'avatar_base';
+    if (avatarActual.includes('robot')) tipoActual = 'avatar_robot';
+    else if (avatarActual.includes('personas')) tipoActual = 'avatar_personas';
+    else if (avatarActual.includes('notionists')) tipoActual = 'avatar_notionists';
+
+    const avataresDisponibles = jugadorData.inventario.filter(id => id.startsWith(tipoActual));
+    if (avataresDisponibles.length <= 1) return; // No hay otros para rotar
+
+    const indiceActual = avataresDisponibles.indexOf(avatarActual);
+    let nuevoIndice = indiceActual + direccion;
+    if (nuevoIndice < 0) nuevoIndice = avataresDisponibles.length - 1;
+    if (nuevoIndice >= avataresDisponibles.length) nuevoIndice = 0;
+
+    const nuevoAvatar = avataresDisponibles[nuevoIndice];
+    jugadorData.equipo.avatar = nuevoAvatar;
+    await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': nuevoAvatar });
+    
+    actualizarVistaPrevia();
+    if (window.actualizarAvatar) window.actualizarAvatar();
 }
 
 async function quitarItem(id, categoria) {
@@ -240,6 +231,11 @@ function actualizarVistaPrevia() {
         if (svg) simbolosHTML += `<div class="avatar-simbolo">${svg}</div>`;
     });
 
+    // Verificar si hay múltiples avatares del tipo actual para mostrar botones de rotación
+    const tipoActual = equipo.avatar.includes('robot') ? 'avatar_robot' : equipo.avatar.includes('personas') ? 'avatar_personas' : equipo.avatar.includes('notionists') ? 'avatar_notionists' : 'avatar_base';
+    const avataresDisponibles = jugadorData.inventario.filter(id => id.startsWith(tipoActual));
+    const puedeRotar = avataresDisponibles.length > 1;
+
     elAvatarPreview.innerHTML = `
         <div style="position:relative; width:140px; height:160px; overflow:hidden; border-radius: 50% 50% 0 0; background:var(--avatar-bg);">
             <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
@@ -247,6 +243,12 @@ function actualizarVistaPrevia() {
         <div class="avatar-simbolos-fila">
             ${simbolosHTML}
         </div>
+        ${puedeRotar ? `
+        <div style="display:flex; gap:10px; margin-top:5px; align-items:center;">
+            <button class="btn-rotar" onclick="rotarAvatar(-1)">◀</button>
+            <span style="font-size:0.8rem; color:var(--text-main);">${avataresDisponibles.indexOf(equipo.avatar) + 1}/${avataresDisponibles.length}</span>
+            <button class="btn-rotar" onclick="rotarAvatar(1)">▶</button>
+        </div>` : ''}
         <div style="margin-top:5px; font-size:0.9rem; background:var(--card-bg); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:var(--text-main);">${nombre}</div>
     `;
 }
