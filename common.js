@@ -52,16 +52,16 @@ function actualizarUICompleta() {
     actualizarAvatar();
 }
 
-// Símbolos Matemáticos SVG (Precisos)
-const SIMBOLOS_SVG = {
-    'pi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 L4 8 A4 4 0 0 1 8 4 L20 4"/><path d="M8 12 L16 12"/></svg>',
-    'integral': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-3 0-3 4-3 8s0 8 3 8"/><path d="M17 4c3 0 3 4 3 8s0 8-3 8"/></svg>',
-    'raiz': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2l2 7 3-14 3 7h8"/></svg>',
-    'sigma': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4H6l6 8-6 8h12"/></svg>',
-    'infinito': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/></svg>',
-    'delta': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4L3 20h18L12 4z"/></svg>',
-    'theta': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 6v12M15 6v12"/></svg>',
-    'suma_frac': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4L10 20"/><path d="M12 8h4M8 16h4"/></svg>'
+// Símbolos Matemáticos Unicode (rigurosos)
+const SIMBOLOS_MATH = {
+    'pi': 'π',
+    'integral': '∫',
+    'raiz': '√',
+    'sigma': 'Σ',
+    'infinito': '∞',
+    'delta': 'Δ',
+    'theta': 'θ',
+    'suma_frac': '½' // o usar ⅓, ⅔, etc.
 };
 
 // Estilos de avatares
@@ -72,12 +72,11 @@ const AVATAR_ESTILOS = {
     'avatar_notionists': { style: 'notionists', label: 'Minimalista' }
 };
 
-function actualizarAvatar() {
-    const avatarContainer = document.getElementById('avatar-display');
-    if (!avatarContainer) return;
-
-    const equipo = window.jugador.equipo || {};
-    const nombre = window.jugador.nombre || 'Aventurero';
+// Función para renderizar avatar con símbolos alrededor dentro de un círculo
+function renderizarAvatar(container, jugador) {
+    if (!container || !jugador) return;
+    const equipo = jugador.equipo || {};
+    const nombre = jugador.nombre || 'Aventurero';
     const avatarId = equipo.avatar || 'avatar_base';
 
     let estilo = AVATAR_ESTILOS['avatar_base'];
@@ -90,24 +89,39 @@ function actualizarAvatar() {
         url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
     }
 
-    // Símbolos en una fila inferior (sin superposición)
+    // Generar HTML de símbolos posicionados
     let simbolosHTML = '';
     (equipo.simbolos || []).forEach(simbolo => {
-        const item = SIMBOLOS_SVG[simbolo.id];
-        if (item) {
-            simbolosHTML += `<div class="avatar-simbolo">${item}</div>`;
+        const char = SIMBOLOS_MATH[simbolo.id];
+        if (char) {
+            const pos = simbolo.pos || 'center-left';
+            let style = '';
+            switch(pos) {
+                case 'top-left': style = 'top:4px; left:4px;'; break;
+                case 'top-right': style = 'top:4px; right:4px;'; break;
+                case 'bottom-left': style = 'bottom:4px; left:4px;'; break;
+                case 'bottom-right': style = 'bottom:4px; right:4px;'; break;
+                case 'center-left': style = 'top:50%; left:4px; transform:translateY(-50%);'; break;
+                case 'center-right': style = 'top:50%; right:4px; transform:translateY(-50%);'; break;
+                default: style = 'top:50%; left:50%; transform:translate(-50%,-50%);';
+            }
+            simbolosHTML += `<span class="avatar-simbolo-abs" style="${style}">${char}</span>`;
         }
     });
 
-    avatarContainer.innerHTML = `
-        <div class="avatar-dicebear">
-            <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
-        </div>
-        <div class="avatar-simbolos-fila">
+    container.innerHTML = `
+        <div class="avatar-circulo">
+            <img src="${url}" alt="Avatar" class="avatar-img">
             ${simbolosHTML}
         </div>
         <div class="avatar-nombre">${nombre}</div>
     `;
+}
+
+function actualizarAvatar() {
+    const avatarContainer = document.getElementById('avatar-display');
+    if (!avatarContainer) return;
+    renderizarAvatar(avatarContainer, window.jugador);
 }
 
 function configurarEdicionNombre() {
@@ -140,7 +154,7 @@ function mostrarFeedback(mensaje, tipo) {
         if (tipo === 'exito') feedback.classList.add('feedback-exito');
         else if (tipo === 'error') feedback.classList.add('feedback-error');
         feedback.classList.remove('hidden');
-        setTimeout(() => feedback.classList.add('hidden'), 3000); // Se mantiene en 3s para acciones globales del lobby
+        setTimeout(() => feedback.classList.add('hidden'), 3000);
     }
 }
 
