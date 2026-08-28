@@ -72,7 +72,7 @@ const AVATAR_ESTILOS = {
     'avatar_notionists': { style: 'notionists', label: 'Minimalista' }
 };
 
-// Reemplaza la función renderizarAvatar completa por esta:
+// Renderiza el avatar con símbolos equidistantes dentro del círculo
 function renderizarAvatar(container, jugador) {
     if (!container || !jugador) return;
     const equipo = jugador.equipo || {};
@@ -89,28 +89,30 @@ function renderizarAvatar(container, jugador) {
         url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
     }
 
-    // Construir HTML de símbolos con posiciones DENTRO del círculo (Radio 80px)
+    // ----- NUEVA LÓGICA DE POSICIONAMIENTO EQUIDISTANTE -----
     let simbolosHTML = '';
-    (equipo.simbolos || []).forEach(simbolo => {
+    const simbolos = equipo.simbolos || [];
+    const numSimbolos = simbolos.length;
+
+    simbolos.forEach((simbolo, index) => {
         const char = SIMBOLOS_MATH[simbolo.id];
         if (!char) return;
-        const pos = simbolo.pos || 'center-left';
-        let styleAttr = '';
+
+        // El círculo mide 160x160 (centro en 80,80).
+        // Usamos un radio de 70px para que queden pegados al borde sin tapar la cara.
+        // Restamos PI/2 para que el primer símbolo empiece justo arriba (12 en punto).
+        const angulo = (2 * Math.PI * index) / numSimbolos - (Math.PI / 2);
         
-        // Ajustamos los valores para que cumplan con la ecuación del círculo (x-80)^2 + (y-80)^2 <= 80^2
-        switch (pos) {
-            case 'top-left': styleAttr = 'top:25px; left:25px;'; break;
-            case 'top-center': styleAttr = 'top:15px; left:50%; transform:translateX(-50%);'; break;
-            case 'top-right': styleAttr = 'top:25px; right:25px;'; break;
-            case 'center-left': styleAttr = 'top:50%; left:20px; transform:translateY(-50%);'; break;
-            case 'center-right': styleAttr = 'top:50%; right:20px; transform:translateY(-50%);'; break;
-            case 'bottom-left': styleAttr = 'bottom:25px; left:25px;'; break;
-            case 'bottom-center': styleAttr = 'bottom:15px; left:50%; transform:translateX(-50%);'; break;
-            case 'bottom-right': styleAttr = 'bottom:25px; right:25px;'; break;
-            default: styleAttr = 'top:50%; left:50%; transform:translate(-50%,-50%);';
-        }
+        // Coordenadas exactas (x, y) en el borde del círculo
+        const x = 80 + 70 * Math.cos(angulo);
+        const y = 80 + 70 * Math.sin(angulo);
+        
+        // Centramos el símbolo exactamente en ese punto
+        const styleAttr = `left:${x}px; top:${y}px; transform:translate(-50%, -50%);`;
+        
         simbolosHTML += `<span class="avatar-simbolo-abs" style="${styleAttr}">${char}</span>`;
     });
+    // ---------------------------------------------------------
 
     container.innerHTML = `
         <div class="avatar-circulo">
