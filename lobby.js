@@ -1,21 +1,22 @@
 // lobby.js - Lógica del lobby y tienda
 
+// Nuevos precios económicos y lógica de avatares únicos
 const ITEMS = {
     avatar: [
-        { id: 'avatar_base', nombre: 'Clásico', categoria: 'avatar', precio: 0 },
-        { id: 'avatar_robot', nombre: 'Robot', categoria: 'avatar', precio: 1500 },
-        { id: 'avatar_personas', nombre: 'Caricatura', categoria: 'avatar', precio: 1500 },
-        { id: 'avatar_notionists', nombre: 'Minimalista', categoria: 'avatar', precio: 1500 }
+        { id: 'avatar_base', nombre: 'Clásico', categoria: 'avatar', precio: 0, style: 'adventurer' },
+        { id: 'avatar_robot', nombre: 'Robot', categoria: 'avatar', precio: 800, style: 'bottts' },
+        { id: 'avatar_personas', nombre: 'Caricatura', categoria: 'avatar', precio: 800, style: 'personas' },
+        { id: 'avatar_notionists', nombre: 'Minimalista', categoria: 'avatar', precio: 800, style: 'notionists' }
     ],
     simbolo: [
-        { id: 'pi', nombre: 'Pi (π)', categoria: 'simbolo', precio: 500, pos: 'top-left' },
-        { id: 'integral', nombre: 'Integral (∫)', categoria: 'simbolo', precio: 500, pos: 'top-right' },
-        { id: 'raiz', nombre: 'Raíz (√)', categoria: 'simbolo', precio: 500, pos: 'bottom-left' },
-        { id: 'sigma', nombre: 'Sigma (Σ)', categoria: 'simbolo', precio: 500, pos: 'bottom-right' },
-        { id: 'infinito', nombre: 'Infinito (∞)', categoria: 'simbolo', precio: 500, pos: 'center-left' },
-        { id: 'delta', nombre: 'Delta (Δ)', categoria: 'simbolo', precio: 500, pos: 'center-right' },
-        { id: 'theta', nombre: 'Theta (θ)', categoria: 'simbolo', precio: 500, pos: 'top-left' },
-        { id: 'suma_frac', nombre: 'Fracción', categoria: 'simbolo', precio: 500, pos: 'top-right' }
+        { id: 'pi', nombre: 'Pi (π)', categoria: 'simbolo', precio: 250, pos: 'top-left' },
+        { id: 'integral', nombre: 'Integral (∫)', categoria: 'simbolo', precio: 250, pos: 'top-right' },
+        { id: 'raiz', nombre: 'Raíz (√)', categoria: 'simbolo', precio: 250, pos: 'bottom-left' },
+        { id: 'sigma', nombre: 'Sigma (Σ)', categoria: 'simbolo', precio: 250, pos: 'bottom-right' },
+        { id: 'infinito', nombre: 'Infinito (∞)', categoria: 'simbolo', precio: 250, pos: 'center-left' },
+        { id: 'delta', nombre: 'Delta (Δ)', categoria: 'simbolo', precio: 250, pos: 'center-right' },
+        { id: 'theta', nombre: 'Theta (θ)', categoria: 'simbolo', precio: 250, pos: 'top-left' },
+        { id: 'suma_frac', nombre: 'Fracción', categoria: 'simbolo', precio: 250, pos: 'top-right' }
     ]
 };
 
@@ -73,24 +74,32 @@ function mostrarItemsCategoria(categoria) {
 
         let contenidoPreview = '';
         if (categoria === 'avatar') {
-            const estilo = AVATAR_ESTILOS[item.id].style;
+            const estilo = item.style;
             contenidoPreview = `<div style="width:60px; height:60px; margin:0 auto; overflow:hidden; border-radius:50%; background:#e3f2fd;"><img src="https://api.dicebear.com/10.x/${estilo}/svg?seed=Preview" style="width:100%; height:100%; object-fit:cover;"></div>`;
         } else {
             const svg = SIMBOLOS_SVG[item.id];
-            contenidoPreview = `<div style="font-size:2.5rem; color:#3b4cca; display:flex; justify-content:center;">${svg}</div>`;
+            contenidoPreview = `<div style="font-size:2.5rem; color:var(--btn-secondary); display:flex; justify-content:center;">${svg}</div>`;
+        }
+
+        // Lógica para permitir quitar símbolos
+        let accionesHTML = '';
+        if (inventarioItem) {
+            if (equipado) {
+                accionesHTML = categoria === 'simbolo' 
+                    ? `<button class="btn-quitar" data-id="${item.id}" data-cat="${categoria}">Quitar</button>`
+                    : `<span class="equipado-label">✅ Equipado</span>`;
+            } else {
+                accionesHTML = `<button class="btn-equipar" data-id="${item.id}" data-cat="${categoria}">Equipar</button>`;
+            }
+        } else {
+            accionesHTML = `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`;
         }
 
         card.innerHTML = `
             ${contenidoPreview}
             <div class="item-nombre">${item.nombre}</div>
             <div class="item-precio">${item.precio} 🪙</div>
-            <div class="item-acciones">
-                ${inventarioItem ? 
-                    (equipado ? '<span class="equipado-label">✅ Equipado</span>' : 
-                    `<button class="btn-equipar" data-id="${item.id}" data-cat="${categoria}">Equipar</button>`) :
-                    `<button class="btn-comprar" data-id="${item.id}" data-cat="${categoria}" data-precio="${item.precio}">Comprar</button>`
-                }
-            </div>
+            <div class="item-acciones">${accionesHTML}</div>
         `;
         elItemsTienda.appendChild(card);
 
@@ -98,12 +107,16 @@ function mostrarItemsCategoria(categoria) {
         if (btnComprar) btnComprar.addEventListener('click', () => comprarItem(item.id, item.categoria, item.precio));
         const btnEquipar = card.querySelector('.btn-equipar');
         if (btnEquipar) btnEquipar.addEventListener('click', () => equiparItem(item.id, item.categoria));
+        const btnQuitar = card.querySelector('.btn-quitar');
+        if (btnQuitar) btnQuitar.addEventListener('click', () => quitarItem(item.id, item.categoria));
     });
 }
 
 async function comprarItem(id, categoria, precio) {
     if (jugadorData.monedas < precio) { alert('No tienes suficientes monedas.'); return; }
-    const itemIdCompra = categoria === 'simbolo' ? `simbolo_${id}` : id;
+    
+    // Generar ID ÚNICO para avatares (para poder comprar varios modelos aleatorios)
+    const itemIdCompra = categoria === 'simbolo' ? `simbolo_${id}` : `${id}_${Date.now()}`;
     if (jugadorData.inventario.includes(itemIdCompra)) { alert('Ya tienes este item.'); return; }
 
     const item = ITEMS[categoria].find(i => i.id === id);
@@ -112,7 +125,9 @@ async function comprarItem(id, categoria, precio) {
     try {
         jugadorData.monedas -= precio;
         jugadorData.inventario.push(itemIdCompra);
+        
         await db.collection('usuarios').doc(window.uid).update({ monedas: jugadorData.monedas, inventario: jugadorData.inventario });
+        
         actualizarMonedas();
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
@@ -126,8 +141,8 @@ async function equiparItem(id, categoria) {
 
     try {
         if (categoria === 'avatar') {
-            jugadorData.equipo.avatar = id;
-            await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': id });
+            jugadorData.equipo.avatar = itemIdEquipar;
+            await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': itemIdEquipar });
         } else {
             const item = ITEMS.simbolo.find(i => i.id === id);
             if (!item) return;
@@ -135,11 +150,25 @@ async function equiparItem(id, categoria) {
             jugadorData.equipo.simbolos.push({ id: id, pos: item.pos });
             await db.collection('usuarios').doc(window.uid).update({ 'equipo.simbolos': jugadorData.equipo.simbolos });
         }
+        
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
         if (window.actualizarAvatar) window.actualizarAvatar();
         mostrarFeedback('¡Item equipado!', 'exito');
     } catch (error) { console.error('Error al equipar:', error); alert('Error al equipar.'); }
+}
+
+// Nueva función para quitar símbolos
+async function quitarItem(id, categoria) {
+    if (categoria === 'simbolo') {
+        jugadorData.equipo.simbolos = jugadorData.equipo.simbolos.filter(s => s.id !== id);
+        await db.collection('usuarios').doc(window.uid).update({ 'equipo.simbolos': jugadorData.equipo.simbolos });
+    }
+    
+    mostrarItemsCategoria(categoriaActual);
+    actualizarVistaPrevia();
+    if (window.actualizarAvatar) window.actualizarAvatar();
+    mostrarFeedback('¡Item quitado!', 'exito');
 }
 
 function actualizarVistaPrevia() {
@@ -148,10 +177,12 @@ function actualizarVistaPrevia() {
     const nombre = jugadorData.nombre;
 
     let estilo = AVATAR_ESTILOS['avatar_base'];
-    if (equipo.avatar && AVATAR_ESTILOS[equipo.avatar]) estilo = AVATAR_ESTILOS[equipo.avatar];
+    if (equipo.avatar.includes('robot')) estilo = AVATAR_ESTILOS['avatar_robot'];
+    else if (equipo.avatar.includes('personas')) estilo = AVATAR_ESTILOS['avatar_personas'];
+    else if (equipo.avatar.includes('notionists')) estilo = AVATAR_ESTILOS['avatar_notionists'];
 
-    const seed = encodeURIComponent(nombre);
-    let url = `https://api.dicebear.com/10.x/${estilo.style}/svg?seed=${seed}`;
+    // Usamos el ID único como semilla
+    let url = `https://api.dicebear.com/10.x/${estilo.style}/svg?seed=${equipo.avatar}`;
     url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
 
     let simbolosHTML = '';
@@ -164,7 +195,7 @@ function actualizarVistaPrevia() {
         <div style="position:relative; width:140px; height:160px; overflow:hidden; border-radius: 50% 50% 0 0; background:var(--avatar-bg);">
             <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
             ${simbolosHTML}
-            <div style="position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); font-size:0.9rem; background:rgba(255,255,255,0.8); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:#3b4cca;">${nombre}</div>
+            <div style="position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); font-size:0.9rem; background:var(--card-bg); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:var(--text-main);">${nombre}</div>
         </div>
     `;
 }
