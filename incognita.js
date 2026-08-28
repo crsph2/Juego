@@ -132,9 +132,12 @@ function mostrarHistorial() {
     elHistorialPasos.innerHTML = '';
     practicaState.historialLineas.forEach(linea => {
         const div = document.createElement('div');
-        div.className = 'ecuacion-linea paso-confirmado';
-        if (linea.tipo === 'operacion') { div.style.color = 'var(--btn-secondary)'; div.style.fontWeight = 'bold'; }
-        else if (linea.tipo === 'solucion') { div.style.color = '#2e7d32'; div.style.fontWeight = 'bold'; }
+        div.className = 'ecuacion-linea';
+        if (linea.tipo === 'operacion') { 
+            div.classList.add('linea-paso');
+        } else if (linea.tipo === 'solucion') { 
+            div.classList.add('linea-solucion');
+        }
         div.textContent = linea.texto;
         elHistorialPasos.appendChild(div);
     });
@@ -148,14 +151,14 @@ function resetearControles() {
 
 function actualizarBoton() {
     if (practicaState.operacionPendiente) {
-        elBtnAccion.textContent = 'Confirmar paso';
+        elBtnAccion.textContent = 'Operar'; // Texto solicitado
         elBtnAccion.disabled = false;
         mostrarControles(false);
     } else {
         const opSeleccionada = document.querySelector('.operacion-btn.seleccionado');
         const num = parseInt(elNumeroPractica.value);
         const haySeleccion = opSeleccionada && !isNaN(num) && num > 0;
-        elBtnAccion.textContent = 'Operar';
+        elBtnAccion.textContent = 'Aplicar'; // Texto solicitado
         elBtnAccion.disabled = !haySeleccion;
         mostrarControles(true);
     }
@@ -178,7 +181,6 @@ function realizarOperacion() {
     if (!opSeleccionada) { mostrarFeedbackPractica('Selecciona una operación.', 'error'); return; }
     const operacion = opSeleccionada.dataset.op;
     const num = parseInt(elNumeroPractica.value);
-    // Validación para no permitir negativos (num > 0)
     if (isNaN(num) || num <= 0) { mostrarFeedbackPractica('Ingresa un número positivo.', 'error'); return; }
 
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) { mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error'); return; }
@@ -225,6 +227,34 @@ function confirmarPaso() {
         practicaState.pasoActual++;
         practicaState.historialLineas.push({ texto: practicaState.pasos[practicaState.pasoActual].texto, tipo: 'solucion' });
         mostrarHistorial();
+
+        // OTORGAR RECOMPENSAS (Monedas y XP igual que alternativas)
+        racha++;
+        const bonusRacha = Math.min(racha, 5) * 2;
+        const xpGanada = 10 + bonusRacha;
+        const monedasGanadas = 5 + Math.floor(racha / 3);
+
+        if (window.jugador && window.uid) {
+            const j = window.jugador;
+            if (!j.incognita) j.incognita = { xp: 0, nivel: 1, region: REGION_INCOGNITA };
+            const inc = j.incognita;
+            const nuevoXp = (inc.xp || 0) + xpGanada;
+            const nuevoNivel = Math.floor(nuevoXp / XP_POR_NIVEL) + 1;
+
+            inc.xp = nuevoXp;
+            inc.nivel = nuevoNivel;
+            inc.region = REGION_INCOGNITA;
+            inc.racha = racha;
+            j.monedas = (j.monedas || 0) + monedasGanadas;
+
+            db.collection('usuarios').doc(window.uid).update({
+                monedas: j.monedas,
+                'incognita.xp': inc.xp, 'incognita.nivel': inc.nivel, 'incognita.region': inc.region, 'incognita.racha': racha,
+                historial: firebase.firestore.FieldValue.arrayUnion({ juego: 'incognita', pregunta: practicaState.eq ? `x = ${practicaState.eq.x}` : 'Practica', correcta: true, fecha: new Date().toISOString() })
+            }).catch(error => console.error('Error al guardar progreso:', error));
+            
+            actualizarUI();
+        }
 
         if (elControlesPractica) elControlesPractica.style.display = 'none';
         if (elMensajeExito) { elMensajeExito.style.display = 'block'; if (elTextoSolucion) elTextoSolucion.textContent = practicaState.pasos[practicaState.pasoActual].texto; }
