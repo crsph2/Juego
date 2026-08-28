@@ -52,9 +52,9 @@ function actualizarUICompleta() {
     actualizarAvatar();
 }
 
-// Símbolos Matemáticos SVG
+// Símbolos Matemáticos SVG (Paths precisos y corregidos)
 const SIMBOLOS_SVG = {
-    'pi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V8a3 3 0 0 1 3-3h11"/><path d="M9 12h8"/></svg>',
+    'pi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 L4 8 A4 4 0 0 1 8 4 L20 4"/><path d="M8 12 L16 12"/></svg>',
     'integral': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-3 0-3 4-3 8s0 8 3 8"/><path d="M17 4c3 0 3 4 3 8s0 8-3 8"/></svg>',
     'raiz': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2l2 7 3-14 3 7h8"/></svg>',
     'sigma': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4H6l6 8-6 8h12"/></svg>',
@@ -64,12 +64,12 @@ const SIMBOLOS_SVG = {
     'suma_frac': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4L10 20"/><path d="M12 8h4M8 16h4"/></svg>'
 };
 
+// Estilos de avatares (Se usan como referencia para saber que tipo es)
 const AVATAR_ESTILOS = {
     'avatar_base': { style: 'adventurer', label: 'Clásico' },
     'avatar_robot': { style: 'bottts', label: 'Robot' },
     'avatar_personas': { style: 'personas', label: 'Caricatura' },
-    'avatar_notionists': { style: 'notionists', label: 'Minimalista' },
-    'avatar_avataaars': { style: 'avataaars', label: 'Plano' }
+    'avatar_notionists': { style: 'notionists', label: 'Minimalista' }
 };
 
 function actualizarAvatar() {
@@ -78,24 +78,19 @@ function actualizarAvatar() {
 
     const equipo = window.jugador.equipo || {};
     const nombre = window.jugador.nombre || 'Aventurero';
+    const avatarId = equipo.avatar || 'avatar_base';
 
+    // Detectar el estilo por el ID único comprado
     let estilo = AVATAR_ESTILOS['avatar_base'];
-    if (equipo.avatar && AVATAR_ESTILOS[equipo.avatar]) {
-        estilo = AVATAR_ESTILOS[equipo.avatar];
-    }
+    if (avatarId.includes('robot')) estilo = AVATAR_ESTILOS['avatar_robot'];
+    else if (avatarId.includes('personas')) estilo = AVATAR_ESTILOS['avatar_personas'];
+    else if (avatarId.includes('notionists')) estilo = AVATAR_ESTILOS['avatar_notionists'];
 
-    const seed = encodeURIComponent(nombre);
-    let url = `https://api.dicebear.com/10.x/${estilo.style}/svg?seed=${seed}`;
+    // Usamos el ID único como semilla para que cada compra sea diferente
+    let url = `https://api.dicebear.com/10.x/${estilo.style}/svg?seed=${avatarId}`;
 
     if (estilo.style === 'adventurer' || estilo.style === 'personas') {
-        let params = {};
-        if (equipo.superior === 'camiseta_roja') params.top = 'shirt', params.clothingColor = 'ff0000';
-        if (equipo.superior === 'camiseta_azul') params.top = 'shirt', params.clothingColor = '0055ff';
-        if (equipo.inferior === 'pantalon_vaquero') params.pants = 'pants', params.pantsColor = '003366';
-        params.skinColor = 'f1c27d'; params.hairColor = '2c1b18'; params.hair = 'short';
-        
-        const qs = Object.keys(params).map(key => `${key}=${params[key]}`).join('&');
-        if (qs) url += `&${qs}`;
+        url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
     }
 
     let simbolosHTML = '';
@@ -107,7 +102,7 @@ function actualizarAvatar() {
         }
     });
 
-    // ESTRUCTURA IDÉNTICA A LA TIENDA (140x160, margin-top -25px)
+    // ESTRUCTURA IDÉNTICA A LA TIENDA
     avatarContainer.innerHTML = `
         <div class="avatar-dicebear" style="width:140px; height:160px; overflow:hidden; border-radius: 50% 50% 0 0; background:var(--avatar-bg); position:relative;">
             <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
