@@ -65,7 +65,6 @@ function formatearEcuacionSimple(ecuacion, letra = 'x') {
     return left + ' = ' + c;
 }
 
-// Generador de ecuaciones según el nivel (sin bucles infinitos)
 function generarEcuacionLineal() {
     let nivel = window.jugador.incognita.nivel || 1;
     let dificultad;
@@ -90,12 +89,13 @@ function generarEcuacionLineal() {
         let c = a * x + b;
         return { tipo: 'simple', a, b, c, d: 1, x };
     }
-    // Dificultad 3: x/d + b = c
+    // Dificultad 3: x/d + b = c (CORREGIDO: SIN DECIMALES)
     else if (dificultad === 3) {
-        let x = Math.floor(Math.random() * 10) - 5;
-        let d = Math.floor(Math.random() * 5) + 2; 
-        let b = Math.floor(Math.random() * 10) - 5;
-        let c = (x / d) + b; 
+        let d = Math.floor(Math.random() * 5) + 2; // Denominador de 2 a 6
+        let k = Math.floor(Math.random() * 10) - 5; // k es el cociente entero (x/d)
+        let b = Math.floor(Math.random() * 10) - 5; // Constante
+        let x = d * k; // x SIEMPRE es múltiplo de d (para que no salgan decimales)
+        let c = k + b; // c siempre será entero
         return { tipo: 'simple', a: 1, b, c, d, x };
     }
     // Dificultad 4 y 5: (A - x)/B + (C*x)/D = (x - E)/F (Construcción matemática garantizada)
