@@ -14,8 +14,8 @@ const ITEMS = {
         { id: 'sigma', nombre: 'Sigma (Σ)', categoria: 'simbolo', precio: 1000, pos: 'bottom-right' },
         { id: 'infinito', nombre: 'Infinito (∞)', categoria: 'simbolo', precio: 1000, pos: 'center-left' },
         { id: 'delta', nombre: 'Delta (Δ)', categoria: 'simbolo', precio: 1000, pos: 'center-right' },
-        { id: 'theta', nombre: 'Theta (θ)', categoria: 'simbolo', precio: 1000, pos: 'top-left' },
-        { id: 'suma_frac', nombre: 'Fracción', categoria: 'simbolo', precio: 1000, pos: 'top-right' }
+        { id: 'theta', nombre: 'Theta (θ)', categoria: 'simbolo', precio: 1000, pos: 'top-center' },    // corregido
+        { id: 'suma_frac', nombre: 'Fracción', categoria: 'simbolo', precio: 1000, pos: 'bottom-center' } // corregido
     ]
 };
 
@@ -214,7 +214,6 @@ async function quitarItem(id, categoria) {
 
 function actualizarVistaPrevia() {
     if (!elAvatarPreview) return;
-    // Usar la función común de renderizado de avatar
     renderizarAvatar(elAvatarPreview, jugadorData);
 }
 
