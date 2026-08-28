@@ -52,7 +52,6 @@ body {
 .quest-container { width: 100%; max-width: 520px; padding: 0 4px; animation: fadeIn 0.5s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Tarjetas */
 .login-card, .game-card, .lobby-card {
     background: var(--card-bg); border-radius: 24px; padding: 1.8rem 1.2rem;
     box-shadow: var(--shadow); text-align: center; margin: 0 auto; border: 1px solid var(--card-border);
@@ -61,19 +60,16 @@ body {
 .game-card { max-width: 600px; }
 .lobby-card { max-width: 500px; }
 
-/* Tipografía y Textos */
 h2, h3, p { color: var(--text-main); }
 .game-title { color: var(--btn-primary); }
 .back-button { color: var(--btn-secondary); text-decoration: none; font-weight: 600; }
 
-/* Inputs */
 input[type="email"], input[type="password"], input[type="text"], input[type="number"] {
     width: 100%; padding: 0.9rem 1rem; border: 2px solid var(--card-border);
     border-radius: 12px; background: var(--input-bg); color: var(--text-main); font-size: 1.1rem; outline: none;
 }
 input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59, 76, 202, 0.2); }
 
-/* Botones */
 .rpg-button, .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
     padding: 0.8rem 1.6rem; border: none; border-radius: 14px; font-weight: 700; font-size: 1.1rem;
@@ -89,7 +85,6 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
 .btn-icon { background: transparent; border: none; font-size: 1.6rem; line-height: 1; padding: 0.3rem; cursor: pointer; transition: all 0.2s ease; min-height: 48px; min-width: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid transparent; color: var(--btn-gold); }
 .btn-icon:hover { transform: scale(1.1); border-color: var(--btn-gold); }
 
-/* Cabecera del Jugador */
 .player-header { margin-bottom: 1.2rem; background: var(--header-bg); border-radius: 16px; padding: 0.6rem 0.8rem; border: 1px solid var(--card-border); }
 .player-info { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 1.1rem; padding: 0.2rem 0; }
 .player-name { color: var(--btn-primary); font-weight: 800; font-size: 1.4rem; }
@@ -101,13 +96,11 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
 .xp-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.85rem; font-weight: 700; color: var(--text-main); text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
 .region-info { color: var(--btn-secondary); font-size: 0.9rem; margin-top: 2px; font-weight: 500; }
 
-/* AVATAR PRINCIPAL (Igual que la tienda) */
 .avatar-display { position: relative; display: flex; justify-content: center; align-items: center; margin: 6px 0; padding: 0; min-height: 160px; background: transparent; }
 .avatar-dicebear { position: relative; width: 140px; height: 160px; overflow: hidden; border-radius: 50% 50% 0 0; display: flex; justify-content: center; align-items: center; background: var(--avatar-bg); }
 .avatar-dicebear img { margin-top: -25px; }
 .avatar-nombre { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 0.9rem; color: var(--text-main); font-weight: 700; background: var(--card-bg); padding: 0 8px; border-radius: 10px; white-space: nowrap; }
 
-/* Símbolos */
 .avatar-simbolo { position: absolute; color: var(--btn-secondary); width: 32px; height: 32px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); pointer-events: none; }
 .pos-top-left { top: 15px; left: 15px; }
 .pos-top-right { top: 15px; right: 15px; }
@@ -116,7 +109,6 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
 .pos-center-left { top: 50%; left: 5px; transform: translateY(-50%); }
 .pos-center-right { top: 50%; right: 5px; transform: translateY(-50%); }
 
-/* Preguntas */
 .question-text { font-size: 2.4rem; font-weight: 700; color: var(--text-main); background: var(--card-bg); padding: 1.6rem 1rem; border-radius: 16px; border: 2px solid var(--card-border); margin-bottom: 1.2rem; line-height: 1.3; word-break: break-word; }
 .options-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.2rem 0; }
 .btn-opcion { background: var(--card-bg); border: 2px solid var(--card-border); border-radius: 16px; padding: 1.2rem 0.5rem; font-size: 1.5rem; font-weight: 600; color: var(--text-main); cursor: pointer; transition: all 0.15s ease; min-height: 90px; display: flex; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 0 var(--card-border); }
@@ -132,17 +124,30 @@ body.dark-mode .btn-opcion.opcion-incorrecta { background: #3a1a1a; border-color
 body.dark-mode .feedback-exito { background: #1f3a24; color: #fff; border-color: #4caf50; }
 body.dark-mode .feedback-error { background: #3a1a1a; color: #fff; border-color: #ef5350; }
 
-/* Practica */
 .practica-container { margin-top: 0.8rem; }
 .ecuacion-display { background: var(--card-bg); border-radius: 16px; padding: 1rem; margin-bottom: 1rem; border: 2px solid var(--card-border); }
 .ecuacion-linea { font-size: 2.0rem; color: var(--text-main); display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.2rem 0; }
-.ecuacion-linea.paso-confirmado { color: var(--btn-secondary); font-size: 1.4rem; }
-.ecuacion-linea.solucion { color: #2e7d32; font-weight: bold; }
-body.dark-mode .ecuacion-linea.solucion { color: #66bb6a; }
+/* Estilos con variables para modo oscuro */
+.ecuacion-linea.linea-paso { color: var(--btn-secondary); font-weight: bold; }
+.ecuacion-linea.linea-solucion { color: #2e7d32; font-weight: bold; }
+body.dark-mode .ecuacion-linea.linea-solucion { color: #66bb6a; }
+
 .practica-controles { margin: 1rem 0; padding: 0.8rem; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--card-border); }
 .operacion-botones { display: flex; gap: 0.8rem; justify-content: center; margin: 0.5rem 0; }
 .operacion-btn { min-width: 64px; font-size: 1.6rem; background: var(--card-bg); border: 2px solid var(--card-border); color: var(--text-main); padding: 0.6rem 1rem; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
 .operacion-btn.seleccionado { border-color: var(--btn-primary); background: var(--btn-primary); color: #fff; }
+
+/* MODO SELECTOR EN INCÓGNITA (Más grandes y resaltados) */
+.mode-selector { display: flex; gap: 0.8rem; justify-content: center; margin: 1rem 0; }
+.mode-selector button {
+    padding: 0.9rem 1.8rem; border-radius: 14px; border: 2px solid var(--card-border);
+    background: var(--card-bg); color: var(--text-main); cursor: pointer; transition: all 0.2s;
+    font-weight: 800; font-size: 1.2rem;
+}
+.mode-selector button.active {
+    background: var(--btn-secondary); border-color: var(--btn-secondary); color: #fff;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+}
 
 /* LOBBY Y TIENDA */
 .game-cards { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1.5rem; }
@@ -167,7 +172,8 @@ body.dark-mode .item-card.equipado { border-color: #4caf50; background: #1f3a24;
 .item-nombre { font-weight: 600; font-size: 0.9rem; margin: 0.3rem 0; color: var(--text-main); }
 .item-precio { color: var(--btn-gold); font-weight: 700; }
 .item-acciones { margin-top: 0.5rem; }
-.btn-comprar, .btn-equipar { padding: 0.3rem 0.8rem; border: none; border-radius: 8px; background: var(--btn-secondary); color: #fff; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+.btn-comprar, .btn-equipar, .btn-quitar { padding: 0.3rem 0.8rem; border: none; border-radius: 8px; background: var(--btn-secondary); color: #fff; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+.btn-quitar { background: #c62828; }
 .equipado-label { color: #2e7d32; font-weight: 700; }
 
 .theme-toggle { background: transparent; border: 2px solid var(--btn-secondary); color: var(--btn-secondary); border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s; }
