@@ -1,12 +1,11 @@
 // lobby.js - Lógica del lobby y tienda
 
-// Nuevos datos de la tienda (Avatares y Símbolos)
 const ITEMS = {
     avatar: [
-        { id: 'avatar_base', nombre: 'Clásico', categoria: 'avatar', precio: 0, desc: 'Estilo Aventurero' },
-        { id: 'avatar_robot', nombre: 'Robot', categoria: 'avatar', precio: 1500, desc: 'Estilo Robot' },
-        { id: 'avatar_personas', nombre: 'Caricatura', categoria: 'avatar', precio: 1500, desc: 'Estilo Personas' },
-        { id: 'avatar_notionists', nombre: 'Minimalista', categoria: 'avatar', precio: 1500, desc: 'Estilo Notionists' }
+        { id: 'avatar_base', nombre: 'Clásico', categoria: 'avatar', precio: 0 },
+        { id: 'avatar_robot', nombre: 'Robot', categoria: 'avatar', precio: 1500 },
+        { id: 'avatar_personas', nombre: 'Caricatura', categoria: 'avatar', precio: 1500 },
+        { id: 'avatar_notionists', nombre: 'Minimalista', categoria: 'avatar', precio: 1500 }
     ],
     simbolo: [
         { id: 'pi', nombre: 'Pi (π)', categoria: 'simbolo', precio: 500, pos: 'top-left' },
@@ -74,11 +73,9 @@ function mostrarItemsCategoria(categoria) {
 
         let contenidoPreview = '';
         if (categoria === 'avatar') {
-            // Usamos la misma URL de DiceBear con el estilo correspondiente para la vista previa
             const estilo = AVATAR_ESTILOS[item.id].style;
             contenidoPreview = `<div style="width:60px; height:60px; margin:0 auto; overflow:hidden; border-radius:50%; background:#e3f2fd;"><img src="https://api.dicebear.com/10.x/${estilo}/svg?seed=Preview" style="width:100%; height:100%; object-fit:cover;"></div>`;
         } else {
-            // Si es símbolo, mostramos el SVG
             const svg = SIMBOLOS_SVG[item.id];
             contenidoPreview = `<div style="font-size:2.5rem; color:#3b4cca; display:flex; justify-content:center;">${svg}</div>`;
         }
@@ -106,8 +103,6 @@ function mostrarItemsCategoria(categoria) {
 
 async function comprarItem(id, categoria, precio) {
     if (jugadorData.monedas < precio) { alert('No tienes suficientes monedas.'); return; }
-    
-    // Para evitar duplicados en inventario
     const itemIdCompra = categoria === 'simbolo' ? `simbolo_${id}` : id;
     if (jugadorData.inventario.includes(itemIdCompra)) { alert('Ya tienes este item.'); return; }
 
@@ -117,12 +112,7 @@ async function comprarItem(id, categoria, precio) {
     try {
         jugadorData.monedas -= precio;
         jugadorData.inventario.push(itemIdCompra);
-        
-        await db.collection('usuarios').doc(window.uid).update({
-            monedas: jugadorData.monedas,
-            inventario: jugadorData.inventario
-        });
-        
+        await db.collection('usuarios').doc(window.uid).update({ monedas: jugadorData.monedas, inventario: jugadorData.inventario });
         actualizarMonedas();
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
@@ -139,17 +129,12 @@ async function equiparItem(id, categoria) {
             jugadorData.equipo.avatar = id;
             await db.collection('usuarios').doc(window.uid).update({ 'equipo.avatar': id });
         } else {
-            // Lógica para equipar símbolos: se agregan al array "simbolos" con su posición
             const item = ITEMS.simbolo.find(i => i.id === id);
             if (!item) return;
-            
-            // Quitar duplicado si está equipado
             jugadorData.equipo.simbolos = jugadorData.equipo.simbolos.filter(s => s.id !== id);
             jugadorData.equipo.simbolos.push({ id: id, pos: item.pos });
-            
             await db.collection('usuarios').doc(window.uid).update({ 'equipo.simbolos': jugadorData.equipo.simbolos });
         }
-        
         mostrarItemsCategoria(categoriaActual);
         actualizarVistaPrevia();
         if (window.actualizarAvatar) window.actualizarAvatar();
@@ -176,7 +161,7 @@ function actualizarVistaPrevia() {
     });
 
     elAvatarPreview.innerHTML = `
-        <div style="position:relative; width:140px; height:160px; overflow:hidden; border-radius: 50% 50% 0 0; background:#e3f2fd;">
+        <div style="position:relative; width:140px; height:160px; overflow:hidden; border-radius: 50% 50% 0 0; background:var(--avatar-bg);">
             <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
             ${simbolosHTML}
             <div style="position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); font-size:0.9rem; background:rgba(255,255,255,0.8); padding:0 8px; border-radius:10px; white-space:nowrap; font-weight:700; color:#3b4cca;">${nombre}</div>
@@ -210,7 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'index.html';
         }
     });
-
     document.getElementById('btn-factorizados').addEventListener('click', () => { window.location.href = 'factorizados.html'; });
     document.getElementById('btn-incognita').addEventListener('click', () => { window.location.href = 'incognita.html'; });
 });
