@@ -53,16 +53,16 @@ function actualizarUICompleta() {
     actualizarAvatar();
 }
 
-// Mapa de Símbolos Matemáticos SVG (Profesionales)
+// Mapa de Símbolos Matemáticos SVG (Formas corregidas y precisas)
 const SIMBOLOS_SVG = {
-    'pi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8a4 4 0 0 1 4-4h12"/><path d="M9 12h8"/></svg>',
-    'integral': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-3 0-3 4-3 8s0 8 3 8"/><path d="M17 4c3 0 3 4 3 8s0 8-3 8"/></svg>',
-    'raiz': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2l2 7 3-14 3 7h8"/></svg>',
-    'sigma': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4H6l6 8-6 8h12"/></svg>',
-    'infinito': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/></svg>',
-    'delta': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4L3 20h18L12 4z"/></svg>',
-    'theta': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 6v12M15 6v12"/></svg>',
-    'suma_frac': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4L10 20"/><path d="M12 8h4M8 16h4"/></svg>'
+    'pi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V8a3 3 0 0 1 3-3h11"/><path d="M9 12h8"/></svg>',
+    'integral': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-3 0-3 4-3 8s0 8 3 8"/><path d="M17 4c3 0 3 4 3 8s0 8-3 8"/></svg>',
+    'raiz': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2l2 7 3-14 3 7h8"/></svg>',
+    'sigma': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4H6l6 8-6 8h12"/></svg>',
+    'infinito': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/></svg>',
+    'delta': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4L3 20h18L12 4z"/></svg>',
+    'theta': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 6v12M15 6v12"/></svg>',
+    'suma_frac': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4L10 20"/><path d="M12 8h4M8 16h4"/></svg>'
 };
 
 // Nuevo sistema de avatares: Mapa de estilos de DiceBear
@@ -81,34 +81,29 @@ function actualizarAvatar() {
     const equipo = window.jugador.equipo || {};
     const nombre = window.jugador.nombre || 'Aventurero';
 
-    // Obtener estilo de avatar comprado
     let estilo = AVATAR_ESTILOS['avatar_base'];
     if (equipo.avatar && AVATAR_ESTILOS[equipo.avatar]) {
         estilo = AVATAR_ESTILOS[equipo.avatar];
     }
 
-    // Construir URL base
     const seed = encodeURIComponent(nombre);
     let url = `https://api.dicebear.com/10.x/${estilo.style}/svg?seed=${seed}`;
 
-    // Aplicar ropa si aplica (solo para estilos humanoides)
     if (estilo.style === 'adventurer' || estilo.style === 'personas') {
         let params = {};
         if (equipo.superior === 'camiseta_roja') params.top = 'shirt', params.clothingColor = 'ff0000';
         if (equipo.superior === 'camiseta_azul') params.top = 'shirt', params.clothingColor = '0055ff';
         if (equipo.inferior === 'pantalon_vaquero') params.pants = 'pants', params.pantsColor = '003366';
-        // ... (se pueden añadir más)
         params.skinColor = 'f1c27d'; params.hairColor = '2c1b18'; params.hair = 'short';
         
         const qs = Object.keys(params).map(key => `${key}=${params[key]}`).join('&');
         if (qs) url += `&${qs}`;
     }
 
-    // Construir HTML
     let simbolosHTML = '';
     (equipo.simbolos || []).forEach(simbolo => {
         const item = SIMBOLOS_SVG[simbolo.id];
-        const pos = simbolo.pos || 'top-left'; // Posición por defecto
+        const pos = simbolo.pos || 'top-left';
         if (item) {
             simbolosHTML += `<div class="avatar-simbolo pos-${pos}">${item}</div>`;
         }
@@ -145,29 +140,53 @@ function configurarEdicionNombre() {
     });
 }
 
-// (El resto de funciones de common.js se mantienen igual: mostrarFeedback, auth listener...)
+function mostrarFeedback(mensaje, tipo) {
+    const feedback = document.getElementById('feedback-message');
+    if (feedback) {
+        feedback.textContent = mensaje;
+        feedback.className = 'feedback';
+        if (tipo === 'exito') feedback.classList.add('feedback-exito');
+        else if (tipo === 'error') feedback.classList.add('feedback-error');
+        feedback.classList.remove('hidden');
+        setTimeout(() => feedback.classList.add('hidden'), 3000);
+    }
+}
+
+firebase.auth().onAuthStateChanged((user) => {
+    const paginasPublicas = ['index.html', 'register.html'];
+    const path = window.location.pathname.split('/').pop();
+    if (!user && !paginasPublicas.includes(path)) {
+        window.location.href = 'index.html';
+    }
+});
 
 // ============================================================
-// MODO OSCURO MANUAL (Guardado en localStorage)
+// MODO OSCURO MANUAL (Corregido para no romper la carga)
 // ============================================================
-const themeBtn = document.getElementById('theme-toggle');
 function aplicarTema(tema) {
     if (tema === 'dark') {
         document.body.classList.add('dark-mode');
-        if (themeBtn) themeBtn.textContent = '☀️';
+        const btn = document.getElementById('theme-toggle');
+        if (btn) btn.textContent = '☀️';
     } else {
         document.body.classList.remove('dark-mode');
-        if (themeBtn) themeBtn.textContent = '🌙';
+        const btn = document.getElementById('theme-toggle');
+        if (btn) btn.textContent = '🌙';
     }
     localStorage.setItem('mathquest_theme', tema);
 }
+
 const temaGuardado = localStorage.getItem('mathquest_theme') || 'light';
 aplicarTema(temaGuardado);
-if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-        const nuevoTema = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-        aplicarTema(nuevoTema);
-    });
-}
 
-document.addEventListener('DOMContentLoaded', cargarJugador);
+// Escuchamos el evento DOMContentLoaded para que NO falle si el botón no existe
+document.addEventListener('DOMContentLoaded', () => {
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const nuevoTema = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+            aplicarTema(nuevoTema);
+        });
+    }
+    cargarJugador();
+});
