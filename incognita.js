@@ -9,7 +9,9 @@ const REGIONES_INCOGNITA = [
   { minNivel: 1, nombre: "Aldea de las Ecuaciones" },
   { minNivel: 5, nombre: "Villa de los Enteros" },
   { minNivel: 10, nombre: "Fortaleza de las Fracciones" },
-  { minNivel: 15, nombre: "Cumbre del Álgebra Racional" }
+  { minNivel: 15, nombre: "Cumbre del Álgebra Racional" },
+  { minNivel: 21, nombre: "Abismo de los Coeficientes" },
+  { minNivel: 31, nombre: "El Vacío del Infinito Algebraico" }
 ];
 
 function regionParaNivelIncognita(nivel) {
@@ -61,7 +63,8 @@ function generarEcuacionLineal() {
     if (nivel >= 1 && nivel <= 4) dificultad = 1;
     else if (nivel >= 5 && nivel <= 9) dificultad = 2;
     else if (nivel >= 10 && nivel <= 14) dificultad = 3;
-    else dificultad = 4;
+    else if (nivel >= 15 && nivel <= 20) dificultad = 4;
+    else dificultad = 5; // ¡Nivel 21+!
 
     // Dificultad 1: x + b = c
     if (dificultad === 1) {
@@ -81,36 +84,56 @@ function generarEcuacionLineal() {
     // Dificultad 3: x/d + b = c
     else if (dificultad === 3) {
         let x = Math.floor(Math.random() * 10) - 5;
-        let d = Math.floor(Math.random() * 5) + 2; // Denominador de 2 a 6
+        let d = Math.floor(Math.random() * 5) + 2; 
         let b = Math.floor(Math.random() * 10) - 5;
-        let c = (x / d) + b; // c siempre será entero porque (x/d) es entero
+        let c = (x / d) + b; 
         return { tipo: 'simple', a: 1, b, c, d, x };
     }
-    // Dificultad 4: (A - x)/B + Cx/D = (x - E)/F
-    else {
+    // Dificultad 4: (A - x)/B + Cx/D = (x - E)/F (Números medianos)
+    else if (dificultad === 4) {
         let x, A, B, C, D, E, F;
         let intentos = 0;
         do {
             intentos++;
             x = Math.floor(Math.random() * 15) - 7;
-            B = Math.floor(Math.random() * 3) + 2; // 2, 3, 4
-            D = Math.floor(Math.random() * 3) + 2; // 2, 3, 4
-            F = Math.floor(Math.random() * 5) + 2; // 2 a 6
-            A = Math.floor(Math.random() * 5) + 1; // 1 a 5
-            C = Math.floor(Math.random() * 5) + 1; // 1 a 5
+            B = Math.floor(Math.random() * 3) + 2; 
+            D = Math.floor(Math.random() * 3) + 2; 
+            F = Math.floor(Math.random() * 5) + 2; 
+            A = Math.floor(Math.random() * 5) + 1; 
+            C = Math.floor(Math.random() * 5) + 1; 
             
-            // Cálculo matemático para asegurar que la solución sea entero
             let const = (A - x) / B + (C * x) / D;
             E = x - (F * const);
             
-            // Asegurarnos de que E sea entero y que no sea una identidad (coef x no se anule)
             let coeffX = (-1 / B) + (C / D);
             if (Math.abs(coeffX - (1 / F)) < 0.01) continue; 
 
         } while (!Number.isInteger(E) && intentos < 100);
-        
-        if (!Number.isInteger(E)) E = Math.round(E); // Failsafe
+        if (!Number.isInteger(E)) E = Math.round(E);
+        return { tipo: 'compleja', A, B, C, D, E, F, x };
+    }
+    // Dificultad 5: Nivel 21+ (Ecuaciones gigantes con fracciones complejas)
+    else {
+        let x, A, B, C, D, E, F;
+        let intentos = 0;
+        do {
+            intentos++;
+            // Números mucho más grandes para castigar los errores y premiar la concentración
+            x = Math.floor(Math.random() * 30) - 15; // -15 a 15
+            B = Math.floor(Math.random() * 6) + 3; // 3 a 8
+            D = Math.floor(Math.random() * 6) + 3; // 3 a 8
+            F = Math.floor(Math.random() * 8) + 3; // 3 a 10
+            A = Math.floor(Math.random() * 8) + 2; // 2 a 9
+            C = Math.floor(Math.random() * 8) + 2; // 2 a 9
+            
+            let const = (A - x) / B + (C * x) / D;
+            E = x - (F * const);
+            
+            let coeffX = (-1 / B) + (C / D);
+            if (Math.abs(coeffX - (1 / F)) < 0.01) continue; 
 
+        } while (!Number.isInteger(E) && intentos < 200); // Más intentos porque los números son más difíciles de cuadrar
+        if (!Number.isInteger(E)) E = Math.round(E); 
         return { tipo: 'compleja', A, B, C, D, E, F, x };
     }
 }
