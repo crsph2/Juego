@@ -89,51 +89,51 @@ function generarEcuacionLineal() {
         let c = (x / d) + b; 
         return { tipo: 'simple', a: 1, b, c, d, x };
     }
-    // Dificultad 4: (A - x)/B + Cx/D = (x - E)/F (Números medianos)
-    else if (dificultad === 4) {
-        let x, A, B, C, D, E, F;
-        let intentos = 0;
-        do {
-            intentos++;
-            x = Math.floor(Math.random() * 15) - 7;
-            B = Math.floor(Math.random() * 3) + 2; 
-            D = Math.floor(Math.random() * 3) + 2; 
-            F = Math.floor(Math.random() * 5) + 2; 
-            A = Math.floor(Math.random() * 5) + 1; 
-            C = Math.floor(Math.random() * 5) + 1; 
-            
-            let const = (A - x) / B + (C * x) / D;
-            E = x - (F * const);
-            
-            let coeffX = (-1 / B) + (C / D);
-            if (Math.abs(coeffX - (1 / F)) < 0.01) continue; 
-
-        } while (!Number.isInteger(E) && intentos < 100);
-        if (!Number.isInteger(E)) E = Math.round(E);
-        return { tipo: 'compleja', A, B, C, D, E, F, x };
-    }
-    // Dificultad 5: Nivel 21+ (Ecuaciones gigantes con fracciones complejas)
+    // Dificultad 4 y 5: (A - x)/B + (C*x)/D = (x - E)/F
     else {
-        let x, A, B, C, D, E, F;
-        let intentos = 0;
-        do {
-            intentos++;
-            // Números mucho más grandes para castigar los errores y premiar la concentración
-            x = Math.floor(Math.random() * 30) - 15; // -15 a 15
-            B = Math.floor(Math.random() * 6) + 3; // 3 a 8
-            D = Math.floor(Math.random() * 6) + 3; // 3 a 8
-            F = Math.floor(Math.random() * 8) + 3; // 3 a 10
-            A = Math.floor(Math.random() * 8) + 2; // 2 a 9
-            C = Math.floor(Math.random() * 8) + 2; // 2 a 9
-            
-            let const = (A - x) / B + (C * x) / D;
-            E = x - (F * const);
-            
-            let coeffX = (-1 / B) + (C / D);
-            if (Math.abs(coeffX - (1 / F)) < 0.01) continue; 
+        // Elegir F, B, D para que B y D dividan a F. ¡Esto evita el bucle infinito!
+        let F, B, D;
+        if (dificultad === 4) {
+            F = [4, 6, 8, 12][Math.floor(Math.random() * 4)];
+            // Divisores de F (excluyendo 1)
+            let divisores = [];
+            for (let i = 2; i <= F; i++) {
+                if (F % i === 0) divisores.push(i);
+            }
+            B = divisores[Math.floor(Math.random() * divisores.length)];
+            D = divisores[Math.floor(Math.random() * divisores.length)];
+        } else {
+            F = [8, 12, 16, 20, 24][Math.floor(Math.random() * 5)];
+            let divisores = [];
+            for (let i = 2; i <= F; i++) {
+                if (F % i === 0) divisores.push(i);
+            }
+            B = divisores[Math.floor(Math.random() * divisores.length)];
+            D = divisores[Math.floor(Math.random() * divisores.length)];
+        }
 
-        } while (!Number.isInteger(E) && intentos < 200); // Más intentos porque los números son más difíciles de cuadrar
-        if (!Number.isInteger(E)) E = Math.round(E); 
+        // Elegir x, A, C (pueden ser números más grandes en dificultad 5)
+        let x, A, C;
+        if (dificultad === 4) {
+            x = Math.floor(Math.random() * 15) - 7;
+            A = Math.floor(Math.random() * 5) + 1;
+            C = Math.floor(Math.random() * 5) + 1;
+        } else {
+            x = Math.floor(Math.random() * 30) - 15;
+            A = Math.floor(Math.random() * 8) + 2;
+            C = Math.floor(Math.random() * 8) + 2;
+        }
+
+        // Calcular E matemáticamente para garantizar que sea entero
+        let F_div_B = F / B;
+        let F_div_D = F / D;
+        
+        // LHS * F = F_div_B * (A - x) + F_div_D * (C * x)
+        let LHS_por_F = F_div_B * (A - x) + F_div_D * (C * x);
+        
+        // E = x - LHS * F
+        let E = x - LHS_por_F;
+
         return { tipo: 'compleja', A, B, C, D, E, F, x };
     }
 }
