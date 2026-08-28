@@ -109,7 +109,6 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
     background: transparent;
 }
 
-/* Contenedor del círculo del avatar */
 .avatar-circulo {
     position: relative;
     width: 140px;
@@ -128,7 +127,6 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
     display: block;
 }
 
-/* Símbolos dentro del círculo */
 .avatar-simbolo-abs {
     position: absolute;
     font-size: 1.3rem;
@@ -150,11 +148,6 @@ input:focus { border-color: var(--btn-secondary); box-shadow: 0 0 0 3px rgba(59,
     border-radius: 10px;
     white-space: nowrap;
 }
-
-/* Para el lobby (vista previa) el contenedor puede tener un tamaño diferente,
-   pero usamos la misma clase .avatar-circulo, así que el tamaño se hereda del contenedor.
-   En lobby, #avatar-preview tendrá su propio tamaño, pero usamos .avatar-circulo dentro.
-   Podemos ajustar el tamaño en el lobby si es necesario, pero usaremos el mismo. */
 
 /* Preguntas y Opciones */
 .question-text { font-size: 2.4rem; font-weight: 700; color: var(--text-main); background: var(--card-bg); padding: 1.6rem 1rem; border-radius: 16px; border: 2px solid var(--card-border); margin-bottom: 1.2rem; line-height: 1.3; word-break: break-word; }
@@ -202,7 +195,6 @@ body.dark-mode .ecuacion-linea.linea-solucion { color: #66bb6a; }
 #tienda-container { margin-top: 1.5rem; background: var(--card-bg); border-radius: 20px; padding: 1rem; border: 2px solid var(--card-border); }
 #vista-previa { display: flex; flex-direction: column; align-items: center; margin-bottom: 1rem; }
 #avatar-preview { background: var(--avatar-bg); border-radius: 16px; padding: 0.5rem; min-height: 180px; width: 100%; display: flex; justify-content: center; align-items: center; border: 1px solid var(--card-border); position: relative; }
-/* La vista previa usará .avatar-circulo, pero queremos que sea más grande? Podemos dejar que herede el tamaño, pero #avatar-preview es un contenedor flex, y .avatar-circulo se renderizará dentro. Podemos ajustar el tamaño de .avatar-circulo en la vista previa si es necesario, pero la función renderizarAvatar lo crea con 140x140. En el lobby, #avatar-preview tiene min-height: 180px, así que 140x140 cabe bien. */
 #categorias-tienda { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1rem; }
 .categoria-btn { padding: 0.4rem 1rem; border-radius: 20px; border: 2px solid var(--card-border); background: var(--card-bg); cursor: pointer; font-weight: 600; transition: all 0.2s; color: var(--text-main); }
 .categoria-btn.active { background: var(--btn-secondary); color: #fff; border-color: var(--btn-secondary); }
