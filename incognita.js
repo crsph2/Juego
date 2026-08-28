@@ -258,7 +258,7 @@ function mostrarFeedbackPractica(mensaje, tipo) {
     if (tipo === 'exito') elFeedbackPractica.classList.add('feedback-exito');
     else if (tipo === 'error') elFeedbackPractica.classList.add('feedback-error');
     elFeedbackPractica.classList.remove('hidden');
-    feedbackTimeout = setTimeout(() => { elFeedbackPractica.classList.add('hidden'); feedbackTimeout = null; }, 1500); // 1.5 segundos
+    feedbackTimeout = setTimeout(() => { elFeedbackPractica.classList.add('hidden'); feedbackTimeout = null; }, 1500);
 }
 
 // ---------- Modo Alternativas ----------
@@ -422,6 +422,14 @@ function iniciarJuego() {
     if (elNextPracticaBtn) elNextPracticaBtn.addEventListener('click', iniciarPractica);
     document.getElementById('btn-logout').addEventListener('click', async () => { await firebase.auth().signOut(); sessionStorage.clear(); window.location.href = 'index.html'; });
     if (elBtnReiniciar) elBtnReiniciar.addEventListener('click', reiniciarNivel);
+
+    // Botón Guardar (igual que en factorizados)
+    const btnSave = document.getElementById('btn-save');
+    if (btnSave) {
+        btnSave.addEventListener('click', () => {
+            mostrarFeedback('¡Progreso guardado!', 'exito');
+        });
+    }
 
     cambiarModo('alternativas');
 }
