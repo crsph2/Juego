@@ -10,18 +10,8 @@
         #pregunta-enunciado, #opciones-container, .btn-opcion {
             font-family: 'Roboto', 'Segoe UI', Arial, sans-serif !important;
         }
-        #pregunta-enunciado {
-            font-size: 2.4rem !important; font-weight: 700 !important; color: var(--text-main) !important;
-            background: var(--card-bg) !important; padding: 1.8rem 1rem !important; border-radius: 16px !important;
-            border: 2px solid var(--card-border) !important; margin-bottom: 1.5rem !important; line-height: 1.4 !important;
-            word-break: break-word !important; text-align: center !important; text-shadow: none !important;
-        }
-        .btn-opcion {
-            background: var(--card-bg) !important; border: 2px solid var(--card-border) !important;
-            border-radius: 16px !important; padding: 1.2rem 0.5rem !important; font-size: 1.5rem !important;
-            font-weight: 600 !important; color: var(--text-main) !important; cursor: pointer !important;
-            transition: all 0.15s ease !important; min-height: 90px !important; box-shadow: 0 4px 0 var(--card-border) !important;
-        }
+        #pregunta-enunciado { font-size: 2.4rem !important; font-weight: 700 !important; color: var(--text-main) !important; background: var(--card-bg) !important; padding: 1.8rem 1rem !important; border-radius: 16px !important; border: 2px solid var(--card-border) !important; margin-bottom: 1.5rem !important; line-height: 1.4 !important; word-break: break-word !important; text-align: center !important; text-shadow: none !important; }
+        .btn-opcion { background: var(--card-bg) !important; border: 2px solid var(--card-border) !important; border-radius: 16px !important; padding: 1.2rem 0.5rem !important; font-size: 1.5rem !important; font-weight: 600 !important; color: var(--text-main) !important; cursor: pointer !important; transition: all 0.15s ease !important; min-height: 90px !important; box-shadow: 0 4px 0 var(--card-border) !important; }
         .btn-opcion:hover { background: var(--header-bg) !important; border-color: var(--btn-secondary) !important; }
         .btn-opcion.opcion-correcta { border-color: #2e7d32 !important; background: #e8f5e9 !important; color: #1a1a1a !important; }
         body.dark-mode .btn-opcion.opcion-correcta { background: #1f3a24 !important; color: #fff !important; }
@@ -34,7 +24,7 @@
         <section class="game-card">
             <header class="player-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <a href="lobby.html" class="back-button" style="color: #3b4cca; text-decoration: none; font-weight: 600; font-size: 0.9rem;">← Volver</a>
+                    <a href="lobby.html" class="back-button">← Volver</a>
                     <h1 class="game-title" style="font-size: 1.8rem; margin: 0;">🧮 Factorizados</h1>
                     <div style="width: 60px;"></div>
                 </div>
@@ -45,10 +35,10 @@
                     <button id="theme-toggle" class="theme-toggle" title="Cambiar modo claro/oscuro">🌙</button>
                 </div>
                 <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
-                    <button id="btn-edit-name" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: #f2c94c; color: #1a1a1a;">✏️ Nombre</button>
-                    <button id="btn-reiniciar" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: #d32f2f; color: #fff;">🔄 Reiniciar nivel</button>
-                    <button id="btn-save" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: #3b4cca; color: #fff;">💾 Guardar</button>
-                    <button id="btn-logout" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: #ee1515; color: #fff;">🚪 Salir</button>
+                    <button id="btn-edit-name" class="rpg-button btn-gold" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">✏️ Nombre</button>
+                    <button id="btn-reiniciar" class="rpg-button btn-danger" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">🔄 Reiniciar nivel</button>
+                    <button id="btn-save" class="rpg-button btn-secondary" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">💾 Guardar</button>
+                    <button id="btn-logout" class="rpg-button btn-danger" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">🚪 Salir</button>
                 </div>
                 <div class="xp-bar">
                     <div id="xp-bar-fill" class="xp-bar-fill" style="width:0%"></div>
