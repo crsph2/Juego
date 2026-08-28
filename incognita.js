@@ -81,7 +81,7 @@ function formatearEcuacionSimple(ecuacion, letra = 'x') {
     return left + ' = ' + c;
 }
 
-// Generador de ecuaciones según el nivel (sin bucles infinitos)
+// Generador de ecuaciones según el nivel (sin decimales y sin triviales)
 function generarEcuacionLineal() {
     let nivel = window.jugador.incognita.nivel || 1;
     let dificultad;
@@ -91,26 +91,29 @@ function generarEcuacionLineal() {
     else if (nivel >= 15 && nivel <= 20) dificultad = 4;
     else dificultad = 5; // Nivel 21+
 
-    // Dificultad 1: x + b = c
+    // Dificultad 1: x + b = c (b nunca es 0)
     if (dificultad === 1) {
         let x = Math.floor(Math.random() * 10) - 5;
-        let b = Math.floor(Math.random() * 10) - 5;
+        let b = Math.floor(Math.random() * 9) - 4; // Rango de -4 a 4
+        if (b === 0) b = 1; // Nunca dejar b en 0
         let c = x + b;
         return { tipo: 'simple', a: 1, b, c, d: 1, x };
     }
-    // Dificultad 2: ax + b = c
+    // Dificultad 2: ax + b = c (a nunca es 1, b nunca es 0)
     else if (dificultad === 2) {
         let x = Math.floor(Math.random() * 10) - 5;
-        let a = Math.floor(Math.random() * 4) + 2;
+        let a = Math.floor(Math.random() * 4) + 2; // Empieza en 2, nunca es 1
         let b = Math.floor(Math.random() * 10) - 5;
+        if (b === 0) b = 1;
         let c = a * x + b;
         return { tipo: 'simple', a, b, c, d: 1, x };
     }
-    // Dificultad 3: x/d + b = c (SIN DECIMALES)
+    // Dificultad 3: x/d + b = c (b nunca es 0)
     else if (dificultad === 3) {
         let d = Math.floor(Math.random() * 5) + 2; 
         let k = Math.floor(Math.random() * 10) - 5; // k es el cociente entero
         let b = Math.floor(Math.random() * 10) - 5;
+        if (b === 0) b = 1;
         let x = d * k;
         let c = k + b;
         return { tipo: 'simple', a: 1, b, c, d, x };
@@ -193,33 +196,28 @@ function generarPasos(ecuacion) {
         return pasos;
     }
 
-    // Práctica para complejas (Niveles 15+) - GUÍA PASO A PASO
+    // Práctica para complejas (Niveles 15+)
     if (tipo === 'compleja') {
         let { A, B, C, D, E, F } = ecuacion;
         
-        // Paso 1: Multiplicar por B (o MCM) para eliminar el primer denominador
         let paso1 = { ...ecuacion, B: 1, D: D / B, F: F / B };
         pasos.push({ tipo: 'multiplicar', operacion: 'multiplicar', valor: B, resultado: formatearEcuacionSimple(paso1), ...paso1 });
 
-        // Paso 2: Multiplicar por el nuevo denominador (si queda)
         if (paso1.D !== 1 || paso1.F !== 1) {
-            let den = Math.max(paso1.D, paso1.F); // En el ejemplo es 4
+            let den = Math.max(paso1.D, paso1.F);
             let paso2 = { ...paso1, A: paso1.A * den, D: 1, F: 1 };
             pasos.push({ tipo: 'multiplicar', operacion: 'multiplicar', valor: den, resultado: formatearEcuacionSimple(paso2), ...paso2 });
         }
 
-        // Paso 3: Mover términos (restar constante, ej: 28)
         let constante = paso2 ? paso2.A : paso1.A;
         let paso3 = paso2 ? { ...paso2, A: 0, E: paso2.E + constante } : { ...paso1, A: 0, E: paso1.E + constante };
         if (constante !== 0) {
             pasos.push({ tipo: 'restar', operacion: 'restar', valor: constante, resultado: formatearEcuacionSimple(paso3), ...paso3 });
         }
 
-        // Paso 4: Mover x (restar 1, ej: para pasar x)
         let paso4 = { ...paso3, C: paso3.C - 1, E: paso3.E };
         pasos.push({ tipo: 'restar', operacion: 'restar', valor: 1, resultado: formatearEcuacionSimple(paso4), ...paso4 });
 
-        // Paso 5: Dividir por el coeficiente de x
         let coef = paso4.C;
         let paso5 = { ...paso4, A: 0, C: 1, E: paso4.E / coef };
         pasos.push({ tipo: 'dividir', operacion: 'dividir', valor: coef, resultado: `x = ${x}`, ...paso5 });
@@ -234,7 +232,6 @@ function aplicarOperacion(ecuacion, op, num) {
         let { A, B, C, D, E, F } = ecuacion;
 
         if (op === 'multiplicar') {
-            // Simplificar fracciones usando Máximo Común Divisor
             const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
             
             let gA = gcd(num, B);
@@ -253,7 +250,6 @@ function aplicarOperacion(ecuacion, op, num) {
         }
         if (op === 'sumar' || op === 'restar') {
             let signo = op === 'sumar' ? 1 : -1;
-            // Movemos términos independientes (sumamos/restamos a numeradores A y E)
             return { ...ecuacion, A: A + signo * num * B, E: E + signo * num * F };
         }
         if (op === 'dividir') {
@@ -261,7 +257,6 @@ function aplicarOperacion(ecuacion, op, num) {
         }
     }
     
-    // Lógica para simples
     let { a, b, c, d } = ecuacion;
     if (d && d !== 1 && d !== undefined) {
         switch (op) {
@@ -404,6 +399,7 @@ function iniciarPractica() {
     if (elControlesPractica) elControlesPractica.style.display = 'block';
     if (elMensajeExito) elMensajeExito.style.display = 'none';
     if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'none';
+    if (elBtnAccion) elBtnAccion.style.display = 'inline-flex'; // Mostrar botón al iniciar
     if (elFeedbackPractica) {
         elFeedbackPractica.className = 'feedback hidden';
         elFeedbackPractica.textContent = '';
@@ -484,6 +480,7 @@ function confirmarPaso() {
         if (elControlesPractica) elControlesPractica.style.display = 'none';
         if (elMensajeExito) { elMensajeExito.style.display = 'block'; if (elTextoSolucion) elTextoSolucion.textContent = `x = ${practicaState.eq.x}`; }
         if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
+        if (elBtnAccion) elBtnAccion.style.display = 'none'; // Ocultar botón al terminar
         mostrarControles(false); elBtnAccion.disabled = true;
         return;
     }
