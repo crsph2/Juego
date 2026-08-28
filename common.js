@@ -89,7 +89,6 @@ function renderizarAvatar(container, jugador) {
         url += '&skinColor=f1c27d&hairColor=2c1b18&hair=short';
     }
 
-    // ----- NUEVA LÓGICA DE POSICIONAMIENTO EQUIDISTANTE -----
     let simbolosHTML = '';
     const simbolos = equipo.simbolos || [];
     const numSimbolos = simbolos.length;
@@ -98,21 +97,14 @@ function renderizarAvatar(container, jugador) {
         const char = SIMBOLOS_MATH[simbolo.id];
         if (!char) return;
 
-        // El círculo mide 160x160 (centro en 80,80).
-        // Usamos un radio de 70px para que queden pegados al borde sin tapar la cara.
-        // Restamos PI/2 para que el primer símbolo empiece justo arriba (12 en punto).
         const angulo = (2 * Math.PI * index) / numSimbolos - (Math.PI / 2);
-        
-        // Coordenadas exactas (x, y) en el borde del círculo
         const x = 80 + 70 * Math.cos(angulo);
         const y = 80 + 70 * Math.sin(angulo);
         
-        // Centramos el símbolo exactamente en ese punto
         const styleAttr = `left:${x}px; top:${y}px; transform:translate(-50%, -50%);`;
         
         simbolosHTML += `<span class="avatar-simbolo-abs" style="${styleAttr}">${char}</span>`;
     });
-    // ---------------------------------------------------------
 
     container.innerHTML = `
         <div class="avatar-circulo">
