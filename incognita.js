@@ -56,7 +56,6 @@ function formatearEcuacionSimple(ecuacion, letra = 'x') {
     return left + ' = ' + c;
 }
 
-// Generador de ecuaciones según el nivel
 function generarEcuacionLineal() {
     let nivel = window.jugador.incognita.nivel || 1;
     let dificultad;
