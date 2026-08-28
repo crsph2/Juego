@@ -14,10 +14,8 @@
                 <button id="edit-name-btn" class="btn-icon" title="Editar nombre">✏️</button>
                 <span class="xp">⭐ <span id="player-xp">0</span> XP</span>
                 <span class="coins">🪙 <span id="player-coins">0</span></span>
-                <!-- Botón de Modo Oscuro -->
                 <button id="theme-toggle" class="theme-toggle" title="Cambiar modo claro/oscuro">🌙</button>
             </div>
-            <!-- Avatar -->
             <div id="avatar-display" class="avatar-display"></div>
             <button id="btn-logout" class="btn btn-danger" style="margin-top:8px;">Cerrar sesión</button>
         </header>
@@ -47,23 +45,17 @@
         <div id="tienda-container">
             <div id="vista-previa">
                 <h3>Tu Avatar</h3>
-                <div id="avatar-preview" class="avatar-preview">
-                    <!-- Se llena con JS -->
-                </div>
+                <div id="avatar-preview" class="avatar-preview"></div>
                 <p>Monedas: <span id="tienda-coins">0</span></p>
             </div>
             <div id="categorias-tienda">
                 <button class="categoria-btn active" data-categoria="avatar">🧑 Avatares</button>
                 <button class="categoria-btn" data-categoria="simbolo">∑ Símbolos</button>
             </div>
-            <div id="items-tienda">
-                <!-- Se llena con JS -->
-            </div>
+            <div id="items-tienda"></div>
         </div>
-        <!-- ====== FIN TIENDA ====== -->
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
