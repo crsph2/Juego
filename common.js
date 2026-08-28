@@ -12,7 +12,6 @@ async function cargarJugador() {
         const snap = await db.collection('usuarios').doc(window.uid).get();
         if (!snap.exists) { window.location.href = 'index.html'; return; }
         window.jugador = snap.data();
-        // Inicializar campos
         if (window.jugador.monedas === undefined) window.jugador.monedas = 0;
         if (!window.jugador.inventario) window.jugador.inventario = ['avatar_base'];
         if (!window.jugador.equipo) window.jugador.equipo = { avatar: 'avatar_base', superior: null, inferior: null, sombrero: null, zapatillas: null, insignia: null, simbolos: [] };
@@ -53,7 +52,7 @@ function actualizarUICompleta() {
     actualizarAvatar();
 }
 
-// Mapa de Símbolos Matemáticos SVG (Formas corregidas y precisas)
+// Símbolos Matemáticos SVG
 const SIMBOLOS_SVG = {
     'pi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V8a3 3 0 0 1 3-3h11"/><path d="M9 12h8"/></svg>',
     'integral': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-3 0-3 4-3 8s0 8 3 8"/><path d="M17 4c3 0 3 4 3 8s0 8-3 8"/></svg>',
@@ -65,7 +64,6 @@ const SIMBOLOS_SVG = {
     'suma_frac': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4L10 20"/><path d="M12 8h4M8 16h4"/></svg>'
 };
 
-// Nuevo sistema de avatares: Mapa de estilos de DiceBear
 const AVATAR_ESTILOS = {
     'avatar_base': { style: 'adventurer', label: 'Clásico' },
     'avatar_robot': { style: 'bottts', label: 'Robot' },
@@ -109,9 +107,10 @@ function actualizarAvatar() {
         }
     });
 
+    // ESTRUCTURA IDÉNTICA A LA TIENDA (140x160, margin-top -25px)
     avatarContainer.innerHTML = `
-        <div class="avatar-dicebear">
-            <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
+        <div class="avatar-dicebear" style="width:140px; height:160px; overflow:hidden; border-radius: 50% 50% 0 0; background:var(--avatar-bg); position:relative;">
+            <img src="${url}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; margin-top:-25px;">
             ${simbolosHTML}
         </div>
         <div class="avatar-nombre">${nombre}</div>
@@ -160,9 +159,7 @@ firebase.auth().onAuthStateChanged((user) => {
     }
 });
 
-// ============================================================
-// MODO OSCURO MANUAL (Corregido para no romper la carga)
-// ============================================================
+// MODO OSCURO
 function aplicarTema(tema) {
     if (tema === 'dark') {
         document.body.classList.add('dark-mode');
@@ -179,7 +176,6 @@ function aplicarTema(tema) {
 const temaGuardado = localStorage.getItem('mathquest_theme') || 'light';
 aplicarTema(temaGuardado);
 
-// Escuchamos el evento DOMContentLoaded para que NO falle si el botón no existe
 document.addEventListener('DOMContentLoaded', () => {
     const themeBtn = document.getElementById('theme-toggle');
     if (themeBtn) {
