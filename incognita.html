@@ -12,7 +12,7 @@
         <section class="game-card">
             <header class="player-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <a href="lobby.html" class="back-button" style="color: #3b4cca; text-decoration: none; font-weight: 600; font-size: 0.9rem;">← Volver</a>
+                    <a href="lobby.html" class="back-button">← Volver</a>
                     <h1 class="game-title" style="font-size: 1.5rem; margin: 0;">🔍 Incógnita</h1>
                     <div style="width: 60px;"></div>
                 </div>
@@ -23,9 +23,9 @@
                     <button id="theme-toggle" class="theme-toggle" title="Cambiar modo claro/oscuro">🌙</button>
                 </div>
                 <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
-                    <button id="btn-edit-name" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: #f2c94c; color: #1a1a1a;">✏️ Nombre</button>
-                    <button id="btn-reiniciar" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: #d32f2f; color: #fff;">🔄 Reiniciar nivel</button>
-                    <button id="btn-logout" class="rpg-button" style="padding: 4px 14px; font-size: 0.75rem; width: auto; background: #ee1515; color: #fff;">🚪 Salir</button>
+                    <button id="btn-edit-name" class="rpg-button btn-gold" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">✏️ Nombre</button>
+                    <button id="btn-reiniciar" class="rpg-button btn-danger" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">🔄 Reiniciar nivel</button>
+                    <button id="btn-logout" class="rpg-button btn-danger" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">🚪 Salir</button>
                 </div>
                 <div class="xp-bar">
                     <div id="xp-bar-fill" class="xp-bar-fill" style="width:0%"></div>
@@ -37,13 +37,11 @@
                 <div id="avatar-display" class="avatar-display"></div>
             </header>
 
-            <!-- Selector de modo -->
             <div class="mode-selector">
                 <button id="mode-alternativas" class="active">📝 Alternativas</button>
                 <button id="mode-practica">✋ Práctica paso a paso</button>
             </div>
 
-            <!-- Modo Alternativas -->
             <div id="modo-alternativas" class="question-area">
                 <p id="pregunta-enunciado-alt" class="question-text" style="font-size: 1.8rem; padding: 1rem;">Cargando pregunta...</p>
                 <div id="opciones-container-alt" class="options-container"></div>
@@ -53,7 +51,6 @@
                 </div>
             </div>
 
-            <!-- Modo Práctica paso a paso -->
             <div id="modo-practica" style="display: none;">
                 <div class="practica-container">
                     <p class="hint-text" style="text-align:center; margin-bottom: 10px;">
@@ -73,14 +70,14 @@
                         </div>
                     </div>
                     <div id="boton-accion-container" style="text-align: center; margin-top: 0.5rem;">
-                        <button id="btn-accion" class="rpg-button primary" disabled>Operar</button>
+                        <button id="btn-accion" class="rpg-button btn-primary" disabled>Operar</button>
                     </div>
                     <div id="mensaje-exito" style="display: none; text-align: center; margin: 1rem 0;">
                         <p style="font-size: 1.4rem; color: #2e7d32; font-weight: bold;">🎉 ¡Felicidades! Has descubierto la incógnita:</p>
                         <p id="texto-solucion" style="font-size: 2rem; color: #ee1515; font-weight: 700;"></p>
                     </div>
                     <div id="feedback-practica" class="feedback hidden"></div>
-                    <button id="next-practica-btn" class="rpg-button" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none; background: #3b4cca; color: #fff;">Siguiente ecuación →</button>
+                    <button id="next-practica-btn" class="rpg-button btn-secondary" style="width: auto; padding: 10px 30px; margin: 10px auto; display: none;">Siguiente ecuación →</button>
                 </div>
             </div>
         </section>
