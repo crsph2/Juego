@@ -272,3 +272,18 @@ body.dark-mode .theme-toggle { background: var(--btn-secondary); color: #fff; bo
     z-index: 2;
     line-height: 1;
 }
+/* Fracciones matemáticas */
+.frac {
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    margin: 0 4px;
+}
+.frac > span {
+    display: block;
+    padding: 0 0.2em;
+}
+.frac span.num {
+    border-bottom: 1px solid currentColor;
+    margin-bottom: 2px;
+}
