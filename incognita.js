@@ -71,26 +71,39 @@ function formatearEcuacionSimple(ecuacion, letra = 'x') {
     return left + ' = ' + c;
 }
 
+// Nueva versión: siempre muestra la operación y la ecuación resultante
 function formatearEcuacionConOperacion(original, op, num) {
     const textoOriginal = formatearEcuacionSimple(original);
     const partes = textoOriginal.split('=');
-    if (partes.length !== 2) return textoOriginal;
+    if (partes.length !== 2) return `Operación: ${op} ${num} → ${textoOriginal}`;
     let izq = partes[0].trim();
     let der = partes[1].trim();
 
-    const tieneOperador = /[+-]/.test(izq) || /[+-]/.test(der);
-    const izqConParent = tieneOperador ? `(${izq})` : izq;
-    const derConParent = tieneOperador ? `(${der})` : der;
-
-    if (op === 'multiplicar') {
-        return `${num} · ${izqConParent} = ${num} · ${derConParent}`;
-    } else if (op === 'sumar' || op === 'restar') {
-        const signo = (op === 'sumar') ? '+' : '-';
-        return `${izq} ${signo} ${num} = ${der} ${signo} ${num}`;
+    // Construir la ecuación con la operación aplicada
+    let nuevaIzq, nuevaDer;
+    if (op === 'sumar') {
+        nuevaIzq = `${izq} + ${num}`;
+        nuevaDer = `${der} + ${num}`;
+    } else if (op === 'restar') {
+        nuevaIzq = `${izq} - ${num}`;
+        nuevaDer = `${der} - ${num}`;
+    } else if (op === 'multiplicar') {
+        // Poner paréntesis si la expresión tiene más de un término
+        const izqParent = /[+-]/.test(izq) ? `(${izq})` : izq;
+        const derParent = /[+-]/.test(der) ? `(${der})` : der;
+        nuevaIzq = `${num} · ${izqParent}`;
+        nuevaDer = `${num} · ${derParent}`;
     } else if (op === 'dividir') {
-        return `${izqConParent} ÷ ${num} = ${derConParent} ÷ ${num}`;
+        const izqParent = /[+-]/.test(izq) ? `(${izq})` : izq;
+        const derParent = /[+-]/.test(der) ? `(${der})` : der;
+        nuevaIzq = `${izqParent} ÷ ${num}`;
+        nuevaDer = `${derParent} ÷ ${num}`;
+    } else {
+        return textoOriginal;
     }
-    return `${izq} = ${der}`;
+    // Devolver un texto que describa la operación y la ecuación resultante
+    const nombreOp = { sumar: 'Sumar', restar: 'Restar', multiplicar: 'Multiplicar', dividir: 'Dividir' }[op] || op;
+    return `${nombreOp} ${num}:  ${nuevaIzq} = ${nuevaDer}`;
 }
 
 // ========== GENERADOR DE ECUACIONES ==========
@@ -295,8 +308,7 @@ function generarPasosGuiada(ecuacion) {
                 pasos.push(original);
                 pasos.push({
                     tipo: 'operacion',
-                    texto: `Aplicar ${op === 'sumar' ? 'suma' : 'resta'} de ${val}:`,
-                    resultado: textoOperacion,
+                    texto: textoOperacion,  // ahora incluye la operación y la ecuación
                     ...mover
                 });
                 pasos.push({
@@ -313,8 +325,7 @@ function generarPasosGuiada(ecuacion) {
                         const textoOp = formatearEcuacionConOperacion(ecuacionPrevia, op, val);
                         pasos.push({
                             tipo: 'operacion',
-                            texto: `Aplicar ${op === 'multiplicar' ? 'multiplicación' : 'división'} por ${val}:`,
-                            resultado: textoOp,
+                            texto: textoOp,
                             ...paso
                         });
                         pasos.push({
@@ -344,11 +355,8 @@ function generarPasosGuiada(ecuacion) {
         M = mcm(M, F);
         const textoMul = formatearEcuacionConOperacion(ecuacion, 'multiplicar', M);
         pasos.push({
-            tipo: 'multiplicar',
-            operacion: 'multiplicar',
-            valor: M,
-            texto: `Multiplicar ambos lados por ${M}:`,
-            resultado: textoMul,
+            tipo: 'operacion',
+            texto: textoMul,
             ...ecuacion
         });
         let nuevaEq = aplicarOperacion(ecuacion, 'multiplicar', M);
@@ -370,11 +378,8 @@ function generarPasosGuiada(ecuacion) {
         let eqDiv = aplicarOperacion(eqDistribuida, 'dividir', valorDiv);
         const textoDiv = formatearEcuacionConOperacion(eqDistribuida, 'dividir', valorDiv);
         pasos.push({
-            tipo: 'dividir',
-            operacion: 'dividir',
-            valor: valorDiv,
-            texto: `Dividir ambos lados por ${valorDiv}:`,
-            resultado: textoDiv,
+            tipo: 'operacion',
+            texto: textoDiv,
             ...eqDiv
         });
         pasos.push({
@@ -519,9 +524,6 @@ function iniciarPracticaInteractiva() {
     mostrarHistorial();
     resetearControles();
     actualizarBoton();
-
-    // Depuración: mostrar pasos generados en consola
-    console.log('Pasos generados:', practicaState.pasos);
 }
 
 // ========== INICIALIZAR PRÁCTICA GUIADA ==========
@@ -567,7 +569,9 @@ function mostrarHistorial() {
     practicaState.historialLineas.forEach(linea => {
         const div = document.createElement('div');
         div.className = 'ecuacion-linea';
-        if (linea.tipo === 'operacion' || linea.tipo === 'multiplicar' || linea.tipo === 'dividir' || linea.tipo === 'distribuir' || linea.tipo === 'mover_constante') {
+        // Asignar clase para estilo
+        if (linea.tipo === 'operacion' || linea.tipo === 'multiplicar' || linea.tipo === 'dividir' || 
+            linea.tipo === 'distribuir' || linea.tipo === 'mover_constante') {
             div.classList.add('linea-paso');
         } else if (linea.tipo === 'solucion') {
             div.classList.add('linea-solucion');
@@ -591,17 +595,12 @@ function confirmarPaso() {
     const pasoEsperado = practicaState.pasos[practicaState.pasoActual + 1];
     let esCorrecto = false;
 
-    // Depuración
-    console.log('Pendiente:', pendiente.operacion, pendiente.numero);
-    console.log('Esperado:', pasoEsperado);
-
     if (pasoEsperado && (pasoEsperado.tipo === 'mover_constante' || pasoEsperado.tipo === 'dividir' || pasoEsperado.tipo === 'multiplicar')) {
-        // Comparación no estricta para números
         esCorrecto = (pendiente.operacion === pasoEsperado.operacion && pendiente.numero == pasoEsperado.valor);
     }
 
     if (!esCorrecto) {
-        // Eliminar solo la última línea si es la de operación
+        // Eliminar la última línea si es de operación
         if (practicaState.historialLineas.length > 0 && practicaState.historialLineas[practicaState.historialLineas.length - 1].tipo === 'operacion') {
             practicaState.historialLineas.pop();
         }
@@ -616,13 +615,18 @@ function confirmarPaso() {
     // Paso correcto
     practicaState.eqActual = ecuacionAplicada;
     practicaState.pasoActual++;
-    practicaState.historialLineas.push({ texto: textoSimplificado, tipo: 'simplificacion' });
+    // Agregar la simplificación solo si no existe ya una igual
+    const ultimaLinea = practicaState.historialLineas[practicaState.historialLineas.length - 1];
+    if (!ultimaLinea || ultimaLinea.texto !== textoSimplificado) {
+        practicaState.historialLineas.push({ texto: textoSimplificado, tipo: 'simplificacion' });
+    }
     practicaState.operacionPendiente = null;
 
     mostrarHistorial();
     resetearControles();
 
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
+        // Recompensa
         racha++;
         const bonusRacha = Math.min(racha, 5) * 2;
         const xpGanada = 10 + bonusRacha;
@@ -675,8 +679,19 @@ function realizarOperacion() {
     const ecuacionAplicada = aplicarOperacion(ecuacionActual, operacion, num);
     const textoOperacion = formatearEcuacionConOperacion(ecuacionActual, operacion, num);
 
-    practicaState.operacionPendiente = { operacion, numero: num, ecuacionOriginal: ecuacionActual, ecuacionAplicada: ecuacionAplicada, textoOperacion: textoOperacion };
-    practicaState.historialLineas.push({ texto: textoOperacion, tipo: 'operacion' });
+    // Verificar si ya existe una línea de operación igual
+    const yaExiste = practicaState.historialLineas.some(linea => linea.texto === textoOperacion && linea.tipo === 'operacion');
+    if (!yaExiste) {
+        practicaState.historialLineas.push({ texto: textoOperacion, tipo: 'operacion' });
+    }
+
+    practicaState.operacionPendiente = { 
+        operacion, 
+        numero: num, 
+        ecuacionOriginal: ecuacionActual, 
+        ecuacionAplicada: ecuacionAplicada, 
+        textoOperacion: textoOperacion 
+    };
     mostrarHistorial();
     actualizarBoton();
 }
