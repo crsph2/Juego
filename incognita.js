@@ -78,16 +78,18 @@ function formatearEcuacionConOperacion(original, op, num) {
     let izq = partes[0].trim();
     let der = partes[1].trim();
 
+    // FIX: Siempre poner paréntesis si hay más de un término o si contiene HTML (fracciones)
+    const tieneOperador = /[+-]/.test(izq) || /[+-]/.test(der);
+    const izqConParent = tieneOperador ? `(${izq})` : izq;
+    const derConParent = tieneOperador ? `(${der})` : der;
+
     if (op === 'multiplicar') {
-        // Envolver entre paréntesis si tiene más de un término
-        const izqConParent = (izq.includes(' ') || izq.includes('+') || izq.includes('-')) ? `(${izq})` : izq;
-        const derConParent = (der.includes(' ') || der.includes('+') || der.includes('-')) ? `(${der})` : der;
         return `${num} · ${izqConParent} = ${num} · ${derConParent}`;
     } else if (op === 'sumar' || op === 'restar') {
         const signo = (op === 'sumar') ? '+' : '-';
         return `${izq} ${signo} ${num} = ${der} ${signo} ${num}`;
     } else if (op === 'dividir') {
-        return `(${izq}) ÷ ${num} = (${der}) ÷ ${num}`;
+        return `${izqConParent} ÷ ${num} = ${derConParent} ÷ ${num}`;
     }
     return `${izq} = ${der}`;
 }
@@ -202,21 +204,39 @@ function aplicarOperacion(ecuacion, op, num) {
     }
 }
 
-// ========== GENERACIÓN DE PASOS ==========
+// ========== GENERACIÓN DE PASOS (CORREGIDO) ==========
 function generarPasosInteractiva(ecuacion) {
     const pasos = [];
     const { tipo, a, b, c, d, x } = ecuacion;
 
     if (tipo === 'simple' && d && d !== 1) {
+        // Ecuación con fracción: x/d + b = c
         pasos.push({ tipo: 'original', texto: formatearEcuacionSimple(ecuacion), ...ecuacion });
         let constante = c - b;
-        pasos.push({ tipo: 'mover_constante', operacion: b > 0 ? 'restar' : 'sumar', valor: Math.abs(b), ...ecuacion, texto: `${fraccionHTML('x', d)} = ${constante}` });
-        pasos.push({ tipo: 'multiplicar', operacion: 'multiplicar', valor: d, ...ecuacion, texto: `x = ${constante * d}` });
-        pasos.push({ tipo: 'solucion', x, texto: `x = ${x}` });
-        return pasos;
+        // Paso mover constante
+        const opMover = b > 0 ? 'restar' : 'sumar';
+        const valorMover = Math.abs(b);
+        pasos.push({
+            tipo: 'mover_constante',
+            operacion: opMover,
+            valor: valorMover,
+            texto: `${fraccionHTML('x', d)} = ${constante}`,
+            ...ecuacion
+        });
+        // Paso multiplicar por denominador (ya da la solución)
+        pasos.push({
+            tipo: 'multiplicar',
+            operacion: 'multiplicar',
+            valor: d,
+            texto: `x = ${constante * d}`,
+            ...ecuacion
+        });
+        // No se agrega paso de solución redundante
+        return pasos; // FIX: retorna aquí
     }
 
     if (tipo === 'simple' && (!d || d === 1)) {
+        // Ecuación sin fracción: ax + b = c
         pasos.push({ tipo: 'original', texto: formatearEcuacionSimple(ecuacion), ...ecuacion });
         let pasoActual = { a, b, c };
 
@@ -225,59 +245,99 @@ function generarPasosInteractiva(ecuacion) {
             const operacion = b > 0 ? 'restar' : 'sumar';
             const nuevoB = 0;
             const nuevoC = c - b;
-            pasos.push({ tipo: 'mover_constante', operacion, valor, a, b: nuevoB, c: nuevoC, texto: `${a}x = ${nuevoC}` });
+            pasos.push({
+                tipo: 'mover_constante',
+                operacion,
+                valor,
+                texto: `${a}x = ${nuevoC}`,
+                a, b: nuevoB, c: nuevoC
+            });
             pasoActual = { a, b: nuevoB, c: nuevoC };
         }
 
         if (a !== 1) {
             const valor = a;
             const operacion = 'dividir';
-            const nuevoA = 1;
             const nuevoC = pasoActual.c / a;
-            pasos.push({ tipo: 'dividir', operacion, valor, a: nuevoA, b: pasoActual.b, c: nuevoC, texto: `x = ${nuevoC}` });
-            pasoActual = { a: nuevoA, b: pasoActual.b, c: nuevoC };
+            pasos.push({
+                tipo: 'dividir',
+                operacion,
+                valor,
+                texto: `x = ${nuevoC}`,
+                a: 1, b: pasoActual.b, c: nuevoC
+            });
+            // No se agrega paso de solución redundante
         }
-
-        pasos.push({ tipo: 'solucion', x, texto: `x = ${x}` });
-        return pasos;
+        return pasos; // FIX: retorna aquí
     }
 
-    pasos.push({ tipo: 'original', texto: 'Ecuación no reconocida', ...ecuacion });
+    // Si no se reconoce (caso complejo o error), devolver solo un paso de error
+    pasos.push({ tipo: 'error', texto: 'Ecuación no reconocida', ...ecuacion });
     return pasos;
 }
 
 function generarPasosGuiada(ecuacion) {
     const pasos = [];
 
-    // Si es simple, usar la misma lógica que interactiva pero con más detalle
     if (ecuacion.tipo === 'simple') {
         const base = generarPasosInteractiva(ecuacion);
-        // Insertar paso intermedio que muestre la operación con detalle
+        // Si hay al menos un paso de mover_constante, insertamos paso intermedio
         if (base.length > 1) {
-            // Reemplazar el paso de mover_constante por dos: uno que muestre la operación y otro el resultado
             const original = base[0];
             const mover = base[1];
             if (mover && mover.tipo === 'mover_constante') {
                 const op = mover.operacion;
                 const val = mover.valor;
                 const ecuacionOriginal = { ...ecuacion };
-                // Mostrar operación
                 const textoOperacion = formatearEcuacionConOperacion(ecuacionOriginal, op, val);
                 pasos.push(original);
-                pasos.push({ tipo: 'operacion', texto: `Aplicar ${op === 'sumar' ? 'suma' : 'resta'} de ${val}:`, resultado: textoOperacion, ...mover });
-                // Luego el resultado simplificado
-                pasos.push({ tipo: 'simplificacion', texto: mover.texto, ...mover });
-                // El resto de pasos
+                pasos.push({
+                    tipo: 'operacion',
+                    texto: `Aplicar ${op === 'sumar' ? 'suma' : 'resta'} de ${val}:`,
+                    resultado: textoOperacion,
+                    ...mover
+                });
+                pasos.push({
+                    tipo: 'simplificacion',
+                    texto: mover.texto,
+                    ...mover
+                });
+                // Agregar el resto de pasos (multiplicar o dividir)
                 for (let i = 2; i < base.length; i++) {
-                    pasos.push(base[i]);
+                    const paso = base[i];
+                    if (paso.tipo === 'multiplicar' || paso.tipo === 'dividir') {
+                        // Insertar paso intermedio para mostrar la operación
+                        const op = paso.operacion;
+                        const val = paso.valor;
+                        // Necesitamos la ecuación antes de aplicar la operación
+                        const ecuacionAntes = { ...ecuacion }; // Simplificamos usando la original, pero mejor usar la ecuación del paso anterior
+                        // Obtenemos la ecuación del paso anterior (que puede ser el de mover o el original)
+                        const pasoAnterior = pasos[pasos.length - 1];
+                        const ecuacionPrevia = pasoAnterior ? pasoAnterior : ecuacion;
+                        const textoOp = formatearEcuacionConOperacion(ecuacionPrevia, op, val);
+                        pasos.push({
+                            tipo: 'operacion',
+                            texto: `Aplicar ${op === 'multiplicar' ? 'multiplicación' : 'división'} por ${val}:`,
+                            resultado: textoOp,
+                            ...paso
+                        });
+                        pasos.push({
+                            tipo: 'simplificacion',
+                            texto: paso.texto,
+                            ...paso
+                        });
+                    } else {
+                        pasos.push(paso);
+                    }
                 }
                 return pasos;
             }
         }
+        // Si no hay mover_constante (b=0), solo pasamos los pasos base
         return base;
     }
 
-    // Caso complejo: desglosar en varios pasos
+    // Caso complejo: generar pasos detallados
     if (ecuacion.tipo === 'compleja') {
         let { A, B, C, D, E, F, x } = ecuacion;
 
@@ -303,7 +363,7 @@ function generarPasosGuiada(ecuacion) {
             ...ecuacion
         });
 
-        // Paso 2: distribuir y combinar (mostrar ecuación simplificada)
+        // Paso 2: distribuir y combinar
         let nuevaEq = aplicarOperacion(ecuacion, 'multiplicar', M);
         let newA = A * (M / B);
         let newC = C * (M / D);
@@ -347,7 +407,7 @@ function generarPasosGuiada(ecuacion) {
         return pasos;
     }
 
-    pasos.push({ tipo: 'original', texto: 'Ecuación no reconocida', ...ecuacion });
+    pasos.push({ tipo: 'error', texto: 'Ecuación no reconocida', ...ecuacion });
     return pasos;
 }
 
@@ -545,7 +605,7 @@ function confirmarPaso() {
 
     const pasoEsperado = practicaState.pasos[practicaState.pasoActual + 1];
     let esCorrecto = false;
-    if (pasoEsperado && (pasoEsperado.tipo === 'mover_constante' || pasoEsperado.tipo === 'dividir' || pasoEsperado.tipo === 'multiplicar' || pasoEsperado.tipo === 'restar')) {
+    if (pasoEsperado && (pasoEsperado.tipo === 'mover_constante' || pasoEsperado.tipo === 'dividir' || pasoEsperado.tipo === 'multiplicar')) {
         esCorrecto = (pendiente.operacion === pasoEsperado.operacion && pendiente.numero === pasoEsperado.valor);
     }
 
@@ -567,13 +627,11 @@ function confirmarPaso() {
     mostrarHistorial();
     resetearControles();
 
-    // Verificar si el siguiente paso es solución
-    if (practicaState.pasoActual + 1 < practicaState.pasos.length && practicaState.pasos[practicaState.pasoActual + 1].tipo === 'solucion') {
-        practicaState.pasoActual++;
-        practicaState.historialLineas.push({ texto: practicaState.pasos[practicaState.pasoActual].texto, tipo: 'solucion' });
-        mostrarHistorial();
-
-        // Recompensas
+    // Verificar si el siguiente paso es solución (ya no existe, porque eliminamos redundancia)
+    // Ahora, cuando terminamos, el último paso es el que da la solución (multiplicar o dividir)
+    // Podemos detectar que ya no hay más pasos.
+    if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
+        // Se ha llegado al final, recompensa
         racha++;
         const bonusRacha = Math.min(racha, 5) * 2;
         const xpGanada = 10 + bonusRacha;
