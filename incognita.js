@@ -757,7 +757,16 @@ function avanzarPasoGuiada() {
     if (paso.resultado) {
         textoMostrar += `<br><span style="font-weight:bold;">${paso.resultado}</span>`;
     }
-    practicaState.historialLineas.push({ texto: textoMostrar, tipo: paso.tipo || 'paso' });
+
+    // Evitar duplicados consecutivos
+    const ultimo = practicaState.historialLineas[practicaState.historialLineas.length - 1];
+    if (!ultimo || ultimo.texto !== textoMostrar) {
+        practicaState.historialLineas.push({ texto: textoMostrar, tipo: paso.tipo || 'paso' });
+        console.log(`✅ Paso agregado (${paso.tipo}):`, textoMostrar); // Depuración
+    } else {
+        console.warn('⚠️ Paso duplicado omitido:', textoMostrar);
+    }
+
     mostrarHistorial();
 
     // Mostrar explicación pedagógica
@@ -776,7 +785,6 @@ function avanzarPasoGuiada() {
         mostrarFeedbackPractica('🎉 ¡Ecuación resuelta! (Práctica guiada)', 'exito');
         if (elBtnPista) elBtnPista.style.display = 'none';
     } else {
-        // Habilitar pista para el siguiente paso
         if (elBtnPista) elBtnPista.style.display = 'inline-flex';
     }
 }
