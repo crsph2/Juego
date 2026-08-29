@@ -277,3 +277,14 @@ body.dark-mode .theme-toggle { background: var(--btn-secondary); color: #fff; bo
     border-bottom: 1px solid currentColor;
     margin-bottom: 2px;
 }
+
+.feedback-info {
+    background: #e3f2fd;
+    color: #0d47a1;
+    border: 1px solid #1565c0;
+}
+body.dark-mode .feedback-info {
+    background: #1a237e;
+    color: #bbdefb;
+    border-color: #42a5f5;
+}
