@@ -4,14 +4,14 @@
 
 const XP_POR_NIVEL = 100;
 
-// Regiones por nivel
+// Regiones por nivel (actualizadas para los nuevos rangos)
 const REGIONES_INCOGNITA = [
   { minNivel: 1, nombre: "Aldea de las Ecuaciones" },
-  { minNivel: 5, nombre: "Villa de los Enteros" },
-  { minNivel: 10, nombre: "Fortaleza de las Fracciones" },
-  { minNivel: 15, nombre: "Cumbre del Álgebra Racional" },
-  { minNivel: 21, nombre: "Abismo de los Coeficientes" },
-  { minNivel: 31, nombre: "El Vacío del Infinito Algebraico" }
+  { minNivel: 2, nombre: "Villa de los Enteros" },
+  { minNivel: 4, nombre: "Fortaleza de las Fracciones" },
+  { minNivel: 6, nombre: "Cumbre del Álgebra Racional" },
+  { minNivel: 10, nombre: "Abismo de los Coeficientes" },
+  { minNivel: 15, nombre: "El Vacío del Infinito Algebraico" }
 ];
 
 function regionParaNivelIncognita(nivel) {
@@ -81,15 +81,16 @@ function formatearEcuacionSimple(ecuacion, letra = 'x') {
     return left + ' = ' + c;
 }
 
-// Generador de ecuaciones según el nivel (sin decimales y sin triviales)
+// Generador de ecuaciones según el nivel (con los nuevos rangos de dificultad)
 function generarEcuacionLineal() {
     let nivel = window.jugador.incognita.nivel || 1;
     let dificultad;
-    if (nivel >= 1 && nivel <= 4) dificultad = 1;
-    else if (nivel >= 5 && nivel <= 9) dificultad = 2;
-    else if (nivel >= 10 && nivel <= 14) dificultad = 3;
-    else if (nivel >= 15 && nivel <= 20) dificultad = 4;
-    else dificultad = 5; // Nivel 21+
+    // NUEVA ASIGNACIÓN DE DIFICULTAD
+    if (nivel === 1) dificultad = 1;
+    else if (nivel >= 2 && nivel <= 3) dificultad = 2;
+    else if (nivel >= 4 && nivel <= 5) dificultad = 3;
+    else if (nivel >= 6 && nivel <= 9) dificultad = 4;
+    else dificultad = 5; // Nivel 10+
 
     // Dificultad 1: x + b = c (b nunca es 0)
     if (dificultad === 1) {
@@ -159,7 +160,7 @@ function generarPasos(ecuacion) {
     const pasos = [];
     const { tipo, a, b, c, d, x } = ecuacion;
 
-    // Práctica para fracciones simples (Nivel 10-14)
+    // Práctica para fracciones simples (Nivel 4-5)
     if (tipo === 'simple' && d && d !== 1) {
         pasos.push({ tipo: 'original', texto: formatearEcuacionSimple(ecuacion), ...ecuacion });
         let constante = c - b;
@@ -169,7 +170,7 @@ function generarPasos(ecuacion) {
         return pasos;
     }
 
-    // Práctica para enteros (Niveles 1-9)
+    // Práctica para enteros (Niveles 1-3)
     if (tipo === 'simple') {
         pasos.push({ tipo: 'original', texto: formatearEcuacionSimple(ecuacion), ...ecuacion });
         let pasoActual = { a, b, c };
@@ -196,7 +197,7 @@ function generarPasos(ecuacion) {
         return pasos;
     }
 
-    // Práctica para complejas (Niveles 15+)
+    // Práctica para complejas (Niveles 6+)
     if (tipo === 'compleja') {
         let { A, B, C, D, E, F } = ecuacion;
         
