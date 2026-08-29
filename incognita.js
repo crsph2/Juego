@@ -80,7 +80,6 @@ function formatearEcuacionSimple(ecuacion, letra = 'x') {
 }
 
 function formatearEcuacionConOperacion(original, op, num, letra = 'x') {
-    // CORRECCIÓN: Si el objeto no tiene tipo pero tiene a,b,c, lo tratamos como 'simple'
     if (!original.tipo && original.a !== undefined && original.c !== undefined) {
         original = { ...original, tipo: 'simple' };
     }
@@ -276,7 +275,7 @@ function generarPasosInteractiva(ecuacion) {
             b: 0,
             c: constante * d,
             d: 1,
-            x: constante * d  // CORRECCIÓN: añadir x
+            x: constante * d
         });
         return pasos;
     }
@@ -313,7 +312,7 @@ function generarPasosInteractiva(ecuacion) {
                 a: 1,
                 b: pasoActual.b,
                 c: nuevoC,
-                x: nuevoC   // CORRECCIÓN: añadir x
+                x: nuevoC
             });
         }
         return pasos;
@@ -338,16 +337,17 @@ function generarPasosGuiada(ecuacion) {
                 const ecuacionOriginal = { ...ecuacion };
                 const textoOperacion = formatearEcuacionConOperacion(ecuacionOriginal, op, val);
                 pasos.push(original);
+                // CORRECCIÓN: primero spread de mover, luego sobrescribimos tipo y texto
                 pasos.push({
+                    ...mover,
                     tipo: 'operacion',
                     texto: textoOperacion,
-                    ...mover,
                     explicacion: `Para aislar el término con la incógnita, ${op === 'sumar' ? 'sumamos' : 'restamos'} ${Math.abs(val)} a ambos lados.`
                 });
                 pasos.push({
+                    ...mover,
                     tipo: 'simplificacion',
                     texto: mover.texto,
-                    ...mover,
                     explicacion: `Simplificamos: ${mover.texto}`
                 });
                 for (let i = 2; i < base.length; i++) {
@@ -355,22 +355,21 @@ function generarPasosGuiada(ecuacion) {
                     if (paso.tipo === 'multiplicar' || paso.tipo === 'dividir') {
                         const op = paso.operacion;
                         const val = paso.valor;
-                        // CORRECCIÓN: usar el paso actual como ecuación previa
                         const ecuacionPrevia = { ...paso, tipo: 'simple' };
                         const textoOp = formatearEcuacionConOperacion(ecuacionPrevia, op, val);
                         const explicacion = op === 'multiplicar' 
                             ? `Multiplicamos ambos lados por ${val} para eliminar el denominador.`
                             : `Dividimos ambos lados entre ${val} para obtener x = ${paso.c}.`;
                         pasos.push({
+                            ...paso,
                             tipo: 'operacion',
                             texto: textoOp,
-                            ...paso,
                             explicacion
                         });
                         pasos.push({
+                            ...paso,
                             tipo: 'simplificacion',
                             texto: paso.texto,
-                            ...paso,
                             explicacion: `Simplificamos: ${paso.texto}`
                         });
                     } else {
@@ -400,9 +399,9 @@ function generarPasosGuiada(ecuacion) {
         M = mcm(M, F);
         const textoMul = formatearEcuacionConOperacion(ecuacion, 'multiplicar', M);
         pasos.push({
+            ...ecuacion,
             tipo: 'operacion',
             texto: textoMul,
-            ...ecuacion,
             explicacion: `Multiplicamos ambos lados por el MCM (${M}) para eliminar denominadores.`
         });
         let nuevaEq = aplicarOperacion(ecuacion, 'multiplicar', M);
@@ -415,25 +414,25 @@ function generarPasosGuiada(ecuacion) {
         if (a_simple === 0) a_simple = 1;
         let eqDistribuida = { tipo: 'simple', a: a_simple, b: 0, c: c_simple, d: 1, x: x };
         pasos.push({
+            ...eqDistribuida,
             tipo: 'distribuir',
             texto: 'Distribuir y combinar términos semejantes:',
             resultado: formatearEcuacionSimple(eqDistribuida),
-            ...eqDistribuida,
             explicacion: 'Distribuimos y combinamos términos semejantes para obtener una ecuación más simple.'
         });
         let valorDiv = a_simple;
         let eqDiv = aplicarOperacion(eqDistribuida, 'dividir', valorDiv);
         const textoDiv = formatearEcuacionConOperacion(eqDistribuida, 'dividir', valorDiv);
         pasos.push({
+            ...eqDiv,
             tipo: 'operacion',
             texto: textoDiv,
-            ...eqDiv,
             explicacion: `Dividimos ambos lados entre ${valorDiv} para despejar x.`
         });
         pasos.push({
+            ...eqDiv,
             tipo: 'simplificacion',
             texto: formatearEcuacionSimple(eqDiv),
-            ...eqDiv,
             explicacion: `Simplificamos: ${formatearEcuacionSimple(eqDiv)}`
         });
         pasos.push({ 
@@ -745,7 +744,7 @@ function realizarOperacion() {
     actualizarBoton();
 }
 
-// ========== AVANZAR PASO GUIADA (CORREGIDA) ==========
+// ========== AVANZAR PASO GUIADA ==========
 function avanzarPasoGuiada() {
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
         mostrarFeedbackPractica('Ya has completado todos los pasos.', 'exito');
@@ -766,7 +765,6 @@ function avanzarPasoGuiada() {
         textoMostrar += `<br><span style="font-weight:bold;">${paso.resultado}</span>`;
     }
 
-    // Evitar duplicados consecutivos
     const ultimo = practicaState.historialLineas[practicaState.historialLineas.length - 1];
     if (!ultimo || ultimo.texto !== textoMostrar) {
         practicaState.historialLineas.push({ texto: textoMostrar, tipo: paso.tipo || 'paso' });
@@ -777,7 +775,6 @@ function avanzarPasoGuiada() {
 
     mostrarHistorial();
 
-    // Mostrar explicación pedagógica
     const explicacion = paso.explicacion || obtenerExplicacionPaso(paso, practicaState.eqActual);
     if (explicacion) {
         mostrarFeedbackPractica(`💡 ${explicacion}`, 'info');
