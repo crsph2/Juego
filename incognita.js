@@ -78,7 +78,6 @@ function formatearEcuacionConOperacion(original, op, num) {
     let izq = partes[0].trim();
     let der = partes[1].trim();
 
-    // Siempre poner paréntesis si hay más de un término o contiene HTML
     const tieneOperador = /[+-]/.test(izq) || /[+-]/.test(der);
     const izqConParent = tieneOperador ? `(${izq})` : izq;
     const derConParent = tieneOperador ? `(${der})` : der;
@@ -204,7 +203,7 @@ function aplicarOperacion(ecuacion, op, num) {
     }
 }
 
-// ========== GENERACIÓN DE PASOS (CORREGIDO) ==========
+// ========== GENERACIÓN DE PASOS ==========
 function generarPasosInteractiva(ecuacion) {
     const pasos = [];
     const { tipo, a, b, c, d, x } = ecuacion;
@@ -220,14 +219,22 @@ function generarPasosInteractiva(ecuacion) {
             operacion: opMover,
             valor: valorMover,
             texto: `${fraccionHTML('x', d)} = ${constante}`,
-            ...ecuacion
+            a: 1,
+            b: 0,
+            c: constante,
+            d: d,
+            x: x
         });
         pasos.push({
             tipo: 'multiplicar',
             operacion: 'multiplicar',
             valor: d,
             texto: `x = ${constante * d}`,
-            ...ecuacion
+            a: 1,
+            b: 0,
+            c: constante * d,
+            d: 1,
+            x: x
         });
         return pasos;
     }
@@ -297,13 +304,11 @@ function generarPasosGuiada(ecuacion) {
                     texto: mover.texto,
                     ...mover
                 });
-                // Agregar el resto de pasos (multiplicar o dividir)
                 for (let i = 2; i < base.length; i++) {
                     const paso = base[i];
                     if (paso.tipo === 'multiplicar' || paso.tipo === 'dividir') {
                         const op = paso.operacion;
                         const val = paso.valor;
-                        // Obtenemos la ecuación previa (la última simplificada)
                         const ecuacionPrevia = pasos[pasos.length - 1] || ecuacion;
                         const textoOp = formatearEcuacionConOperacion(ecuacionPrevia, op, val);
                         pasos.push({
@@ -482,7 +487,7 @@ let practicaState = {
     historialLineas: [],
     operacionPendiente: null,
     eq: null,
-    eqActual: null,  // <-- NUEVA VARIABLE: ecuación actual simplificada
+    eqActual: null,
     tipo: 'interactiva'
 };
 
@@ -490,7 +495,7 @@ let practicaState = {
 function iniciarPracticaInteractiva() {
     const eq = generarEcuacionLineal(3);
     practicaState.eq = eq;
-    practicaState.eqActual = eq;  // FIX: inicializar con la ecuación original
+    practicaState.eqActual = eq;
     practicaState.pasos = generarPasosInteractiva(eq);
     practicaState.pasoActual = 0;
     practicaState.operacionPendiente = null;
@@ -514,6 +519,9 @@ function iniciarPracticaInteractiva() {
     mostrarHistorial();
     resetearControles();
     actualizarBoton();
+
+    // Depuración: mostrar pasos generados en consola
+    console.log('Pasos generados:', practicaState.pasos);
 }
 
 // ========== INICIALIZAR PRÁCTICA GUIADA ==========
@@ -582,12 +590,21 @@ function confirmarPaso() {
 
     const pasoEsperado = practicaState.pasos[practicaState.pasoActual + 1];
     let esCorrecto = false;
+
+    // Depuración
+    console.log('Pendiente:', pendiente.operacion, pendiente.numero);
+    console.log('Esperado:', pasoEsperado);
+
     if (pasoEsperado && (pasoEsperado.tipo === 'mover_constante' || pasoEsperado.tipo === 'dividir' || pasoEsperado.tipo === 'multiplicar')) {
-        esCorrecto = (pendiente.operacion === pasoEsperado.operacion && pendiente.numero === pasoEsperado.valor);
+        // Comparación no estricta para números
+        esCorrecto = (pendiente.operacion === pasoEsperado.operacion && pendiente.numero == pasoEsperado.valor);
     }
 
     if (!esCorrecto) {
-        practicaState.historialLineas.pop();
+        // Eliminar solo la última línea si es la de operación
+        if (practicaState.historialLineas.length > 0 && practicaState.historialLineas[practicaState.historialLineas.length - 1].tipo === 'operacion') {
+            practicaState.historialLineas.pop();
+        }
         practicaState.operacionPendiente = null;
         mostrarHistorial();
         resetearControles();
@@ -596,9 +613,8 @@ function confirmarPaso() {
         return;
     }
 
-    // FIX: Actualizar la ecuación actual con la simplificada
+    // Paso correcto
     practicaState.eqActual = ecuacionAplicada;
-
     practicaState.pasoActual++;
     practicaState.historialLineas.push({ texto: textoSimplificado, tipo: 'simplificacion' });
     practicaState.operacionPendiente = null;
@@ -606,9 +622,7 @@ function confirmarPaso() {
     mostrarHistorial();
     resetearControles();
 
-    // Verificar si se ha llegado al final de los pasos
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
-        // Recompensa
         racha++;
         const bonusRacha = Math.min(racha, 5) * 2;
         const xpGanada = 10 + bonusRacha;
@@ -655,7 +669,6 @@ function realizarOperacion() {
 
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) { mostrarFeedbackPractica('Ya has resuelto la ecuación.', 'error'); return; }
 
-    // FIX: Usar la ecuación actual simplificada en lugar del paso almacenado
     const ecuacionActual = practicaState.eqActual;
     if (!ecuacionActual) { mostrarFeedbackPractica('No hay ecuación actual.', 'error'); return; }
 
@@ -680,7 +693,6 @@ function avanzarPasoGuiada() {
     const paso = practicaState.pasos[practicaState.pasoActual];
     if (!paso) return;
 
-    // Actualizar la ecuación actual si el paso tiene propiedades de ecuación
     if (paso.a !== undefined && paso.c !== undefined) {
         practicaState.eqActual = { ...paso };
     }
@@ -838,7 +850,6 @@ function iniciarJuego() {
     elMensajeExito = document.getElementById('mensaje-exito'); elTextoSolucion = document.getElementById('texto-solucion');
     elBtnReiniciar = document.getElementById('btn-reiniciar');
 
-    // Crear botón de modo guiada si no existe
     let btnGuiada = document.getElementById('mode-guiada');
     if (!btnGuiada) {
         const modeSelector = document.querySelector('.mode-selector');
