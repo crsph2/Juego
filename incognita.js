@@ -155,7 +155,7 @@ function generarEcuacionLineal() {
     }
 }
 
-// Generar pasos para la práctica paso a paso
+// ---------- FUNCIÓN generarPasos CORREGIDA ----------
 function generarPasos(ecuacion) {
     const pasos = [];
     const { tipo, a, b, c, d, x } = ecuacion;
@@ -197,31 +197,44 @@ function generarPasos(ecuacion) {
         return pasos;
     }
 
-    // Práctica para complejas (Niveles 6+)
+    // ---------- Práctica para complejas (Niveles 6+) CORREGIDO ----------
     if (tipo === 'compleja') {
         let { A, B, C, D, E, F } = ecuacion;
         
+        // Paso 1: multiplicar por B para eliminar denominador del primer término
         let paso1 = { ...ecuacion, B: 1, D: D / B, F: F / B };
         pasos.push({ tipo: 'multiplicar', operacion: 'multiplicar', valor: B, resultado: formatearEcuacionSimple(paso1), ...paso1 });
 
+        // Aseguramos que paso2 siempre exista (inicialmente igual a paso1)
+        let paso2 = paso1;
+        // Si aún hay denominadores distintos de 1, multiplicamos por el mínimo común múltiplo
         if (paso1.D !== 1 || paso1.F !== 1) {
             let den = Math.max(paso1.D, paso1.F);
-            let paso2 = { ...paso1, A: paso1.A * den, D: 1, F: 1 };
+            paso2 = { ...paso1, A: paso1.A * den, D: 1, F: 1 };
             pasos.push({ tipo: 'multiplicar', operacion: 'multiplicar', valor: den, resultado: formatearEcuacionSimple(paso2), ...paso2 });
         }
 
-        let constante = paso2 ? paso2.A : paso1.A;
-        let paso3 = paso2 ? { ...paso2, A: 0, E: paso2.E + constante } : { ...paso1, A: 0, E: paso1.E + constante };
+        // Ahora paso2 está definido siempre. Movemos la constante A al lado derecho.
+        let constante = paso2.A;
+        let paso3 = { ...paso2, A: 0, E: paso2.E + constante };
         if (constante !== 0) {
             pasos.push({ tipo: 'restar', operacion: 'restar', valor: constante, resultado: formatearEcuacionSimple(paso3), ...paso3 });
+        } else {
+            // Si constante es 0, no agregamos un paso de resta, pero igual usamos paso3 para continuar
+            pasos.push({ tipo: 'simplificacion', texto: formatearEcuacionSimple(paso3), ...paso3 });
         }
 
+        // Agrupamos términos con x: C*x - x = (C-1)x, y movemos el -x al otro lado
         let paso4 = { ...paso3, C: paso3.C - 1, E: paso3.E };
         pasos.push({ tipo: 'restar', operacion: 'restar', valor: 1, resultado: formatearEcuacionSimple(paso4), ...paso4 });
 
+        // Dividimos por el coeficiente de x (C) para despejar
         let coef = paso4.C;
         let paso5 = { ...paso4, A: 0, C: 1, E: paso4.E / coef };
-        pasos.push({ tipo: 'dividir', operacion: 'dividir', valor: coef, resultado: `x = ${x}`, ...paso5 });
+        pasos.push({ tipo: 'dividir', operacion: 'dividir', valor: coef, resultado: `x = ${paso5.E}`, ...paso5 });
+
+        // Agregamos la solución final
+        pasos.push({ tipo: 'solucion', x: paso5.E, texto: `x = ${paso5.E}` });
 
         return pasos;
     }
@@ -400,7 +413,7 @@ function iniciarPractica() {
     if (elControlesPractica) elControlesPractica.style.display = 'block';
     if (elMensajeExito) elMensajeExito.style.display = 'none';
     if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'none';
-    if (elBtnAccion) elBtnAccion.style.display = 'inline-flex'; // Mostrar botón al iniciar
+    if (elBtnAccion) elBtnAccion.style.display = 'inline-flex';
     if (elFeedbackPractica) {
         elFeedbackPractica.className = 'feedback hidden';
         elFeedbackPractica.textContent = '';
@@ -481,7 +494,7 @@ function confirmarPaso() {
         if (elControlesPractica) elControlesPractica.style.display = 'none';
         if (elMensajeExito) { elMensajeExito.style.display = 'block'; if (elTextoSolucion) elTextoSolucion.textContent = `x = ${practicaState.eq.x}`; }
         if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
-        if (elBtnAccion) elBtnAccion.style.display = 'none'; // Ocultar botón al terminar
+        if (elBtnAccion) elBtnAccion.style.display = 'none';
         mostrarControles(false); elBtnAccion.disabled = true;
         return;
     }
@@ -490,7 +503,7 @@ function confirmarPaso() {
     mostrarFeedbackPractica('✅ ¡Bien hecho! 😊', 'exito');
 }
 
-// ---------- Funciones de UI y controles (Completas) ----------
+// ---------- Funciones de UI y controles ----------
 function mostrarFeedbackPractica(mensaje, tipo) {
     if (!elFeedbackPractica) return;
     if (feedbackTimeout) { clearTimeout(feedbackTimeout); feedbackTimeout = null; }
