@@ -37,15 +37,36 @@ function fraccionHTML(num, den) {
     return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
 }
 
+// Formatea el lado izquierdo de una ecuación simple (sin el "= c")
+function formatearLadoIzquierdo(ecuacion, letra = 'x') {
+    let { a, b, d } = ecuacion;
+    let left = '';
+    if (d && d !== 1) {
+        left = fraccionHTML(letra, d);
+    } else {
+        if (a === 1) left = letra;
+        else left = a + letra;
+    }
+    if (b > 0) left += ' + ' + b;
+    else if (b < 0) left += ' - ' + Math.abs(b);
+    return left;
+}
+
+// Formatea el lado derecho (solo el número c)
+function formatearLadoDerecho(ecuacion) {
+    return ecuacion.c;
+}
+
+// Formatea la ecuación completa (con "=") a partir del objeto
 function formatearEcuacionSimple(ecuacion, letra = 'x') {
     if (!ecuacion) return 'Ecuación no disponible';
-    let left = '';
-
     if (ecuacion.tipo === 'compleja') {
+        // Para complejas, usamos la versión anterior (no se usa en paso a paso simple)
         let { A, B, C, D, E, F } = ecuacion;
         let term1 = (A === 0) ? '0' : `${A} - ${letra}`;
         let term2 = (C === 0) ? '0' : `${C}${letra}`;
         let term3 = `${letra} - ${E}`;
+        let left = '';
         if (B === 1 && A !== 0) left = term1;
         else if (B !== 1) left = fraccionHTML(term1, B);
         else left = '0';
@@ -59,51 +80,44 @@ function formatearEcuacionSimple(ecuacion, letra = 'x') {
         return left + ' = ' + right;
     }
 
-    let { a, b, c, d } = ecuacion;
-    if (d && d !== 1) {
-        left = fraccionHTML(letra, d);
-    } else {
-        if (a === 1) left = letra;
-        else left = a + letra;
-    }
-    if (b > 0) left += ' + ' + b;
-    else if (b < 0) left += ' - ' + Math.abs(b);
-    return left + ' = ' + c;
+    // Simple
+    return formatearLadoIzquierdo(ecuacion, letra) + ' = ' + ecuacion.c;
 }
 
-// Nueva versión: siempre muestra la operación y la ecuación resultante
-function formatearEcuacionConOperacion(original, op, num) {
-    const textoOriginal = formatearEcuacionSimple(original);
-    const partes = textoOriginal.split('=');
-    if (partes.length !== 2) return `Operación: ${op} ${num} → ${textoOriginal}`;
-    let izq = partes[0].trim();
-    let der = partes[1].trim();
+// ========== NUEVA: formatear ecuación con operación aplicada (sin split) ==========
+function formatearEcuacionConOperacion(original, op, num, letra = 'x') {
+    // Solo trabajamos con ecuaciones simples (tipo 'simple')
+    if (original.tipo !== 'simple') {
+        // Para complejas, usamos un enfoque genérico
+        const eqStr = formatearEcuacionSimple(original, letra);
+        return `${op} ${num} → ${eqStr}`;
+    }
 
-    // Construir la ecuación con la operación aplicada
+    const izqOriginal = formatearLadoIzquierdo(original, letra);
+    const derOriginal = original.c;
+
     let nuevaIzq, nuevaDer;
     if (op === 'sumar') {
-        nuevaIzq = `${izq} + ${num}`;
-        nuevaDer = `${der} + ${num}`;
+        nuevaIzq = `${izqOriginal} + ${num}`;
+        nuevaDer = `${derOriginal} + ${num}`;
     } else if (op === 'restar') {
-        nuevaIzq = `${izq} - ${num}`;
-        nuevaDer = `${der} - ${num}`;
+        nuevaIzq = `${izqOriginal} - ${num}`;
+        nuevaDer = `${derOriginal} - ${num}`;
     } else if (op === 'multiplicar') {
-        // Poner paréntesis si la expresión tiene más de un término
-        const izqParent = /[+-]/.test(izq) ? `(${izq})` : izq;
-        const derParent = /[+-]/.test(der) ? `(${der})` : der;
+        const izqParent = /[+-]/.test(izqOriginal) ? `(${izqOriginal})` : izqOriginal;
+        const derParent = /[+-]/.test(String(derOriginal)) ? `(${derOriginal})` : derOriginal;
         nuevaIzq = `${num} · ${izqParent}`;
         nuevaDer = `${num} · ${derParent}`;
     } else if (op === 'dividir') {
-        const izqParent = /[+-]/.test(izq) ? `(${izq})` : izq;
-        const derParent = /[+-]/.test(der) ? `(${der})` : der;
+        const izqParent = /[+-]/.test(izqOriginal) ? `(${izqOriginal})` : izqOriginal;
+        const derParent = /[+-]/.test(String(derOriginal)) ? `(${derOriginal})` : derOriginal;
         nuevaIzq = `${izqParent} ÷ ${num}`;
         nuevaDer = `${derParent} ÷ ${num}`;
     } else {
-        return textoOriginal;
+        return formatearEcuacionSimple(original, letra);
     }
-    // Devolver un texto que describa la operación y la ecuación resultante
-    const nombreOp = { sumar: 'Sumar', restar: 'Restar', multiplicar: 'Multiplicar', dividir: 'Dividir' }[op] || op;
-    return `${nombreOp} ${num}:  ${nuevaIzq} = ${nuevaDer}`;
+
+    return `${nuevaIzq} = ${nuevaDer}`;
 }
 
 // ========== GENERADOR DE ECUACIONES ==========
@@ -222,7 +236,6 @@ function generarPasosInteractiva(ecuacion) {
     const { tipo, a, b, c, d, x } = ecuacion;
 
     if (tipo === 'simple' && d && d !== 1) {
-        // Ecuación con fracción: x/d + b = c
         pasos.push({ tipo: 'original', texto: formatearEcuacionSimple(ecuacion), ...ecuacion });
         let constante = c - b;
         const opMover = b > 0 ? 'restar' : 'sumar';
@@ -253,7 +266,6 @@ function generarPasosInteractiva(ecuacion) {
     }
 
     if (tipo === 'simple' && (!d || d === 1)) {
-        // Ecuación sin fracción: ax + b = c
         pasos.push({ tipo: 'original', texto: formatearEcuacionSimple(ecuacion), ...ecuacion });
         let pasoActual = { a, b, c };
 
@@ -287,7 +299,6 @@ function generarPasosInteractiva(ecuacion) {
         return pasos;
     }
 
-    // Si no se reconoce
     pasos.push({ tipo: 'error', texto: 'Ecuación no reconocida', ...ecuacion });
     return pasos;
 }
@@ -308,7 +319,7 @@ function generarPasosGuiada(ecuacion) {
                 pasos.push(original);
                 pasos.push({
                     tipo: 'operacion',
-                    texto: textoOperacion,  // ahora incluye la operación y la ecuación
+                    texto: textoOperacion,
                     ...mover
                 });
                 pasos.push({
@@ -343,7 +354,7 @@ function generarPasosGuiada(ecuacion) {
         return base;
     }
 
-    // Caso complejo (no se modifica)
+    // Caso complejo (no se usa en paso a paso simple, pero se mantiene)
     if (ecuacion.tipo === 'compleja') {
         let { A, B, C, D, E, F, x } = ecuacion;
         pasos.push({ tipo: 'original', texto: formatearEcuacionSimple(ecuacion), ...ecuacion });
@@ -569,7 +580,6 @@ function mostrarHistorial() {
     practicaState.historialLineas.forEach(linea => {
         const div = document.createElement('div');
         div.className = 'ecuacion-linea';
-        // Asignar clase para estilo
         if (linea.tipo === 'operacion' || linea.tipo === 'multiplicar' || linea.tipo === 'dividir' || 
             linea.tipo === 'distribuir' || linea.tipo === 'mover_constante') {
             div.classList.add('linea-paso');
@@ -615,7 +625,7 @@ function confirmarPaso() {
     // Paso correcto
     practicaState.eqActual = ecuacionAplicada;
     practicaState.pasoActual++;
-    // Agregar la simplificación solo si no existe ya una igual
+    // Evitar duplicados: solo agregar si no es igual a la última línea
     const ultimaLinea = practicaState.historialLineas[practicaState.historialLineas.length - 1];
     if (!ultimaLinea || ultimaLinea.texto !== textoSimplificado) {
         practicaState.historialLineas.push({ texto: textoSimplificado, tipo: 'simplificacion' });
@@ -677,9 +687,10 @@ function realizarOperacion() {
     if (!ecuacionActual) { mostrarFeedbackPractica('No hay ecuación actual.', 'error'); return; }
 
     const ecuacionAplicada = aplicarOperacion(ecuacionActual, operacion, num);
+    // Generar el texto de la operación aplicada (sin simplificar)
     const textoOperacion = formatearEcuacionConOperacion(ecuacionActual, operacion, num);
 
-    // Verificar si ya existe una línea de operación igual
+    // Evitar duplicados de operación
     const yaExiste = practicaState.historialLineas.some(linea => linea.texto === textoOperacion && linea.tipo === 'operacion');
     if (!yaExiste) {
         practicaState.historialLineas.push({ texto: textoOperacion, tipo: 'operacion' });
