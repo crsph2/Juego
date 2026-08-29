@@ -31,13 +31,13 @@ let elHistorialPasos, elFeedbackPractica, elNextPracticaBtn;
 let elNumeroPractica, elBtnAccion, elOperacionBtns;
 let elControlesPractica, elMensajeExito, elTextoSolucion;
 let elBtnReiniciar;
+let elBtnPista; // Nuevo: botón de pista
 
 // ========== UTILIDADES ==========
 function fraccionHTML(num, den) {
     return `<span class="frac"><span class="num">${num}</span><span class="den">${den}</span></span>`;
 }
 
-// Formatea el lado izquierdo de una ecuación simple (sin el "= c")
 function formatearLadoIzquierdo(ecuacion, letra = 'x') {
     let { a, b, d } = ecuacion;
     let left = '';
@@ -52,16 +52,13 @@ function formatearLadoIzquierdo(ecuacion, letra = 'x') {
     return left;
 }
 
-// Formatea el lado derecho (solo el número c)
 function formatearLadoDerecho(ecuacion) {
     return ecuacion.c;
 }
 
-// Formatea la ecuación completa (con "=") a partir del objeto
 function formatearEcuacionSimple(ecuacion, letra = 'x') {
     if (!ecuacion) return 'Ecuación no disponible';
     if (ecuacion.tipo === 'compleja') {
-        // Para complejas, usamos la versión anterior (no se usa en paso a paso simple)
         let { A, B, C, D, E, F } = ecuacion;
         let term1 = (A === 0) ? '0' : `${A} - ${letra}`;
         let term2 = (C === 0) ? '0' : `${C}${letra}`;
@@ -79,23 +76,16 @@ function formatearEcuacionSimple(ecuacion, letra = 'x') {
         else right = fraccionHTML(term3, F);
         return left + ' = ' + right;
     }
-
-    // Simple
     return formatearLadoIzquierdo(ecuacion, letra) + ' = ' + ecuacion.c;
 }
 
-// ========== NUEVA: formatear ecuación con operación aplicada (sin split) ==========
 function formatearEcuacionConOperacion(original, op, num, letra = 'x') {
-    // Solo trabajamos con ecuaciones simples (tipo 'simple')
     if (original.tipo !== 'simple') {
-        // Para complejas, usamos un enfoque genérico
         const eqStr = formatearEcuacionSimple(original, letra);
         return `${op} ${num} → ${eqStr}`;
     }
-
     const izqOriginal = formatearLadoIzquierdo(original, letra);
     const derOriginal = original.c;
-
     let nuevaIzq, nuevaDer;
     if (op === 'sumar') {
         nuevaIzq = `${izqOriginal} + ${num}`;
@@ -116,8 +106,32 @@ function formatearEcuacionConOperacion(original, op, num, letra = 'x') {
     } else {
         return formatearEcuacionSimple(original, letra);
     }
-
     return `${nuevaIzq} = ${nuevaDer}`;
+}
+
+// ========== EXPLICACIONES PEDAGÓGICAS (NUEVO) ==========
+function obtenerExplicacionPaso(paso, ecuacion) {
+    if (!paso) return '';
+    const tipo = paso.tipo;
+    const op = paso.operacion || '';
+    const valor = paso.valor || '';
+    switch (tipo) {
+        case 'mover_constante':
+            const signo = op === 'sumar' ? 'sumamos' : 'restamos';
+            return `Para aislar el término con la incógnita, ${signo} ${Math.abs(valor)} a ambos lados de la ecuación.`;
+        case 'dividir':
+            return `Para obtener el valor de la incógnita, dividimos ambos lados por ${valor}.`;
+        case 'multiplicar':
+            return `Para eliminar el denominador, multiplicamos ambos lados por ${valor}.`;
+        case 'distribuir':
+            return 'Distribuimos y combinamos términos semejantes para simplificar la ecuación.';
+        case 'operacion':
+            return `Aplicamos la operación correcta para avanzar en la resolución.`;
+        case 'solucion':
+            return `¡Hemos despejado la incógnita! El valor es ${paso.x}.`;
+        default:
+            return 'Seguimos con el siguiente paso.';
+    }
 }
 
 // ========== GENERADOR DE ECUACIONES ==========
@@ -189,7 +203,6 @@ function generarEcuacionLineal(maxDificultad = 5) {
 function aplicarOperacion(ecuacion, op, num) {
     if (ecuacion.tipo === 'compleja') {
         let { A, B, C, D, E, F } = ecuacion;
-
         if (op === 'multiplicar') {
             const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
             let gA = gcd(num, B);
@@ -211,7 +224,6 @@ function aplicarOperacion(ecuacion, op, num) {
             return { ...ecuacion, A: A / num, C: C / num, E: E / num };
         }
     }
-
     let { a, b, c, d } = ecuacion;
     if (d && d !== 1 && d !== undefined) {
         switch (op) {
@@ -303,6 +315,7 @@ function generarPasosInteractiva(ecuacion) {
     return pasos;
 }
 
+// ========== GENERAR PASOS GUIADA (MODIFICADA CON EXPLICACIONES) ==========
 function generarPasosGuiada(ecuacion) {
     const pasos = [];
 
@@ -320,12 +333,14 @@ function generarPasosGuiada(ecuacion) {
                 pasos.push({
                     tipo: 'operacion',
                     texto: textoOperacion,
-                    ...mover
+                    ...mover,
+                    explicacion: `Para aislar el término con la incógnita, ${op === 'sumar' ? 'sumamos' : 'restamos'} ${Math.abs(val)} a ambos lados.`
                 });
                 pasos.push({
                     tipo: 'simplificacion',
                     texto: mover.texto,
-                    ...mover
+                    ...mover,
+                    explicacion: `Simplificamos: ${mover.texto}`
                 });
                 for (let i = 2; i < base.length; i++) {
                     const paso = base[i];
@@ -334,15 +349,20 @@ function generarPasosGuiada(ecuacion) {
                         const val = paso.valor;
                         const ecuacionPrevia = pasos[pasos.length - 1] || ecuacion;
                         const textoOp = formatearEcuacionConOperacion(ecuacionPrevia, op, val);
+                        const explicacion = op === 'multiplicar' 
+                            ? `Multiplicamos ambos lados por ${val} para eliminar el denominador.`
+                            : `Dividimos ambos lados entre ${val} para obtener x = ${paso.c}.`;
                         pasos.push({
                             tipo: 'operacion',
                             texto: textoOp,
-                            ...paso
+                            ...paso,
+                            explicacion
                         });
                         pasos.push({
                             tipo: 'simplificacion',
                             texto: paso.texto,
-                            ...paso
+                            ...paso,
+                            explicacion: `Simplificamos: ${paso.texto}`
                         });
                     } else {
                         pasos.push(paso);
@@ -354,10 +374,15 @@ function generarPasosGuiada(ecuacion) {
         return base;
     }
 
-    // Caso complejo (no se usa en paso a paso simple, pero se mantiene)
+    // Caso complejo
     if (ecuacion.tipo === 'compleja') {
         let { A, B, C, D, E, F, x } = ecuacion;
-        pasos.push({ tipo: 'original', texto: formatearEcuacionSimple(ecuacion), ...ecuacion });
+        pasos.push({ 
+            tipo: 'original', 
+            texto: formatearEcuacionSimple(ecuacion), 
+            ...ecuacion,
+            explicacion: 'Ecuación original con fracciones.'
+        });
         const mcm = (a, b) => {
             const gcd = (x, y) => y === 0 ? x : gcd(y, x % y);
             return Math.abs(a * b) / gcd(a, b);
@@ -368,7 +393,8 @@ function generarPasosGuiada(ecuacion) {
         pasos.push({
             tipo: 'operacion',
             texto: textoMul,
-            ...ecuacion
+            ...ecuacion,
+            explicacion: `Multiplicamos ambos lados por el MCM (${M}) para eliminar denominadores.`
         });
         let nuevaEq = aplicarOperacion(ecuacion, 'multiplicar', M);
         let newA = A * (M / B);
@@ -383,7 +409,8 @@ function generarPasosGuiada(ecuacion) {
             tipo: 'distribuir',
             texto: 'Distribuir y combinar términos semejantes:',
             resultado: formatearEcuacionSimple(eqDistribuida),
-            ...eqDistribuida
+            ...eqDistribuida,
+            explicacion: 'Distribuimos y combinamos términos semejantes para obtener una ecuación más simple.'
         });
         let valorDiv = a_simple;
         let eqDiv = aplicarOperacion(eqDistribuida, 'dividir', valorDiv);
@@ -391,14 +418,21 @@ function generarPasosGuiada(ecuacion) {
         pasos.push({
             tipo: 'operacion',
             texto: textoDiv,
-            ...eqDiv
+            ...eqDiv,
+            explicacion: `Dividimos ambos lados entre ${valorDiv} para despejar x.`
         });
         pasos.push({
             tipo: 'simplificacion',
             texto: formatearEcuacionSimple(eqDiv),
-            ...eqDiv
+            ...eqDiv,
+            explicacion: `Simplificamos: ${formatearEcuacionSimple(eqDiv)}`
         });
-        pasos.push({ tipo: 'solucion', x: x, texto: `x = ${x}` });
+        pasos.push({ 
+            tipo: 'solucion', 
+            x: x, 
+            texto: `x = ${x}`,
+            explicacion: `¡Solución encontrada! x = ${x}`
+        });
         return pasos;
     }
 
@@ -537,7 +571,7 @@ function iniciarPracticaInteractiva() {
     actualizarBoton();
 }
 
-// ========== INICIALIZAR PRÁCTICA GUIADA ==========
+// ========== INICIALIZAR PRÁCTICA GUIADA (MODIFICADA) ==========
 function iniciarPracticaGuiada() {
     const eq = generarEcuacionLineal();
     practicaState.eq = eq;
@@ -565,6 +599,8 @@ function iniciarPracticaGuiada() {
         elFeedbackPractica.textContent = '';
         if (feedbackTimeout) { clearTimeout(feedbackTimeout); feedbackTimeout = null; }
     }
+    // Ocultar pista al inicio
+    if (elBtnPista) elBtnPista.style.display = 'inline-flex';
 
     mostrarHistorial();
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
@@ -610,7 +646,6 @@ function confirmarPaso() {
     }
 
     if (!esCorrecto) {
-        // Eliminar la última línea si es de operación
         if (practicaState.historialLineas.length > 0 && practicaState.historialLineas[practicaState.historialLineas.length - 1].tipo === 'operacion') {
             practicaState.historialLineas.pop();
         }
@@ -622,10 +657,8 @@ function confirmarPaso() {
         return;
     }
 
-    // Paso correcto
     practicaState.eqActual = ecuacionAplicada;
     practicaState.pasoActual++;
-    // Evitar duplicados: solo agregar si no es igual a la última línea
     const ultimaLinea = practicaState.historialLineas[practicaState.historialLineas.length - 1];
     if (!ultimaLinea || ultimaLinea.texto !== textoSimplificado) {
         practicaState.historialLineas.push({ texto: textoSimplificado, tipo: 'simplificacion' });
@@ -636,7 +669,6 @@ function confirmarPaso() {
     resetearControles();
 
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
-        // Recompensa
         racha++;
         const bonusRacha = Math.min(racha, 5) * 2;
         const xpGanada = 10 + bonusRacha;
@@ -687,10 +719,8 @@ function realizarOperacion() {
     if (!ecuacionActual) { mostrarFeedbackPractica('No hay ecuación actual.', 'error'); return; }
 
     const ecuacionAplicada = aplicarOperacion(ecuacionActual, operacion, num);
-    // Generar el texto de la operación aplicada (sin simplificar)
     const textoOperacion = formatearEcuacionConOperacion(ecuacionActual, operacion, num);
 
-    // Evitar duplicados de operación
     const yaExiste = practicaState.historialLineas.some(linea => linea.texto === textoOperacion && linea.tipo === 'operacion');
     if (!yaExiste) {
         practicaState.historialLineas.push({ texto: textoOperacion, tipo: 'operacion' });
@@ -707,7 +737,7 @@ function realizarOperacion() {
     actualizarBoton();
 }
 
-// ========== AVANZAR EN MODO GUIADA ==========
+// ========== AVANZAR PASO GUIADA (MODIFICADA CON EXPLICACIONES) ==========
 function avanzarPasoGuiada() {
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
         mostrarFeedbackPractica('Ya has completado todos los pasos.', 'exito');
@@ -730,6 +760,12 @@ function avanzarPasoGuiada() {
     practicaState.historialLineas.push({ texto: textoMostrar, tipo: paso.tipo || 'paso' });
     mostrarHistorial();
 
+    // Mostrar explicación pedagógica
+    const explicacion = paso.explicacion || obtenerExplicacionPaso(paso, practicaState.eqActual);
+    if (explicacion) {
+        mostrarFeedbackPractica(`💡 ${explicacion}`, 'info');
+    }
+
     if (practicaState.pasoActual >= practicaState.pasos.length - 1) {
         if (elBtnAccion) elBtnAccion.disabled = true;
         if (elMensajeExito) {
@@ -738,8 +774,32 @@ function avanzarPasoGuiada() {
         }
         if (elNextPracticaBtn) elNextPracticaBtn.style.display = 'block';
         mostrarFeedbackPractica('🎉 ¡Ecuación resuelta! (Práctica guiada)', 'exito');
+        if (elBtnPista) elBtnPista.style.display = 'none';
     } else {
-        mostrarFeedbackPractica('✅ Paso completado.', 'exito');
+        // Habilitar pista para el siguiente paso
+        if (elBtnPista) elBtnPista.style.display = 'inline-flex';
+    }
+}
+
+// ========== PISTA PARA PRÁCTICA GUIADA (NUEVO) ==========
+function mostrarPista() {
+    const siguiente = practicaState.pasos[practicaState.pasoActual + 1];
+    if (!siguiente) {
+        mostrarFeedbackPractica('No hay más pasos.', 'info');
+        return;
+    }
+    if (siguiente.operacion) {
+        const op = siguiente.operacion;
+        const val = siguiente.valor || '?';
+        let mensaje = `Pista: prueba a `;
+        if (op === 'sumar') mensaje += `sumar ${val}`;
+        else if (op === 'restar') mensaje += `restar ${val}`;
+        else if (op === 'multiplicar') mensaje += `multiplicar por ${val}`;
+        else if (op === 'dividir') mensaje += `dividir entre ${val}`;
+        mensaje += ` en ambos lados.`;
+        mostrarFeedbackPractica(mensaje, 'info');
+    } else {
+        mostrarFeedbackPractica('La siguiente acción no es una operación aritmética, revisa los pasos.', 'info');
     }
 }
 
@@ -751,8 +811,9 @@ function mostrarFeedbackPractica(mensaje, tipo) {
     elFeedbackPractica.className = 'feedback';
     if (tipo === 'exito') elFeedbackPractica.classList.add('feedback-exito');
     else if (tipo === 'error') elFeedbackPractica.classList.add('feedback-error');
+    else if (tipo === 'info') elFeedbackPractica.classList.add('feedback-info');
     elFeedbackPractica.classList.remove('hidden');
-    feedbackTimeout = setTimeout(() => { elFeedbackPractica.classList.add('hidden'); feedbackTimeout = null; }, 3000);
+    feedbackTimeout = setTimeout(() => { elFeedbackPractica.classList.add('hidden'); feedbackTimeout = null; }, 4000);
 }
 
 function mostrarFeedback(mensaje, tipo) {
@@ -783,7 +844,6 @@ function actualizarBoton() {
         return;
     }
 
-    // Modo interactivo
     if (practicaState.operacionPendiente) {
         elBtnAccion.textContent = 'Operar';
         elBtnAccion.disabled = false;
@@ -875,6 +935,7 @@ function iniciarJuego() {
     elBtnAccion = document.getElementById('btn-accion'); elControlesPractica = document.getElementById('controles-practica');
     elMensajeExito = document.getElementById('mensaje-exito'); elTextoSolucion = document.getElementById('texto-solucion');
     elBtnReiniciar = document.getElementById('btn-reiniciar');
+    elBtnPista = document.getElementById('btn-pista'); // Nuevo
 
     let btnGuiada = document.getElementById('mode-guiada');
     if (!btnGuiada) {
@@ -889,6 +950,11 @@ function iniciarJuego() {
 
     if (elBtnAccion) {
         elBtnAccion.addEventListener('click', manejarBoton);
+    }
+
+    // Evento para el botón de pista
+    if (elBtnPista) {
+        elBtnPista.addEventListener('click', mostrarPista);
     }
 
     elOperacionBtns = document.querySelectorAll('.operacion-btn');
