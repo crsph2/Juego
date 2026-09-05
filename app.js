@@ -43,7 +43,8 @@ async function registrarUsuario(email, password) {
                 inferior: null,
                 sombrero: null,
                 zapatillas: null,
-                insignia: null
+                insignia: null,
+                simbolos: []
             },
             factorizados: {
                 nivel: 1,
@@ -56,6 +57,15 @@ async function registrarUsuario(email, password) {
                 xp: 0,
                 region: 'Aldea de las Ecuaciones',
                 racha: 0
+            },
+            sistemas: {
+                completado: false,
+                puntuacion: 0,
+                estrellas: 0,
+                bombasDesactivadas: 0,
+                errores: 0,
+                pistasUsadas: 0,
+                tiempo: 0
             },
             estadisticas: {
                 factorizados_correctas: 0,
@@ -80,7 +90,7 @@ async function registrarUsuario(email, password) {
     }
 }
 
-// ---- Inicio de sesión (sin cambios) ----
+// ---- Inicio de sesión ----
 async function iniciarSesion(email, password) {
     try {
         const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
@@ -108,7 +118,7 @@ async function iniciarSesion(email, password) {
     }
 }
 
-// ---- Event listeners (sin cambios) ----
+// ---- Event listeners ----
 btnRegister.addEventListener('click', () => {
     hideError();
     const email = emailInput.value.trim();

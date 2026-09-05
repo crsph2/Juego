@@ -422,3 +422,331 @@ body.dark-mode .feedback-info {
         padding: 0.4rem 0.6rem !important;
     }
 }
+/* ============================================================
+   ESTILOS PARA "OPERACIÓN: SISTEMA"
+   ============================================================ */
+
+/* Contenedor del juego */
+.sistemas-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0.5rem;
+}
+
+/* Pantalla de inicio */
+.start-screen {
+    text-align: center;
+    padding: 1.5rem 0.5rem;
+}
+.start-screen .title {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #ff6b6b;
+    text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+    letter-spacing: 2px;
+}
+.start-screen .subtitle {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin: 1rem 0 2rem;
+}
+.start-screen .btn-start {
+    font-size: 1.5rem;
+    padding: 1rem 3rem;
+    background: #ff6b6b;
+    border: none;
+    border-radius: 50px;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 0 30px rgba(255, 107, 107, 0.4);
+    transition: transform 0.2s;
+}
+.start-screen .btn-start:hover {
+    transform: scale(1.05);
+}
+
+/* Misión intro */
+.mission-intro {
+    padding: 1.5rem 0.5rem;
+    text-align: center;
+}
+.mission-intro p {
+    font-size: 1.2rem;
+    margin: 0.8rem 0;
+    color: var(--text-secondary);
+}
+.mission-intro .btn-mission {
+    margin-top: 1.5rem;
+}
+
+/* Barra de progreso de la misión */
+.mission-progress {
+    width: 100%;
+    height: 12px;
+    background: var(--card-border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0.8rem 0;
+}
+.mission-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff6b6b, #ffd93d);
+    transition: width 0.5s ease;
+}
+
+/* Bombas */
+.bomb-card {
+    background: var(--card-bg);
+    border: 2px solid var(--card-border);
+    border-radius: 20px;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.1);
+}
+.bomb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--card-border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+.bomb-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #ff6b6b;
+}
+.bomb-method {
+    font-size: 1.2rem;
+    background: var(--btn-secondary);
+    color: #fff;
+    padding: 0.2rem 1rem;
+    border-radius: 20px;
+}
+.bomb-system {
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 1rem 0;
+    line-height: 2.2rem;
+    font-family: 'Courier New', monospace;
+}
+.bomb-system .eq {
+    display: block;
+}
+.bomb-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+.bomb-inputs label {
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+.bomb-inputs input {
+    width: 80px;
+    padding: 0.5rem;
+    font-size: 1.4rem;
+    text-align: center;
+    border: 2px solid var(--card-border);
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text-main);
+}
+.bomb-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+    margin: 1rem 0;
+}
+.btn-disarm {
+    background: #ff6b6b;
+    color: #fff;
+    font-size: 1.2rem;
+    padding: 0.8rem 2.5rem;
+    border: none;
+    border-radius: 30px;
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+}
+.btn-hint {
+    background: var(--btn-secondary);
+    color: #fff;
+    padding: 0.6rem 1.5rem;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+}
+.bomb-feedback {
+    min-height: 3rem;
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+.bomb-feedback.success {
+    color: #2e7d32;
+}
+.bomb-feedback.error {
+    color: #c62828;
+}
+.bomb-feedback.hint {
+    color: var(--btn-gold);
+}
+
+/* Desafío gráfico */
+.graph-challenge {
+    padding: 1rem 0;
+}
+.graph-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    border: 2px solid var(--card-border);
+    border-radius: 16px;
+    padding: 0.5rem;
+}
+.graph-container canvas {
+    width: 100% !important;
+    height: auto !important;
+    display: block;
+}
+.graph-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin: 1rem 0;
+}
+.graph-options button {
+    padding: 0.8rem;
+    font-size: 1.2rem;
+    border: 2px solid var(--card-border);
+    border-radius: 12px;
+    background: var(--card-bg);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.graph-options button.correct {
+    border-color: #2e7d32;
+    background: #e8f5e9;
+}
+.graph-options button.incorrect {
+    border-color: #c62828;
+    background: #ffebee;
+}
+body.dark-mode .graph-options button.correct {
+    background: #1f3a24;
+    color: #fff;
+}
+body.dark-mode .graph-options button.incorrect {
+    background: #3a1a1a;
+    color: #fff;
+}
+
+/* Desafío estrategia */
+.strategy-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+    margin: 1rem 0;
+}
+.strategy-options button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+    border: 2px solid var(--card-border);
+    border-radius: 12px;
+    background: var(--card-bg);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.strategy-options button.selected {
+    border-color: var(--btn-secondary);
+    background: var(--btn-secondary);
+    color: #fff;
+}
+
+/* Pantalla final */
+.final-screen {
+    text-align: center;
+    padding: 1.5rem 0.5rem;
+}
+.final-screen .big-icon {
+    font-size: 4rem;
+}
+.final-screen .stars {
+    font-size: 3rem;
+    letter-spacing: 0.5rem;
+}
+.final-screen .score {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--btn-gold);
+}
+.final-screen .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    background: var(--card-bg);
+    padding: 1rem;
+    border-radius: 16px;
+    border: 1px solid var(--card-border);
+}
+.final-screen .stats-item {
+    font-size: 1rem;
+}
+.final-screen .stats-item span {
+    font-weight: 700;
+}
+.final-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+.final-actions button {
+    padding: 0.8rem 1.8rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Ajustes móviles para sistemas */
+@media (max-width: 768px) {
+    .start-screen .title {
+        font-size: 2.2rem;
+    }
+    .bomb-system {
+        font-size: 1.4rem;
+        line-height: 1.8rem;
+    }
+    .bomb-inputs input {
+        width: 60px;
+        font-size: 1.2rem;
+    }
+    .graph-options {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    .graph-options button {
+        font-size: 1rem;
+        padding: 0.6rem;
+    }
+    .strategy-options button {
+        font-size: 1rem;
+        padding: 0.6rem 1rem;
+    }
+    .final-screen .stats {
+        grid-template-columns: 1fr;
+    }
+}
