@@ -1,27 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Matejuegos - Lobby</title>
-    <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-    <div class="container lobby-card">
-        <header>
-            <div class="player-info">
-                <span id="player-name">Trotamundos</span>
-                <button id="edit-name-btn" class="btn-icon" title="Editar nombre">✏️</button>
-                <span class="coins">🪙 <span id="player-coins">0</span></span>
-                <button id="theme-toggle" class="theme-toggle" title="Cambiar modo claro/oscuro">🌙</button>
-            </div>
-            <div id="avatar-display" class="avatar-display"></div>
-            <button id="btn-logout" class="btn btn-danger" style="margin-top:8px;">Cerrar sesión</button>
-        </header>
-
-        <div id="feedback-message" class="hidden"></div>
-
-        <h2>🏰 Elige tu aventura</h2>
         <div class="game-cards">
             <div class="card">
                 <div class="card-icon">🧮</div>
@@ -38,35 +14,13 @@
                 <button class="btn btn-primary" id="btn-incognita">Jugar</button>
             </div>
             <div class="card">
+                <div class="card-icon">🚪</div>
+                <h3>Escape Room Cuadrático</h3>
+                <p>Escapa de 6 niveles resolviendo ecuaciones de segundo grado</p>
+                <span class="badge">Álgebra: Ecuaciones cuadráticas</span>
+                <button class="btn btn-primary" id="btn-escape">Jugar</button>
+            </div>
+            <div class="card">
                 <div class="card-icon">💣</div>
                 <h3>Operación: Sistema</h3>
-                <p>Desactiva bombas resolviendo sistemas de ecuaciones 2x2</p>
-                <span class="badge">Álgebra: Sistemas de ecuaciones lineales</span>
-                <button class="btn btn-primary" id="btn-sistemas">Jugar</button>
-            </div>
-        </div>
-
-        <!-- ====== TIENDA ====== -->
-        <h2 style="margin-top: 2rem;">🛒 Tienda de Avatares</h2>
-        <div id="tienda-container">
-            <div id="vista-previa">
-                <h3>Tu Avatar</h3>
-                <div id="avatar-preview" class="avatar-preview"></div>
-                <p>Monedas: <span id="tienda-coins">0</span></p>
-            </div>
-            <div id="categorias-tienda">
-                <button class="categoria-btn active" data-categoria="avatar">🧑 Avatares</button>
-                <button class="categoria-btn" data-categoria="simbolo">∑ Símbolos</button>
-            </div>
-            <div id="items-tienda"></div>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="common.js"></script>
-    <script src="lobby.js"></script>
-</body>
-</html>
+                <p>Desact
