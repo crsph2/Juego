@@ -1,6 +1,6 @@
 // ============================================================
 // escape-cuadratico.js – "Escape Room Cuadrático"
-// 6 niveles. Cada nivel tiene 3 puzzles. Cada puzzle revela
+// 5 niveles. Cada nivel tiene 3 puzzles. Cada puzzle revela
 // un dígito del código que abre la puerta al siguiente nivel.
 // ============================================================
 
@@ -8,7 +8,7 @@ const XP_POR_NIVEL = 100;
 const XP_POR_PUZZLE = 25;
 const MONEDAS_POR_PUZZLE = 15;
 const MONEDAS_POR_NIVEL = 100;
-const TOTAL_NIVELES = 6;
+const TOTAL_NIVELES = 5;
 const PUZZLES_POR_NIVEL = 3;
 
 const NIVELES_CONFIG = [
@@ -28,27 +28,20 @@ const NIVELES_CONFIG = [
   },
   {
     id: 3,
-    nombre: "El laboratorio",
-    icono: "🧪",
-    narrativa: "Un laboratorio abandonado. En un monitor aparecen parábolas que representan experimentos. Encuentra el vértice de cada una para desbloquear la salida.",
-    tipo: "vertice"
-  },
-  {
-    id: 4,
     nombre: "La azotea",
     icono: "🏙️",
-    narrativa: "Subes a la azotea. Un dron deja caer paquetes siguiendo trayectorias parabólicas. ¿En qué momento tocan el suelo?",
+    narrativa: "Subes a la azotea. Un dron deja caer paquetes siguiendo trayectorias parabólicas. ¿En qué momento tocan el suelo? Resuélvelo para desbloquear la siguiente puerta.",
     tipo: "tiro_parabolico"
   },
   {
-    id: 5,
+    id: 4,
     nombre: "El espejo roto",
     icono: "🪞",
     narrativa: "Un espejo roto refleja ecuaciones distorsionadas. Algunas tienen solución doble, otras carecen de solución real. ¡Clasifícalas para romper el hechizo!",
     tipo: "discriminante_especial"
   },
   {
-    id: 6,
+    id: 5,
     nombre: "La puerta final",
     icono: "🚪",
     narrativa: "Estás ante la puerta de salida. Un último desafío: tres ecuaciones que combinan todo lo aprendido. ¡Resuélvelas y escapa!",
@@ -152,23 +145,7 @@ function generarPuzzleFormulaGeneral() {
   };
 }
 
-// Nivel 3: Vértice
-function generarPuzzleVertice() {
-  const a = randChoice([1, 2, -1]);
-  const h = randInt(-5, 5);
-  const k = randInt(-10, 10);
-  const b = -2 * a * h;
-  const c = a * h * h + k;
-  return {
-    tipoRespuesta: 'vertice',
-    enunciado: `y = ${formatPolinomio(a, b, c)}`,
-    instruccion: 'Encuentra las coordenadas del vértice (h, k):',
-    vertice: [h, k],
-    pista: `h = -b/(2a) con a=${a}, b=${b}. Luego k = y(h).`
-  };
-}
-
-// Nivel 4: Tiro parabólico
+// Nivel 3: Tiro parabólico
 function generarPuzzleTiroParabolico() {
   let t, v, h0, intentos = 0;
   do {
@@ -187,7 +164,7 @@ function generarPuzzleTiroParabolico() {
   };
 }
 
-// Nivel 5: Discriminante especial
+// Nivel 4: Discriminante especial
 function generarPuzzleDiscriminanteEspecial() {
   const variante = randChoice(['positivo', 'cero', 'negativo']);
   if (variante === 'positivo') {
@@ -239,9 +216,9 @@ function generarPuzzleDiscriminanteEspecial() {
   }
 }
 
-// Nivel 6: Integrador
+// Nivel 5: Integrador
 function generarPuzzleIntegrador() {
-  const tipo = randChoice(['fac_hard', 'formula_hard', 'vertice_hard', 'tiro_hard', 'disc_hard']);
+  const tipo = randChoice(['fac_hard', 'formula_hard', 'tiro_hard', 'disc_hard']);
   switch (tipo) {
     case 'fac_hard': {
       const a = randChoice([2, 3, 4]);
@@ -273,19 +250,6 @@ function generarPuzzleIntegrador() {
         instruccion: 'Resuelve la ecuación:',
         raices: [r1, r2],
         pista: `Usa la fórmula general con a=${a}, b=${b}, c=${c}. Δ = ${b*b - 4*a*c}.`
-      };
-    }
-    case 'vertice_hard': {
-      const a = randChoice([1, 2, -1]);
-      const h = randInt(-6, 6);
-      const k = randInt(-12, 12);
-      const b = -2 * a * h, c = a * h * h + k;
-      return {
-        tipoRespuesta: 'vertice',
-        enunciado: `y = ${formatPolinomio(a, b, c)}`,
-        instruccion: 'Encuentra el vértice (h, k):',
-        vertice: [h, k],
-        pista: `h = -b/(2a) con a=${a}, b=${b}.`
       };
     }
     case 'tiro_hard': {
@@ -331,10 +295,9 @@ function generarPuzzle(nivelId) {
   switch (nivelId) {
     case 1: return generarPuzzleFactorizacionSimple();
     case 2: return generarPuzzleFormulaGeneral();
-    case 3: return generarPuzzleVertice();
-    case 4: return generarPuzzleTiroParabolico();
-    case 5: return generarPuzzleDiscriminanteEspecial();
-    case 6: return generarPuzzleIntegrador();
+    case 3: return generarPuzzleTiroParabolico();
+    case 4: return generarPuzzleDiscriminanteEspecial();
+    case 5: return generarPuzzleIntegrador();
     default: return generarPuzzleFactorizacionSimple();
   }
 }
@@ -343,7 +306,7 @@ function generarPuzzle(nivelId) {
 function iniciarEstado() {
   const nivelGuardado = (window.jugador && window.jugador.escapeCuadratico && window.jugador.escapeCuadratico.nivel) || 1;
   gameState = {
-    estado: 'narrativa', // narrativa | puzzle | nivel_completado | juego_completado
+    estado: 'narrativa',
     nivelActual: Math.min(Math.max(nivelGuardado, 1), TOTAL_NIVELES),
     puzzles: [],
     puzzleActual: 0,
@@ -371,7 +334,6 @@ function cargarNivel() {
   gameState.inicioNivel = Date.now();
   gameState.respuestaEspecialSeleccionada = false;
 
-  // Generar código único de 3 dígitos
   const d1 = randInt(0, 9);
   let d2 = randInt(0, 9);
   while (d2 === d1) d2 = randInt(0, 9);
@@ -379,7 +341,6 @@ function cargarNivel() {
   while (d3 === d1 || d3 === d2) d3 = randInt(0, 9);
   gameState.codigo = [d1, d2, d3];
 
-  // Generar 3 puzzles
   for (let i = 0; i < PUZZLES_POR_NIVEL; i++) {
     const p = generarPuzzle(nivel);
     p.digito = gameState.codigo[i];
@@ -408,7 +369,6 @@ function renderPuzzle() {
   if (!puzzle) return '<p>Error: puzzle no encontrado</p>';
   const idx = gameState.puzzleActual;
 
-  // Panel de código
   let digitosHTML = '';
   for (let i = 0; i < 3; i++) {
     const revelado = gameState.digitosRevelados[i] !== null;
@@ -416,7 +376,6 @@ function renderPuzzle() {
     digitosHTML += `<div class="digito ${revelado ? 'revelado' : ''}">${val}</div>`;
   }
 
-  // Inputs según tipo de respuesta
   let inputsHTML = '';
   if (puzzle.tipoRespuesta === 'raices') {
     inputsHTML = `
@@ -428,19 +387,6 @@ function renderPuzzle() {
         <div class="input-grupo">
           <label>x₂ =</label>
           <input type="number" id="input-r2" step="any" inputmode="numeric" autocomplete="off">
-        </div>
-      </div>
-    `;
-  } else if (puzzle.tipoRespuesta === 'vertice') {
-    inputsHTML = `
-      <div class="inputs-raices">
-        <div class="input-grupo">
-          <label>h =</label>
-          <input type="number" id="input-h" step="any" inputmode="numeric" autocomplete="off">
-        </div>
-        <div class="input-grupo">
-          <label>k =</label>
-          <input type="number" id="input-k" step="any" inputmode="numeric" autocomplete="off">
         </div>
       </div>
     `;
@@ -517,12 +463,11 @@ function renderNivelCompletado() {
 }
 
 function renderJuegoCompletado() {
-  const totalTiempo = Math.round((Date.now() - gameState.inicioNivel) / 1000);
   return `
     <div class="nivel-completo-box">
       <div class="puerta">🏆🎉</div>
       <h2>¡Has escapado!</h2>
-      <p>Has completado los 6 niveles del Escape Room Cuadrático.</p>
+      <p>Has completado los ${TOTAL_NIVELES} niveles del Escape Room Cuadrático.</p>
       <div class="stats-final">
         <div class="item">✅ Aciertos totales: <strong>${gameState.aciertosTotales}</strong></div>
         <div class="item">❌ Errores totales: <strong>${gameState.erroresTotales}</strong></div>
@@ -572,15 +517,13 @@ function conectarEventos() {
     if (btnSinSol) btnSinSol.addEventListener('click', () => {
       gameState.respuestaEspecialSeleccionada = !gameState.respuestaEspecialSeleccionada;
       btnSinSol.classList.toggle('seleccionado', gameState.respuestaEspecialSeleccionada);
-      // Deshabilitar visualmente inputs si se selecciona sin solución
       const r1 = document.getElementById('input-r1');
       const r2 = document.getElementById('input-r2');
       if (r1) r1.disabled = gameState.respuestaEspecialSeleccionada;
       if (r2) r2.disabled = gameState.respuestaEspecialSeleccionada;
     });
 
-    // Enter para comprobar
-    ['input-r1', 'input-r2', 'input-h', 'input-k', 'input-t'].forEach(id => {
+    ['input-r1', 'input-r2', 'input-t'].forEach(id => {
       const inp = document.getElementById(id);
       if (inp) inp.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') comprobarRespuesta();
@@ -640,7 +583,6 @@ function comprobarRespuesta() {
     if (!r1El || !r2El) return;
 
     if (puzzle.tipoRespuesta === 'raices_con_especial' && gameState.respuestaEspecialSeleccionada) {
-      // El usuario marcó "sin solución"
       if (!puzzle.tieneSolucion) {
         esCorrecta = true;
       } else {
@@ -665,17 +607,6 @@ function comprobarRespuesta() {
     }
   }
 
-  else if (puzzle.tipoRespuesta === 'vertice') {
-    const hEl = document.getElementById('input-h');
-    const kEl = document.getElementById('input-k');
-    if (!hEl || !kEl) return;
-    const vh = parseFloat(hEl.value);
-    const vk = parseFloat(kEl.value);
-    if (isNaN(vh) || isNaN(vk)) { mensajeError = 'Ingresa valores numéricos válidos.'; }
-    else if (sonIguales(vh, puzzle.vertice[0]) && sonIguales(vk, puzzle.vertice[1])) { esCorrecta = true; }
-    else { mensajeError = 'Incorrecto. Revisa las coordenadas del vértice.'; }
-  }
-
   else if (puzzle.tipoRespuesta === 'tiempo') {
     const tEl = document.getElementById('input-t');
     if (!tEl) return;
@@ -688,19 +619,16 @@ function comprobarRespuesta() {
   if (esCorrecta) {
     gameState.aciertosTotales++;
     gameState.digitosRevelados[gameState.puzzleActual] = puzzle.digito;
-    // Otorgar XP y monedas
     otorgarRecompensas(XP_POR_PUZZLE, MONEDAS_POR_PUZZLE);
 
     mostrarFeedbackLocal(`¡Correcto! Dígito revelado: ${puzzle.digito}`, 'exito');
 
-    // Deshabilitar botones y avanzar tras breve pausa
     const btn = document.getElementById('btn-comprobar');
     if (btn) btn.disabled = true;
     setTimeout(() => {
       gameState.puzzleActual++;
       gameState.respuestaEspecialSeleccionada = false;
       if (gameState.puzzleActual >= PUZZLES_POR_NIVEL) {
-        // Nivel completado
         gameState.estado = 'nivel_completado';
         otorgarRecompensas(0, MONEDAS_POR_NIVEL);
         renderizar();
@@ -737,7 +665,6 @@ function otorgarRecompensas(xp, monedas) {
   ec.monedasGanadas = (ec.monedasGanadas || 0) + monedas;
   j.escapeCuadratico = ec;
   j.monedas = (j.monedas || 0) + monedas;
-  // No esperamos a Firestore para actualizar la UI
   actualizarUI();
 }
 
@@ -841,7 +768,6 @@ function iniciarJuego() {
 
   if (!elGameScreen) { console.error('No se encontró #game-screen'); return; }
 
-  // Asegurar que existe el campo escapeCuadratico
   if (window.jugador && !window.jugador.escapeCuadratico) {
     window.jugador.escapeCuadratico = { nivel: 1, xp: 0, completado: false, monedasGanadas: 0 };
     if (window.uid) {
@@ -855,7 +781,6 @@ function iniciarJuego() {
   cargarNivel();
   renderizar();
 
-  // Botones del header
   const btnReiniciar = document.getElementById('btn-reiniciar');
   if (btnReiniciar) btnReiniciar.addEventListener('click', reiniciarEscape);
 
