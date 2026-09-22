@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Matejuegos - Escape Room Cuadrático</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .escape-container { max-width: 620px; margin: 0 auto; padding: 0.5rem; }
+
+        .narrativa-box {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            margin: 1rem 0;
+            animation: fadeIn 0.6s ease-out;
+        }
+        .narrativa-icono { font-size: 4.5rem; margin-bottom: 0.5rem; line-height: 1; }
+        .narrativa-titulo { font-size: 1.7rem; color: var(--btn-primary); margin-bottom: 0.6rem; font-weight: 800; }
+        .narrativa-texto { font-size: 1rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem; }
+
+        .progreso-nivel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--header-bg);
+            padding: 0.6rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid var(--card-border);
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .codigo-panel {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+        .digito {
+            width: 62px;
+            height: 74px;
+            background: var(--input-bg);
+            border: 3px solid var(--card-border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--text-secondary);
+            transition: all 0.4s ease;
+            font-family: 'Courier New', monospace;
+        }
+        .digito.revelado {
+            background: #fff9c4;
+            border-color: var(--btn-gold);
+            color: #1a1a1a;
+            animation: pop 0.5s ease;
+            box-shadow: 0 0 15px rgba(242, 201, 76, 0.5);
+        }
+        body.dark-mode .digito.revelado {
+            background: #4a3a00;
+            color: var(--btn-gold);
+        }
+        @keyframes pop {
+            0% { transform: scale(0.6) rotate(-10deg); }
+            60% { transform: scale(1.25) rotate(5deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+
+        .puzzle-box {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.2rem 1rem;
+            margin: 1rem 0;
+            animation: fadeIn 0.4s ease-out;
+        }
+        .puzzle-instruccion {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.8rem;
+            text-align: center;
+            font-weight: 500;
+        }
+        .puzzle-ecuacion {
+            font-size: 1.9rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 1rem 0;
+            padding: 1rem 0.5rem;
+            background: var(--input-bg);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-family: 'Courier New', monospace;
+            word-break: break-word;
+            border: 1px solid var(--card-border);
+        }
+        .puzzle-contexto {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            padding: 0.8rem 1rem;
+            background: var(--input-bg);
+            border-radius: 10px;
+            line-height: 1.5;
+            border-left: 4px solid var(--btn-secondary);
+            white-space: pre-line;
+        }
+
+        .inputs-raices {
+            display: flex;
+            gap: 1.2rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 1.2rem 0;
+        }
+        .input-grupo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .input-grupo label {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+        .input-grupo input {
+            width: 90px;
+            padding: 0.6rem;
+            font-size: 1.4rem;
+            text-align: center;
+            border: 2px solid var(--card-border);
+            border-radius: 10px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-weight: 700;
+        }
+        .input-grupo input:focus {
+            border-color: var(--btn-secondary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 76, 202, 0.2);
+        }
+
+        .puzzle-acciones {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .btn-especial {
+            background: #7b1fa2;
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 48px;
+        }
+        .btn-especial:hover { transform: scale(1.03); background: #9c27b0; }
+        .btn-especial.seleccionado {
+            background: #4a148c;
+            box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.4);
+        }
+
+        .nivel-completo-box {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            animation: fadeIn 0.6s ease-out;
+        }
+        .nivel-completo-box .puerta {
+            font-size: 5rem;
+            margin-bottom: 0.5rem;
+            animation: abrirPuerta 1s ease;
+            display: inline-block;
+        }
+        @keyframes abrirPuerta {
+            0% { transform: rotate(-20deg) scale(0.5); opacity: 0; }
+            60% { transform: rotate(10deg) scale(1.15); opacity: 1; }
+            100% { transform: rotate(0) scale(1); }
+        }
+        .nivel-completo-box h2 {
+            color: var(--btn-primary);
+            font-size: 1.8rem;
+            margin-bottom: 0.8rem;
+        }
+        .nivel-completo-box p {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .xp-reward-box {
+            background: linear-gradient(135deg, #fff9c4, #ffe082);
+            border: 2px solid var(--btn-gold);
+            border-radius: 12px;
+            padding: 0.8rem;
+            margin: 1rem 0;
+            font-weight: 700;
+            color: #1a1a1a;
+            font-size: 1.1rem;
+        }
+        body.dark-mode .xp-reward-box {
+            background: linear-gradient(135deg, #4a3a00, #6b5500);
+            color: var(--btn-gold);
+        }
+
+        .stats-final {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            margin: 1.2rem 0;
+            background: var(--input-bg);
+            padding: 1rem;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
+        }
+        .stats-final .item { font-size: 0.95rem; text-align: left; }
+        .stats-final .item strong { color: var(--btn-primary); }
+
+        @media (max-width: 768px) {
+            .puzzle-ecuacion { font-size: 1.5rem; }
+            .digito { width: 52px; height: 62px; font-size: 1.8rem; }
+            .narrativa-titulo { font-size: 1.4rem; }
+            .narrativa-icono { font-size: 3.5rem; }
+            .stats-final { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <main class="escape-container">
+        <section class="game-card">
+            <header class="player-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <a href="lobby.html" class="back-button">← Volver</a>
+                    <h1 class="game-title" style="font-size: 1.4rem; margin: 0;">🚪 Escape Cuadrático</h1>
+                    <div style="width: 60px;"></div>
+                </div>
+                <div class="player-info">
+                    <span id="player-name" class="player-name">Aventurero</span>
+                    <span class="player-level">Nivel <span id="player-level">1</span></span>
+                    <span class="player-coins">🪙 <span id="player-coins">0</span></span>
+                    <button id="theme-toggle" class="theme-toggle" title="Cambiar modo claro/oscuro">🌙</button>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px 0; flex-wrap: wrap;">
+                    <button id="btn-edit-name" class="rpg-button btn-gold" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">✏️ Nombre</button>
+                    <button id="btn-reiniciar" class="rpg-button btn-danger" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">🔄 Reiniciar escape</button>
+                    <button id="btn-logout" class="rpg-button btn-danger" style="padding: 4px 14px; font-size: 0.75rem; width: auto;">🚪 Salir</button>
+                </div>
+                <div class="xp-bar">
+                    <div id="xp-bar-fill" class="xp-bar-fill" style="width:0%"></div>
+                    <span id="xp-text" class="xp-text">0 / 100 XP</span>
+                </div>
+                <div class="region-info">
+                    <span id="player-region">Escape Room Cuadrático</span>
+                </div>
+                <div id="avatar-display" class="avatar-display"></div>
+            </header>
+
+            <div id="game-screen"></div>
+            <div id="feedback-message" class="feedback hidden"></div>
+        </section>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="common.js"></script>
+    <script src="escape-cuadratico.js"></script>
+</body>
+</html>
