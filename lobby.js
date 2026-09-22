@@ -244,5 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('btn-factorizados').addEventListener('click', () => { window.location.href = 'factorizados.html'; });
     document.getElementById('btn-incognita').addEventListener('click', () => { window.location.href = 'incognita.html'; });
+    document.getElementById('btn-escape').addEventListener('click', () => { window.location.href = 'escape-cuadratico.html'; });
     document.getElementById('btn-sistemas').addEventListener('click', () => { window.location.href = 'sistemas.html'; });
 });
