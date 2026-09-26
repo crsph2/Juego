@@ -37,6 +37,8 @@ async function registrarUsuario(email, password) {
             monedas: 0,
             avatarSeed: avatarSeed,
             inventario: ['avatar_base'],
+            conexiones: 1,
+            ultimaConexion: new Date(),
             equipo: {
                 avatar: 'avatar_base',
                 superior: null,
