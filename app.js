@@ -101,6 +101,10 @@ async function iniciarSesion(email, password) {
             return;
         }
         const jugador = snap.data();
+        await db.collection('usuarios').doc(uid).update({
+            conexiones: firebase.firestore.FieldValue.increment(1),
+            ultimaConexion: new Date()
+        });
         sessionStorage.setItem('mathquest_uid', uid);
         sessionStorage.setItem('mathquest_nombre', jugador.nombre || 'Trotamundos');
         window.location.href = 'lobby.html';
